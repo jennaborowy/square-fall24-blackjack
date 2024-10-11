@@ -1,0 +1,17 @@
+ - Use Case: Set up a table
+ - Primary Actor: Account User
+ - Purpose: Account user wants to set up a table with their specifications for the game, including the payout ratio, number of bots, max number of players, chip increments, minimum bet, and maximum bet.
+ - Stakeholders: Account Users and Guest Users who are deciding where to play
+ - Pre-conditions: User needs to sign in and be in the lobby
+ - Post-conditions: table appears in the lobby, people can join it, and the settings apply correctly when the game is played
+ - Triggers: the user wants to set up a table and the user clicked a button to trigger it
+ - Basic Flow/Main Success Scenario: 
+    1. the user was in the lobby
+    2. user clicked the button to set up a table
+    3. the options for the rules of the table were given to the user
+    4. the user configures the table parameters
+    5. the user confirms
+    6. the table appears in the lobby to other players with the correct parameters
+ - Alternate Flow/Extensions: 
+    3-5. the user decides not to configure a table and exits
+
