@@ -1,4 +1,4 @@
-package src.main.java.edu.loyola.square.model;
+package edu.loyola.square.model;
 
 import java.util.ArrayList;
 import java.util.Scanner;
