@@ -18,5 +18,5 @@ bib: references.bib
 
 .phony: clean
 clean:
-	@-/bin/rm main.aux main.log main.out main.pdf main.bbl main.blg
+	@-/bin/rm main.aux main.log main.out main.pdf main.bbl main.blg main.toc
 
