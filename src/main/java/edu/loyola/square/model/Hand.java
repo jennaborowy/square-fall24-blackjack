@@ -1,4 +1,4 @@
-package src.project.model;
+package src.main.java.edu.loyola.square.model;
 
 import java.util.ArrayList;
 
@@ -15,7 +15,7 @@ public class Hand
     this.pointValue = pointValue;
   }
 
-  private ArrayList<Card> getHand() {
+  public ArrayList<Card> getHand() {
     return cards;
   }
 
@@ -25,12 +25,12 @@ public class Hand
   public int getPointValue() {
     return pointValue;
   }
-  private void addCard(Card newCard) {
+  public void addCard(Card newCard) {
     cards.add(newCard);
     changePoints(newCard);
   }
 
-  private int changePoints(Card newCard) {
+  public int changePoints(Card newCard) {
     pointValue += newCard.getValue();
     return pointValue;
   }
@@ -42,5 +42,4 @@ public class Hand
     }
     return handString;
   }
-
 }
