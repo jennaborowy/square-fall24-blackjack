@@ -1,4 +1,4 @@
-package edu.loyola.square.model.repositories;
+package edu.loyola.square.controller.repositories;
 
 import java.util.List;
 import org.springframework.data.repository.CrudRepository;
