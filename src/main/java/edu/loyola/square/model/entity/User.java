@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 package edu.loyola.square.model.entity;
 
 import jakarta.persistence.*;
