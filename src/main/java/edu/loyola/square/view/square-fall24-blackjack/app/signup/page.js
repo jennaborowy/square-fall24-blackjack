@@ -3,7 +3,7 @@ import Paper from '@mui/material/Paper'
 import Grid2 from '@mui/material/Grid2'
 import Link from "next/link";
 import Image from "next/image";
-import style from "./signup.css"
+import "./signup.css"
 
 const Page=()=> {
     const paperStyle={padding:15, height:'78vh', width:'50vh',margin:"30px auto"}
@@ -15,7 +15,8 @@ const Page=()=> {
                     <Image src={"/coins.png"}
                            alt=""
                            height={600}
-                           width={600}
+                            width={600}
+
                     />
                 </div>
            </div>
@@ -23,7 +24,7 @@ const Page=()=> {
                   <Grid2>
                        <Paper elevation={7} style={paperStyle}>
                           <Grid2 align={"center"}>
-                              <Image src={"/logo-transparent.png"}
+                              <img src={"/logo-transparent.png"}
                                   alt=""
                                   height={215}
                                   width={290}

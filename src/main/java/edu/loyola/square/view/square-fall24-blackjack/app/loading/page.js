@@ -1,12 +1,16 @@
 import Image from "next/image";
 import React from "react";
+import "./loading.css"
 
 export default function Page() {
     return(
-        <Image src={"/logo-gif-transparent.gif"}
-               alt=""
-               height={500}
-               width={500}
-        />
+        <div className="main">
+            <div className="gif">
+                <img src={"/logo-gif-transparent.gif"}
+                    alt=""
+
+                />
+            </div>
+        </div>
     );
 }
