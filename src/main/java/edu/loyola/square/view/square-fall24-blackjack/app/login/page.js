@@ -1,5 +1,5 @@
 "use client";
-import "../../globals.css";
+import "../globals.css";
 
 import React, { useState, useRef } from "react";
 import Link from "next/Link";
@@ -53,17 +53,21 @@ function Login() {
     };
 
     return (
-        <>
-            <form onSubmit={handleSubmit}>
-                <h1>Login</h1>
-                <div>
-                    <label id="username-label">username</label>
-                    <input type="text" name="username" value={data.username} onInput={handleChange}/>
-                    <label id="password-label">password</label>
-                    <input type="text" name="password" value={data.password} onInput={handleChange}/>
-                    <input type="submit" value="submit"/>
-                </div>
-            </form>
+        <div className="container-sm mt-5">
+
+                    <form onSubmit={handleSubmit}>
+                        <h1>Login</h1>
+                        <div className="form-group">
+                            <label id="username-label">username</label>
+                            <input className="form-control" type="text" name="username" value={data.username} onInput={handleChange}/>
+                        </div>
+                        <div className="form-group">
+                            <label id="password-label">password</label>
+                            <input className="form-control" type="text" name="password" value={data.password} onInput={handleChange}/>
+                        </div>
+                        <button className="mt-3 btn btn-light" type="submit">submit</button>
+                    </form>
+
             <h>{data.username}</h>
             <h>{data.password}</h>
             <footer className={styles.footer}>
@@ -79,22 +83,9 @@ function Login() {
                     />
                     Sign up for Account
                 </Link>
-                <a
-                    href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    <Image
-                        aria-hidden
-                        src="https://nextjs.org/icons/window.svg"
-                        alt="Window icon"
-                        width={16}
-                        height={16}
-                    />
-                    Play as Guest
-                </a>
+
             </footer>
-        </>
+        </div>
     );
 }
 
