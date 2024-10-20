@@ -1,5 +1,7 @@
 package edu.loyola.square.model;
 
+import java.util.Scanner;
+
 public class Card
 {
   private String suit;

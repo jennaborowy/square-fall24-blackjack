@@ -5,7 +5,6 @@ import java.util.ArrayList;
 public class Hand
 {
   private ArrayList<Card> cards;
-  //use for dealer's hand
   private boolean isDealer;
   private int pointValue;
 
@@ -15,16 +14,6 @@ public class Hand
     this.pointValue = pointValue;
   }
 
-  public ArrayList<Card> getHand() {
-    return cards;
-  }
-
-  public boolean isDealer() {
-    return isDealer;
-  }
-  public int getPointValue() {
-    return pointValue;
-  }
   public void addCard(Card newCard) {
     cards.add(newCard);
     changePoints(newCard);
@@ -42,4 +31,24 @@ public class Hand
     }
     return handString;
   }
+
+  public void recalculatePoints() {
+    pointValue = 0;  // Reset point value
+    for (Card card : cards) {
+      pointValue += card.getValue();  // Sum the values of all cards again
+    }
+  }
+
+  public ArrayList<Card> getHand() {
+    return cards;
+  }
+
+  public boolean isDealer() {
+    return isDealer;
+  }
+
+  public int getPointValue() {
+    return pointValue;
+  }
+
 }
