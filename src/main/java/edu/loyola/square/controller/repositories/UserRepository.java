@@ -4,7 +4,7 @@ import java.util.List;
 import org.springframework.data.repository.CrudRepository;
 import edu.loyola.square.model.entity.User;
 
-public interface UserRepository extends CrudRepository {
+public interface UserRepository extends CrudRepository<User, Long> {
   List<User> findByUsername(String name);
 
   // lists all users; good for list before filtering users
