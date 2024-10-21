@@ -9,11 +9,14 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.13.0",
+    "@mui/material": "^6.1.4",
     "bootstrap": "^5.3.3",
     "next": "^14.2.15",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "rsuite": "^5.73.0"
+    "react-router-dom": "^6.27.0"
   },
   "devDependencies": {
     "eslint": "^8",

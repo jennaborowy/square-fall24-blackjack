@@ -4,7 +4,7 @@ export default function Loading() {
         <div className="main">
             <div className="gif">
                 <img src={"/logo-gif-transparent.gif"}
-                    alt=""
+                     alt=""
                 />
             </div>
         </div>

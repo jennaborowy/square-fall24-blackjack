@@ -1,23 +1,31 @@
-import Image from "next/image";
 import styles from "./page.module.css";
-import {Button, ButtonToolbar, Form} from "rsuite";
-import React from "react"
-import Link from "next/link";
-import Login from "@/app/login/page.js"
-import ReactDOM from "react-dom"
+import Link from 'next/link'
+import React from "react";
 
-// the ui for root url
 export default function Home() {
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-          <img className="container-sm" src="/Blackjack.png" alt="The Winning Hand Co. logo"/>
-          <footer className={styles.footer}>
-              <Link href="/login">Login</Link>
-              <Link href="/signup">Signup</Link>
-            <Link href="/gameplay">Card Display</Link>
-          </footer>
-      </main>
-    </div>
+
+          <main className={styles.main}>
+              <img src={"/logo-transparent.png"}
+                   alt=""
+                   height={415}
+                   width={530}
+                   style={{alignSelf:"center"}}/>
+
+            <div className={styles.container}>
+              <button className={styles.btn}>
+                <Link href="/signup">Signup</Link>
+              </button>
+              <button className={styles.btn}>
+                <Link href="/login">Login</Link>
+              </button>
+              <button className={styles.btn}>
+                <Link href="/gameplay">Play Game</Link>
+              </button>
+            </div>
+
+          </main>
+
   );
 }

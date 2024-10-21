@@ -1,6 +1,6 @@
 .main {
     height: 100vh;
-    background: url("../../public/background.jpg") no-repeat center;
+    background: url("../public/background.jpg") no-repeat center;
     background-size: cover;
 
 }
