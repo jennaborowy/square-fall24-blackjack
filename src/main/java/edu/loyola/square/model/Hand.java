@@ -2,26 +2,98 @@ package edu.loyola.square.model;
 
 import java.util.ArrayList;
 
-public class Hand
-{
-  private ArrayList<Card> cards;
+public class Hand {
+
   private boolean isDealer;
-  private int pointValue;
+  private ArrayList<Card> cards;
+  private int aceCount;
+  private int aceValue;
 
-  public Hand(ArrayList<Card> cards, boolean isDealer, int pointValue) {
-    this.cards = cards;
+  private int value(int aceValue) {
+    int v = 0;
+    for (Card card : cards) {
+      switch (card.getRank()) {
+        case "A":
+          v += aceValue;
+          break;
+        case "J":
+        case "Q":
+        case "K":
+          v += 10;
+          break;
+        default:
+          v += card.getValue(aceValue);
+          break;
+      }
+    }
+    return v;
+  }
+
+  private void optimizeAces() {
+    if (aceCount > 0) {
+      if (getValue(11) > 21) {
+        setAceValue(1);
+      } else {
+        if (getValue(11) == 21) {
+          setAceValue(11);
+        }
+      }
+    }
+  }
+
+  public Hand(ArrayList<Card> cards, boolean isDealer) {
     this.isDealer = isDealer;
-    this.pointValue = pointValue;
+    this.cards = cards;
+    aceValue = 1;
+    for (Card card : cards) {
+      if (card.getRank().equals("A")) {
+        aceCount++;
+      }
+    }
   }
 
-  public void addCard(Card newCard) {
-    cards.add(newCard);
-    changePoints(newCard);
+  public boolean isDealer() {
+    return isDealer;
   }
 
-  public int changePoints(Card newCard) {
-    pointValue += newCard.getValue();
-    return pointValue;
+  public ArrayList<Card> getHand() {
+    return cards;
+  }
+
+  public void setAceValue(int value) {
+    aceValue = value;
+  }
+
+  public void addCard(Card card) {
+    cards.add(card);
+    if (card.getRank().equals("A")) {
+      aceCount++;
+    }
+    optimizeAces();
+  }
+
+  public boolean blackjack() {
+    if (cards.size() == 2) {
+      Card card1 = cards.get(0);
+      Card card2 = cards.get(1);
+      if (card1.getRank().equals("A") && card2.getValue(aceValue) == 10 || card2.getRank().equals("A") && card1.getValue(aceValue) == 10) {
+        aceValue = 11;
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public int getValue() {
+    return value(aceValue);
+  }
+
+  public int getValue(int aceValue) {
+    return value(aceValue);
+  }
+
+  public int getAceCount() {
+    return aceCount;
   }
 
   public String toString() {
@@ -32,23 +104,4 @@ public class Hand
     return handString;
   }
 
-  public void recalculatePoints() {
-    pointValue = 0;  // Reset point value
-    for (Card card : cards) {
-      pointValue += card.getValue();  // Sum the values of all cards again
-    }
-  }
-
-  public ArrayList<Card> getHand() {
-    return cards;
-  }
-
-  public boolean isDealer() {
-    return isDealer;
-  }
-
-  public int getPointValue() {
-    return pointValue;
-  }
-
-}
+} // Hand
