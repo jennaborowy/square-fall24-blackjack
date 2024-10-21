@@ -72,3 +72,38 @@
   width: 40vh;
 }
 
+.left {
+  float: left;
+  width: 33%;
+  height: 100vh;
+  position: relative;
+}
+.middle {
+  float: left;
+  display: flex;
+  flex-direction: column;
+  width: 34%;
+  height: 90vh;
+}
+.right {
+  float: left;
+  width: 33%;
+  height: 100vh;
+  position: relative;
+
+}
+
+.leftimg {
+  position:absolute;
+  bottom: 0;
+  left:0;
+  transform: scaleX(-1);
+
+}
+
+.rightimg {
+  position:absolute;
+  bottom: 0;
+  right: 0;
+
+}
