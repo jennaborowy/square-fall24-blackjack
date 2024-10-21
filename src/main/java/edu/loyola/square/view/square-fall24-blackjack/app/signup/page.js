@@ -15,8 +15,7 @@ const Page=()=> {
                     <Image src={"/coins.png"}
                            alt=""
                            height={600}
-                            width={600}
-
+                           width={600}
                     />
                 </div>
            </div>
