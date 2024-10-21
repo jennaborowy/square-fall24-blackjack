@@ -3,3 +3,6 @@
 target/
 
 secrets.properties
+
+logs/
+
