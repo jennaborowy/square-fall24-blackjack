@@ -138,15 +138,9 @@ public class Game {
       }
     }
     else {
-      if (playerHand.getValue() == 21) {
-        if (dealerHand.getValue() == 21) {
+      if (playerHand.getValue() == dealerHand.getValue()) {
           System.out.println("Push!");
           player.setPayout(0.0);
-        }
-        else {
-          System.out.println("Player Wins!");
-          player.setPayout(1.0);
-        }
       }
       else if (playerHand.getValue() > 21) {
         System.out.println("Player Bust!");
@@ -167,5 +161,4 @@ public class Game {
       System.out.printf("$%1.02f\n", player.getPayout());
     }
   }
-
 } // Game
