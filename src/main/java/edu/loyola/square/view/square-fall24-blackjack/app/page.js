@@ -30,7 +30,7 @@ export default function Home() {
                   <button className={styles.btn}>
                       <Link href="/login">Login</Link>
                   </button>
-                  <button className={styles.btn} onClick={setOpen}>
+                  <button className={styles.btn} onClick={handleClickOpen}>
                       Tutorial
                   </button>
                   <Dialog
