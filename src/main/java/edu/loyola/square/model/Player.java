@@ -1,16 +1,19 @@
 package edu.loyola.square.model;
+
 import java.util.ArrayList;
 
 public class Player {
+
   private String name;
   private Hand hand;
   private int bet;
+  private double payout;
 
   public Player(String name, int bet) {
-    ArrayList<Card> playerCards = new ArrayList<Card>();
-    hand = new Hand(playerCards, false, 0);
     this.name = name;
+    hand = new Hand(new ArrayList<Card>(), false);
     this.bet = bet;
+    payout = 0.0;
   }
 
   public String getName() {
@@ -25,7 +28,12 @@ public class Player {
     return bet;
   }
 
-  public int getHandTotal() {
-    return hand.getPointValue();
+  public void setPayout(double multiplier) {
+    payout = bet * multiplier;
   }
-}
+
+  public double getPayout() {
+    return payout;
+  }
+
+} // Player
