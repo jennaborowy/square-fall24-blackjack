@@ -1,5 +1,9 @@
 function Signup() {
-    return <h1>hi!</h1>
+    return (
+        <div>
+            <h1>placeholder</h1>
+        </div>
+    );
 }
 
-export default Signup();
+export default Signup;

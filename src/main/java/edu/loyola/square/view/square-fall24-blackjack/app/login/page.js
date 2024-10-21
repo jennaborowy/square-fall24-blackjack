@@ -1,5 +1,6 @@
 "use client";
 import "../globals.css";
+import axios from "axios";
 
 import React, { useState, useRef } from "react";
 import Link from "next/Link";
@@ -9,16 +10,11 @@ import styles from "@/app/page.module.css";
 import Image from "next/image";
 
 function Login() {
-    const initialData = {
-        username: "",
-        password: ""
-    };
 
-    const [data, setData] = useState(initialData);
-    // const [username, setUsername] = useState("");
-    // const [password, setPassword] = useState("");
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
 
-    // indicates whether post request was succesful or not
+    // indicates whether post request was successful or not
     const [success, setSuccess] = useState('');
     const [errors, setErrors] = useState([]);
 
@@ -29,6 +25,30 @@ function Login() {
     // prevents form from submitting
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        try {
+            const response = await fetch("http://localhost:3306/user/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-Content-Type-Options": "no-sniff"
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+
+                }
+            );
+            if (response.ok) {
+                const responseData = await response.json();
+                console.log("User logged in:", responseData);
+            } else {
+                console.error("Login failed:", response.statusText);
+            }
+        } catch (error) {
+            console.error("Error during fetch:", error);
+        }
     }
 
     // // do a post request to backend
@@ -45,31 +65,48 @@ function Login() {
     // }
 
     const handleChange = (e) => {
-        setData({
-            ...data, [e.target.name]: e.target.value,
-        });
+        const { name, value } = e.target;
+        if (name === "username") {
+            setUsername(value);
+        } else if (name === "password") {
+            setPassword(value);
+        }
         setSuccess("");
         setErrors([]);
     };
 
     return (
-        <div className="container-sm mt-5">
-
-                    <form onSubmit={handleSubmit}>
-                        <h1>Login</h1>
-                        <div className="form-group">
-                            <label id="username-label">username</label>
-                            <input className="form-control" type="text" name="username" value={data.username} onInput={handleChange}/>
-                        </div>
-                        <div className="form-group">
-                            <label id="password-label">password</label>
-                            <input className="form-control" type="text" name="password" value={data.password} onInput={handleChange}/>
-                        </div>
-                        <button className="mt-3 btn btn-light" type="submit">submit</button>
-                    </form>
-
-            <h>{data.username}</h>
-            <h>{data.password}</h>
+        <div className="container-sm m-5 p-5 rounded shadow-lg">
+            <div className="container">
+                <form onSubmit={handleSubmit}>
+                    <h1>Login</h1>
+                    <div className="form-group">
+                        <label htmlFor="username">username</label>
+                        <input
+                            className="form-control"
+                            type="text"
+                            id="username"
+                            name="username"
+                            title="Enter username"
+                            value={username}
+                            onInput={handleChange}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="password">password</label>
+                        <input
+                            className="form-control"
+                            type="text"
+                            id="password"
+                            name="password"
+                            title="Enter password"
+                            value={password}
+                            onInput={handleChange}
+                        />
+                    </div>
+                    <button className="mt-3 btn btn-light" type="submit">submit</button>
+                </form>
+            </div>
             <footer className={styles.footer}>
                 <Link
                     href="/signup"
@@ -83,7 +120,6 @@ function Login() {
                     />
                     Sign up for Account
                 </Link>
-
             </footer>
         </div>
     );
