@@ -1,21 +1,27 @@
 package edu.loyola.square.model;
 
-public class Card
-{
-  private String suit;
-  private String rank;
-  private int value;
+public class Card {
 
-  public Card(String suit, String rank) {
-    this.suit = suit;
+  private String rank;
+  private String suit;
+
+  public Card(String rank, String suit) {
     this.rank = rank;
-    this.value = findValue();
+    this.suit = suit;
   }
 
-  public int findValue() {
+  public String getRank() {
+    return rank;
+  }
+
+  public String getSuit() {
+    return suit;
+  }
+
+  public int getValue(int aceValue) {
     switch (rank) {
       case "A":
-        return 11;
+        return aceValue;
       case "J":
       case "Q":
       case "K":
@@ -25,24 +31,9 @@ public class Card
     }
   }
 
-  public String getSuit() {
-    return suit;
-  }
-
-  public String getRank() {
-    return rank;
-  }
-
-  public int getValue() {
-    return value;
-  }
-
-  public void setAceValue(int value) {
-    this.value = value;
-  }
-
   @Override
-  public String toString(){
-    return rank + "" + suit;
+  public String toString() {
+    return rank + suit;
   }
-}
+
+} // Card
