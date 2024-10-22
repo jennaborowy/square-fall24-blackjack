@@ -1,4 +1,29 @@
-.card-size{
-    max-width: 18%;
-    margin: 5px;
+.cardDisplay {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    justify-content: space-between;
+}
+
+.playerHand-container{
+    display: flex;
+    justify-content: center;
+    margin-top:auto;
+}
+
+.dealerHand-container{
+    display: flex;
+    justify-content: center;
+
+}
+
+.cardArea {
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    margin: 0px 10px;
+}
+
+.cardArea img {
+    max-width:100px;
 }
