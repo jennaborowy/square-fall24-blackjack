@@ -9,9 +9,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-@RestController
-@RequestMapping("/api/deck")
 
+@RestController
 public class GameController
 {
 
@@ -25,17 +24,15 @@ public class GameController
   private Hand playerHand;
   private Hand dealerHand;
 
-  @GetMapping("/shuffle")
-  public void shuffleDeck()
+  @GetMapping("/hello")
+  public String hello()
   {
-    deck = new Deck();
-    deck.shuffle();
+    return "Hello World";
   }
-
   //using hashmap, so information of the game can be added in key,value pairs and returned in JSON
   @PostMapping("/stand")
   public Map<String, Object> playerStand() {
-    while(dealerHand.getPointValue() < 17)
+    while(dealerHand.getValue() < 17)
       dealerHand.addCard(deck.dealCard());
     String res = "You win"; //winner statement -> make winner function
     return getGameState(res);
@@ -46,6 +43,7 @@ public class GameController
   {
     return getGameState(null);
   }
+
   private Map<String, Object> getGameState(String res)
   {
     Map<String, Object> gameState = new HashMap<String, Object>();
@@ -56,12 +54,16 @@ public class GameController
 
     return gameState;
   }
+
   @GetMapping("/draw/{count}")
-  public ArrayList<Card> drawCards(@PathVariable int count) {
+  public ArrayList<Card> drawCards(@PathVariable int count)
+  {
     ArrayList<Card> drawnCards = new ArrayList<Card>();
-    for (int i = 0; i < count; i++) {
+    for (int i = 0; i < count; i++)
+    {
       Card card = deck.dealCard(); // Deal a card from the deck
-      if (card != null) {
+      if (card != null)
+      {
         drawnCards.add(card);
       }
     }
