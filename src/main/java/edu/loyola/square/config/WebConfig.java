@@ -1,4 +1,4 @@
-package edu.loyola.square.config;
+package edu.loyola.square;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;

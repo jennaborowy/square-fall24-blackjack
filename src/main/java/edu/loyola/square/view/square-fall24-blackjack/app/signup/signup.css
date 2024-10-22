@@ -1,0 +1,84 @@
+.left {
+    float: left;
+    width: 35%;
+    height: 100vh;
+    position: relative;
+}
+.middle {
+    float: left;
+    width: 35%;
+    height: 90vh;
+}
+.right {
+     float: left;
+     width: 30%;
+     height: 100vh;
+     position: relative;
+
+ }
+
+.title {
+    color: #5d0707;
+    font-size: 28px;
+
+}
+.form {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap: 10px;
+    margin: 10px;
+
+}
+
+.input {
+    width: 400px;
+    height: 30px;
+    border-radius: 5px;
+    gap: 10px;
+    margin: 15px;
+}
+
+.input input {
+    height: 30px;
+    width: 400px;
+    font-size: 14px;
+}
+
+.create-acct-btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 150px;
+    height: 40px;
+    color: white;
+    background: darkgreen;
+    font-size: 20px;
+    font-weight: 10;
+    border-radius: 7px;
+    margin-bottom: 15px;
+}
+
+.login span {
+    color: rebeccapurple;
+    text-decoration: underline;
+}
+
+.guest span {
+    color: rebeccapurple;
+    text-decoration: underline;
+}
+.leftimg {
+    position:absolute;
+    bottom: 0;
+    left:0;
+    transform: scaleX(-1);
+
+}
+
+.rightimg {
+    position:absolute;
+    bottom: 0;
+    right: 0;
+
+}
