@@ -32,7 +32,7 @@
 }
 
 .input {
-    width: 400px;
+    width: 25vw;
     height: 30px;
     border-radius: 5px;
     gap: 10px;
@@ -41,7 +41,7 @@
 
 .input input {
     height: 30px;
-    width: 400px;
+    width: 25vw;
     font-size: 14px;
 }
 

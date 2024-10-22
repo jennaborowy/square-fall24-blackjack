@@ -1,6 +1,6 @@
+"use client";
 import Image from "next/image";
 import styles from "./page.module.css";
-import React from "react"
 import Link from "next/link";
 import React, { useState } from "react";
 import {Dialog, DialogContent, DialogContentText, DialogTitle} from "@mui/material";

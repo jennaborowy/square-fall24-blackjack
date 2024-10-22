@@ -1,11 +1,11 @@
 "use client";
 import "../globals.css";
+import { useRouter } from 'next/navigation';
 import axios from "axios";
 
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import Link from "next/Link";
 
-import { Form, ButtonToolbar, Button, Input } from 'rsuite';
 import styles from "@/app/page.module.css";
 import Image from "next/image";
 
@@ -14,55 +14,39 @@ function Login() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
 
-    // indicates whether post request was successful or not
-    const [success, setSuccess] = useState('');
-    const [errors, setErrors] = useState([]);
+    const router = useRouter();
 
-    //
-    const userRef = useRef(null);
-    const passRef = useRef(null);
-
-    // prevents form from submitting
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        try {
-            const response = await fetch("http://localhost:3306/user/login", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-Content-Type-Options": "no-sniff"
-                    },
-                    body: JSON.stringify({
-                        username: username,
-                        password: password
-                    })
+        async function login(userUsername, userPassword) {
+            let url = `http://localhost:8080/api/user/login`;
 
-                }
-            );
-            if (response.ok) {
-                const responseData = await response.json();
-                console.log("User logged in:", responseData);
-            } else {
-                console.error("Login failed:", response.statusText);
-            }
-        } catch (error) {
-            console.error("Error during fetch:", error);
+            let headers = {
+                'Content-Type': 'application/json',
+            };
+
+            let body = {
+                "username": userUsername,
+                "password": userPassword,
+            };
+
+            let response = await fetch(url, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(body),
+            })
+                .then(() => {
+                    if (response.ok) {
+                        console.log(response.status)
+
+                        router.push('/table')
+                    }
+                });
         }
+
+        await login(username, password);
     }
-
-    // // do a post request to backend
-    // try {
-    //     // send POST request using axios
-    //
-    //     // setSuccess("Data received")
-    // } catch (err) {
-    //     handleErrors(err);
-    // }
-
-    // const handleErrors = (err) => {
-    //
-    // }
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -71,12 +55,10 @@ function Login() {
         } else if (name === "password") {
             setPassword(value);
         }
-        setSuccess("");
-        setErrors([]);
     };
 
     return (
-        <div className="container-sm m-5 p-5 rounded shadow-lg">
+        <div className="container-sm m-5 p-5 rounded shadow-lg bg-light-subtle">
             <div className="container">
                 <form onSubmit={handleSubmit}>
                     <h1>Login</h1>
