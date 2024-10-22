@@ -34,6 +34,7 @@ public class UserDTO {
   }
 
   public Long getId() { return userID;}
+
   public String getUsername() { return username;}
 
   public String getPassword() {

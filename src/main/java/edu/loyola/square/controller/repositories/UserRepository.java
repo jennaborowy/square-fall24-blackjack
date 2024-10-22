@@ -7,10 +7,14 @@ import edu.loyola.square.model.entity.User;
 public interface UserRepository extends CrudRepository<User, Long> {
   List<User> findByUsername(String name);
 
+  List<User> findByEmail(String email);
+
   // lists all users; good for list before filtering users
   List<User> findAll();
 
   User findById(long id);
+
+
 
 
 }

@@ -39,10 +39,19 @@ public class User {
   @Column(name = "totalLosses", nullable = false, columnDefinition = "INTEGER")
   private int totalLosses;
 
-  protected User() {} // needed internally
+  public User() {} // needed internally
 
-  public User(String username) {
+  public User(Long userID, String username, int totalWins, String email, int chipBalance, String lastName, String firstName, String password, int totalLosses)
+  {
+    this.userID = userID;
     this.username = username;
+    this.totalWins = totalWins;
+    this.email = email;
+    this.chipBalance = chipBalance;
+    this.lastName = lastName;
+    this.firstName = firstName;
+    this.password = password;
+    this.totalLosses = totalLosses;
   }
 
   @Override
@@ -51,9 +60,14 @@ public class User {
   }
 
   public Long getId() { return userID;}
+
   public String getUsername() { return username;}
 
-  public @Size(min = 8, message = "Password must be at least 8 characters") String getPassword() {
+  public void setUsername(String username) {
+    this.username = username;
+  }
+
+  public String getPassword() {
     return password;
   }
 
