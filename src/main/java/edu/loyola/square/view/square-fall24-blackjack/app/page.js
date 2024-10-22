@@ -4,7 +4,7 @@ import Link from 'next/link'
 import React, {useState} from "react";
 import {Dialog, DialogContent, DialogContentText, DialogTitle} from "@mui/material";
 import Image from "next/image";
-
+import "./globals.css"
 
 export default function Home() {
     const [open, setOpen] = useState(false);
@@ -40,6 +40,9 @@ export default function Home() {
                   <button className={styles.btn}>
                       <Link href="/login">Login</Link>
                   </button>
+                  <button className={styles.btn}>
+                      <Link href="/table">Guest</Link>
+                  </button>
                   <button className={styles.btn} onClick={handleClickOpen}>
                       Tutorial
                   </button>
@@ -66,9 +69,11 @@ export default function Home() {
                                   You win if your hand's value is greater than the value of the dealer's hand.
                               </p>
                               <p>
+                                  <span>
                                   <a href="https://bicyclecards.com/how-to-play/blackjack">
                                       Click here for more Blackjack info.
                                   </a>
+                                  </span>
                               </p>
                           </DialogContentText>
                       </DialogContent>
@@ -77,7 +82,7 @@ export default function Home() {
           </div>
           <div className={styles.right}>
               <div className={styles.rightimg}>
-                  <Image src={"/coins.png"}
+              <Image src={"/coins.png"}
                          alt=""
                          height={500}
                          width={500}

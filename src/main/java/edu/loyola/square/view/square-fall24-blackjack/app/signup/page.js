@@ -1,7 +1,6 @@
 import React from 'react'
-
+import "../globals.css"
 import Link from "next/link";
-import Image from "next/image";
 import "./signup.css"
 
 const Page=()=> {

@@ -44,16 +44,6 @@
     margin-top: 15px;
 }
 
-.login span {
-    color: rebeccapurple;
-    text-decoration: underline;
-}
-
-.guest span {
-    color: rebeccapurple;
-    text-decoration: underline;
-}
-
 .container {
     background: url("../../public/background.jpg") no-repeat center;
     background-size: cover;
