@@ -1,7 +1,11 @@
 "use client";
 import "../globals.css";
 import { useRouter } from 'next/navigation';
-import axios from "axios";
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
 
 import React, { useState } from "react";
 import Link from "next/Link";
@@ -13,6 +17,8 @@ function Login() {
 
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+
+    const [loginErr, setLoginErr] = useState(false);
 
     const router = useRouter();
 
@@ -31,22 +37,27 @@ function Login() {
                 "password": userPassword,
             };
 
-            let response = await fetch(url, {
+            await fetch(url, {
                 method: 'POST',
                 headers: headers,
                 body: JSON.stringify(body),
             })
-                .then(() => {
-                    if (response.ok) {
-                        console.log(response.status)
-
+                .then((res) => {
+                    if (res.ok) {
                         router.push('/table')
+                    } else {
+                        setLoginErr(true);
+                        console.log(res.json)
                     }
                 });
         }
 
         await login(username, password);
     }
+
+    const handleClose = () => {
+        setLoginErr(false);
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -103,6 +114,22 @@ function Login() {
                     Sign up for Account
                 </Link>
             </footer>
+            <Dialog
+                onClose={handleClose}
+                open={loginErr}
+            >
+                <DialogTitle id="alert-dialog-title">
+                    {"Error"}
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="alert-dialog-description">
+                        Username or password is incorrect. Please try again.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <button className="btn btn-light border" onClick={handleClose}>Exit</button>
+                </DialogActions>
+            </Dialog>
         </div>
     );
 }
