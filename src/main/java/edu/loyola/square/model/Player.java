@@ -17,15 +17,27 @@ public class Player {
   }
 
   public String getName() {
-    return name;
+    return this.name;
   }
 
   public Hand getHand() {
-    return hand;
+    return this.hand;
+  }
+
+  /**
+   *
+   * used in controller to access player's hand
+   * @param hand
+   * @return
+   */
+  public Hand setHand(Hand hand)
+  {
+    return this.hand = hand;
+
   }
 
   public int getBet() {
-    return bet;
+    return this.bet;
   }
 
   public void setPayout(double multiplier) {
@@ -33,7 +45,7 @@ public class Player {
   }
 
   public double getPayout() {
-    return payout;
+    return this.payout;
   }
 
 } // Player

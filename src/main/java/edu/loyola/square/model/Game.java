@@ -21,6 +21,14 @@ public class Game {
     gameOver = false;
   }
 
+  public void beginPlay(){
+    if (playerHand.blackjack()) {
+      gameOver();
+    }
+    else {
+      takePlayerTurn();
+    }
+  }
   public void play() {
     // deal dealer hand
     dealerHand.addCard(deck.dealCard());
@@ -45,6 +53,39 @@ public class Game {
     }
   }
 
+  /**
+   *purpose: refactored hit to perform action of getting a new card at user request
+   * @param hand, the player's hand
+   */
+  public void hit(Hand hand)
+  {
+    Card newCard = deck.dealCard();
+    hand.addCard(newCard);
+    showPlayerHand();
+    if (hand.getValue() > 21) {
+      gameOver();
+    }
+    else if (hand.getValue() == 21) {
+      takeDealerTurn();
+      gameOver();
+    }
+  }
+
+  /**
+   * performs stand action in controller
+   *
+   */
+  public void stand()
+  {
+    takeDealerTurn();
+    gameOver();
+  }
+
+  //can be changed to list of players later
+  public Player getPlayers()
+  {
+    return this.player;
+  }
   private void showPlayerHand() {
     System.out.println(player.getName() + ": " + playerHand + " (" + playerHand.getValue() + ")");
   }

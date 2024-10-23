@@ -1,21 +1,120 @@
-import React from 'react';
+'use client'
+import {useState, useEffect} from "react";
 import Card from './card';
 import './card.css'
 export default function CardDisplay() {
+  //going to be list of cards
+  const [playerHand, setPlayerHand] = useState([])
+  const [dealerHand, setDealerHand] = useState([])
+  const [gameStarted, setGameStarted] = useState(false)
+  const [gameOver, isGameOver] = useState(false)
+  const [gameState, setGameState] = useState(null)
+
+
+
+  const localhost = "http://localhost:8080";
+    const startGame = async () => {
+      console.log("fetching game...");
+      setGameStarted(true);
+
+      try {
+        const response = await fetch('http://localhost:8080/gamestart', {method: 'POST',
+        headers: {
+          'Content-type': 'application/json',
+
+        },
+        body:JSON.stringify({})
+        })
+        if (!response.ok) throw new Error("Connection failed");
+        const result = await response.json();
+        console.log("Game started: ", result); // Check the response structure
+        setPlayerHand(result.playerHand);
+        setDealerHand(result.dealerHand);
+      } catch (error){
+        console.log("Game failed to start", error);
+      }
+
+    }
+
+    const playerHits = async() => {
+      if (playerHand.length === 0) {
+        console.log("Game has not started yet.");
+        return; // Prevent hitting if the game has not started
+      }
+      try {
+        const response = await fetch('http://localhost:8080/hit', {
+          method: 'POST',
+          headers: {
+            'Content-type': 'application/json',
+
+          },
+          body: JSON.stringify({}),
+        })
+        if (!response.ok) throw new Error("Connection failed");
+        const result = await response.json();
+        console.log("Player response ", result)
+        setPlayerHand(result.playerHand);
+        setDealerHand(result.playerHand);
+
+      } catch (error) {
+        console.log("Hit failed", error)
+      }
+    }
+  const playerStands = async() => {
+    if (playerHand.length === 0) {
+      console.log("Game has not started yet.");
+      return; // Prevent hitting if the game has not started
+    }
+    try {
+      const response = await fetch('http://localhost:8080/stand', {
+        method: 'POST',
+        headers: {
+          'Content-type': 'application/json',
+
+        },
+        body: JSON.stringify({}),
+      })
+      if (!response.ok) throw new Error("Connection failed");
+      const result = await response.json();
+      console.log("Player response ", result)
+      setPlayerHand(result.playerHand);
+      setDealerHand(result.playerHand);
+
+    } catch (error) {
+      console.log("Hit failed", error)
+    }
+
+  };
 
   return (
     <div>
       <div className="cardDisplay">
-        <h1>Card Display</h1>
+        {!gameStarted && (
+          <div className="play-container">
+            <button className="play-btn" onClick={startGame}>
+              Start Game
+            </button>
+          </div>
+        )}
+        {gameStarted && (
         <div className="dealerHand-container">
-        <Card suit="Hearts" rank="A" />
-        <Card suit="Spades" rank="10" />
-        </div>
-        <div className= "playerHand-container">
-        <Card suit="Clubs" rank="Q" />
-        <Card suit="Diamonds" rank="K" />
-          <Card suit="Spades" rank="3" />
-        </div>
+          {dealerHand.map((card, index) => (
+            <Card key={index} suit={card.suit} rank={card.rank} />
+          ))}
+        </div> )}
+
+        {gameStarted && (
+          <div className="btn-container">
+          <button className="action-btn" onClick={playerHits}>Hit</button>
+          <button className="action-btn" onClick={playerStands}>Stand</button>
+        </div> )}
+
+        {gameStarted && (
+          <div className= "playerHand-container">
+          {playerHand.map((card, index) => (
+              <Card key={index} suit={card.suit} rank={card.rank} />
+            ))}
+        </div> )}
       </div>
     </div>
     );
