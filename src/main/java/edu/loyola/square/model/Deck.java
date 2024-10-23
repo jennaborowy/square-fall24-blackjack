@@ -19,13 +19,17 @@ public class Deck {
     Collections.shuffle(cards);
   }
 
+  /**
+   * This function deals a card from the deck
+   * @return The card that is being dealt
+   */
   // deal a random card
   public Card dealCard() {
     return cards.isEmpty() ? null : cards.remove(cards.size()-1);
   }
 
   // deal a specific card during testing
-  public Card dealCard(String rank, String suit) {
+  /*public Card dealCard(String rank, String suit) {
     if (cards.isEmpty()) {
       return null;
     }
@@ -34,6 +38,6 @@ public class Deck {
       return card;
     }
     throw new IllegalArgumentException(String.format("the card \"%s\" has already been dealt", card.toString()));
-  }
+  }*/
 
 } // Deck

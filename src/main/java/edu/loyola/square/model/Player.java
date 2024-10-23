@@ -28,6 +28,10 @@ public class Player {
     return bet;
   }
 
+  /**
+   * This function sets the players payout (winnings) based on how the game played out
+   * @param multiplier 0, 1.0, or 1.5 depending if they lost, won, or got blackjack
+   */
   public void setPayout(double multiplier) {
     payout = bet * multiplier;
   }

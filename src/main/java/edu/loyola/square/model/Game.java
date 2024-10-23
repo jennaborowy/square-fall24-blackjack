@@ -21,19 +21,18 @@ public class Game {
     gameOver = false;
   }
 
+  /**
+   * This function drives the main game, dealing cards and starting the player's turn
+   */
   public void play() {
     // deal dealer hand
     dealerHand.addCard(deck.dealCard());
     dealerHand.addCard(deck.dealCard());
-    //dealerHand.addCard(deck.dealCard("A", "S"));
-    //dealerHand.addCard(deck.dealCard("3", "C"));
     System.out.println("Dealer: " + dealerHand.getHand().get(0) + " ??  (??)");
 
     // deal player hand
     playerHand.addCard(deck.dealCard());
     playerHand.addCard(deck.dealCard());
-    //playerHand.addCard(deck.dealCard("2", "D"));
-    //playerHand.addCard(deck.dealCard("A", "H"));
     showPlayerHand();
 
     // see if we were dealt "pocket blackjack"
@@ -45,14 +44,23 @@ public class Game {
     }
   }
 
+  /**
+   * This function shows the players hand to the screen
+   */
   private void showPlayerHand() {
     System.out.println(player.getName() + ": " + playerHand + " (" + playerHand.getValue() + ")");
   }
 
+  /**
+   * This function shows the dealers hand to the screen
+   */
   private void showDealerHand() {
     System.out.println("Dealer: " + dealerHand + " (" + dealerHand.getValue() + ")");
   }
 
+  /**
+   * This function shows what options the player has at that point in the game
+   */
   private void showPlayerOptions() {
     System.out.println("(h)it");
     System.out.println("(s)tand");
@@ -61,6 +69,9 @@ public class Game {
     }
   }
 
+  /**
+   * This function asks the player what value (1 or 11) the player wants their ace to be
+   */
   private void promptPlayerAce() {
     System.out.println("Ace value (1 or 11): ");
     while (true) {
@@ -80,6 +91,9 @@ public class Game {
     }
   }
 
+  /**
+   * This function plays out the players turn, accepting user input and implementing game logic
+   */
   private void takePlayerTurn() {
     while (!gameOver) {
       showPlayerOptions();
@@ -115,6 +129,9 @@ public class Game {
     }
   }
 
+  /**
+   * This function plays the dealer's turn once the player's turn is over
+   */
   private void takeDealerTurn() {
     while (dealerHand.getValue() < 17) {
       Card newCard = deck.dealCard();
@@ -122,6 +139,9 @@ public class Game {
     }
   }
 
+  /**
+   * This function resolves the outcome of the game and determines who won
+   */
   private void gameOver() {
     gameOver = true;
     System.out.println("Game Over");
