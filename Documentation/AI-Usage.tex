@@ -1,0 +1,40 @@
+\section{AI Usage}
+\setlength{\parindent}{0pt}
+During Sprint 1, we used AI to help us fix bugs and errors as well as write better tests for our software. We primarily used Claude AI and ChatGPT. Most of our debugging used ChatGPT and was on the front and back end of our software, while we used Claude (better suited for coding) to help us write better tests.\\
+
+Here are some summaries of our AI interactions:\\
+
+\textbf{ChatGPT:}\\
+
+Prompt:\\
+http://localhost:8080/api/user/login' from origin 'http://localhost:3000/' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: It does not have HTTP ok status.\\
+
+Response:\\
+The CORS (Cross-Origin Resource Sharing) issue you’re encountering indicates that your frontend application running at http://localhost:3000/ is trying to make a request to your backend at http://localhost:8080/, but the browser is blocking it due to security policies. Specifically, the preflight request (an OPTIONS request) to check permissions did not return an HTTP 200 OK status. \\
+
+Prompt:\\
+Arraylist is showing up as var10001\\
+
+Response:\\
+The issue of ArrayList showing up as var10001 typically happens when using debugging tools or decompiled code, which sometimes generate generic variable names like var10001 when they lose track of original names during the compilation process.\\
+
+\textbf{Claude AI:}\\
+
+Prompt:\\
+using this provided class [GameTest] implement automated user input for testing\\
+
+Response:\\
+testPlayerStands: Tests basic standing functionality\\
+testPlayerHits: Tests hitting and receiving new cards\\
+testPlayerAceChoice: Tests the ace value selection feature\\
+testPlayerBusts: Tests the bust scenario\\
+testDealerPlay: Tests dealer's automatic play\\
+
+Key features of the test implementation:\\
+
+Uses ByteArrayInputStream to simulate user input\\
+Uses ByteArrayOutputStream to capture and verify console output\\
+Includes proper stream restoration in @AfterEach\\
+Tests various game scenarios and verifies appropriate output\\
+
+\pagebreak
