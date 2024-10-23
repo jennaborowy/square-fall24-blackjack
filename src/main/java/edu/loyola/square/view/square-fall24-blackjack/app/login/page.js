@@ -70,46 +70,48 @@ function Login() {
     };
 
     return (
-        <div className="container-sm m-5 p-5 rounded shadow-lg bg-light-subtle">
-            <div className="container">
-                <img src={"/logo-transparent.png"}
-                     alt=""
-                     height={215}
-                     width={290}
-                     style={{alignSelf: "center"}}
-                />
-                <div className="title">
-                    <h1>Login</h1>
-                </div>
-                <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label htmlFor="username">username</label>
-                        <input
-                            className="form-control"
-                            type="text"
-                            id="username"
-                            name="username"
-                            title="Enter username"
-                            value={username}
-                            onInput={handleChange}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="password">password</label>
-                        <input
-                            className="form-control"
-                            type="text"
-                            id="password"
-                            name="password"
-                            title="Enter password"
-                            value={password}
-                            onInput={handleChange}
-                        />
-                    </div>
-                    <button className="mt-3 btn btn-light border" type="submit">submit</button>
-                </form>
+
+        <div className="container">
+            <img src={"/logo-transparent.png"}
+                 alt=""
+                 height={215}
+                 width={290}
+                 style={{alignSelf: "center"}}
+            />
+            <div className="title">
+                <h1>Login</h1>
             </div>
-            <footer className={styles.footer}>
+            <form onSubmit={handleSubmit}>
+                <div className="form-group">
+                    <label htmlFor="username"></label>
+                    <input
+                        className="form-control"
+                        type="text"
+                        id="username"
+                        name="username"
+                        title="Enter username"
+                        placeholder="Username"
+                        value={username}
+                        onInput={handleChange}
+                    />
+                </div>
+                <div className="form-group">
+                    <label htmlFor="password"></label>
+                    <input
+                        className="form-control"
+                        type="text"
+                        id="password"
+                        name="password"
+                        title="Enter password"
+                        placeholder="Password"
+                        value={password}
+                        onInput={handleChange}
+                    />
+                </div>
+                <button className="mt-3 btn btn-success border" type="submit">Submit</button>
+            </form>
+
+            <footer className="footer">
                 <Link
                     href="/signup"
                 >
