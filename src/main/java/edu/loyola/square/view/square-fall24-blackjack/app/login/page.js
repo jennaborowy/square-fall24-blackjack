@@ -45,10 +45,10 @@ function Login() {
             })
                 .then((res) => {
                     if (res.ok) {
-                        router.push('/lobby')
+                        router.push('/lobby');
                     } else {
                         setLoginErr(true);
-                        console.log(res.json)
+                        console.log(res.json);
                     }
                 });
         }

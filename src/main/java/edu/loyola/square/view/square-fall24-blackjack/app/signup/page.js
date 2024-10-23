@@ -6,6 +6,11 @@ import { useRouter } from 'next/navigation';
 
 import "./signup.css"
 import "../globals.css"
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogActions from "@mui/material/DialogActions";
+import Dialog from "@mui/material/Dialog";
 
 const Page=()=> {
 
@@ -16,6 +21,14 @@ const Page=()=> {
     const [email, setEmail] = useState("");
     const [first, setFirst] = useState("");
     const [last, setLast] = useState("");
+    const [confirm, setConfirm] = useState("");
+    const [passMatch, setPassMatch] = useState(true);
+
+    // make dialog component? make dialog error list based on backend requirements, pass as prop
+    //  (password length, email validation, etc.)
+
+
+    const [loginErr, setLoginErr] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -45,9 +58,8 @@ const Page=()=> {
                         console.log(res.status)
                         router.push('/login') // was ../login
                     } else {
-                        // make loginErr
-                        // check if password fields match
-                        // customize dialog message for that (could make function that returns String with errors)
+                        setLoginErr(true);
+                        console.log(res.json);
                     }
                 });
         }
@@ -66,7 +78,16 @@ const Page=()=> {
             setLast(value);
         } else if (name === "email") {
             setEmail(value);
+        } else if (name === "confirm") {
+            setConfirm(value);
+            if (value !== password) {
+                setPassMatch(false);
+            }
         }
+    }
+
+    const handleClose = () => {
+        setLoginErr(false);
     }
 
     return (
@@ -84,30 +105,30 @@ const Page=()=> {
                 </div>
 
                 <div className="form">
-                    <form action={""}>
+                    <form onSubmit={handleSubmit}>
 
                         <div className="input">
-                            <input type="text" placeholder="First Name" required/>
+                            <input type="text" placeholder="First Name" name="first" onInput={handleChange} required/>
                         </div>
 
                         <div className="input">
-                            <input type="text" placeholder="Last Name" required/>
+                            <input type="text" placeholder="Last Name" name="last" onInput={handleChange} required/>
                         </div>
 
                         <div className="input">
-                            <input type="text" placeholder="Username" required/>
+                            <input type="text" placeholder="Username" name="username" onInput={handleChange} required/>
                         </div>
 
                         <div className="input">
-                            <input type="text" placeholder="Email" required/>
+                            <input type="text" placeholder="Email" name="email" onInput={handleChange} required/>
                         </div>
 
                         <div className="input">
-                            <input type="text" placeholder="Password" required/>
+                            <input type="text" placeholder="Password" name="password" onInput={handleChange} required/>
                         </div>
 
                         <div className="input">
-                            <input type="text" placeholder="Confirm Password" required/>
+                            <input type="text" placeholder="Confirm Password" name="confirm" onInput={handleChange} required/>
                         </div>
 
                         <button className="create-acct-btn" >
@@ -132,6 +153,22 @@ const Page=()=> {
                             </p>
                         </div>
                     </form>
+                    <Dialog
+                        onClose={handleClose}
+                        open={loginErr}
+                    >
+                        <DialogTitle id="alert-dialog-title">
+                            {"Error"}
+                        </DialogTitle>
+                        <DialogContent>
+                            <DialogContentText id="alert-dialog-description">
+                                Password fields do not match. Please try again.
+                            </DialogContentText>
+                        </DialogContent>
+                        <DialogActions>
+                            <button className="btn btn-light border" onClick={handleClose}>Exit</button>
+                        </DialogActions>
+                    </Dialog>
                 </div>
             </div>
         </div>
