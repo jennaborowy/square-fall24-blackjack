@@ -37,21 +37,22 @@ const Page=()=> {
                 "last_name": userLast,
             };
 
-            let response = await fetch(url, {
+            await fetch(url, {
                 method: 'POST',
                 headers: headers,
                 body: JSON.stringify(body),
             })
-                .then(() => {
-                    if (response.ok) {
-                        console.log(response.status)
-
-                        router.push('../login')
+                .then((res) => {
+                    if (res.ok) {
+                        console.log(res.status)
+                        router.push('/login') // was ../login
+                    } else {
+                        // make loginErr
+                        // check if password fields match
+                        // customize dialog message for that (could make function that returns String with errors)
                     }
                 });
-
         }
-
         await createAccount(username, password, email, first, last);
     }
 

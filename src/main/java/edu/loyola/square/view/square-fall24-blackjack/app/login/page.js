@@ -11,6 +11,7 @@ import React, { useState } from "react";
 import Link from "next/Link";
 
 import styles from "@/app/page.module.css";
+import "./login.css";
 import Image from "next/image";
 
 function Login() {
@@ -44,7 +45,7 @@ function Login() {
             })
                 .then((res) => {
                     if (res.ok) {
-                        router.push('/table')
+                        router.push('/lobby')
                     } else {
                         setLoginErr(true);
                         console.log(res.json)
@@ -71,8 +72,16 @@ function Login() {
     return (
         <div className="container-sm m-5 p-5 rounded shadow-lg bg-light-subtle">
             <div className="container">
-                <form onSubmit={handleSubmit}>
+                <img src={"/logo-transparent.png"}
+                     alt=""
+                     height={215}
+                     width={290}
+                     style={{alignSelf: "center"}}
+                />
+                <div className="title">
                     <h1>Login</h1>
+                </div>
+                <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label htmlFor="username">username</label>
                         <input
@@ -97,7 +106,7 @@ function Login() {
                             onInput={handleChange}
                         />
                     </div>
-                    <button className="mt-3 btn btn-light" type="submit">submit</button>
+                    <button className="mt-3 btn btn-light border" type="submit">submit</button>
                 </form>
             </div>
             <footer className={styles.footer}>
