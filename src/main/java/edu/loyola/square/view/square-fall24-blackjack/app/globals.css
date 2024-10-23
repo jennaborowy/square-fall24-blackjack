@@ -29,3 +29,8 @@ a {
   text-decoration: none;
 }
 
+
+span {
+  color: rebeccapurple;
+  text-decoration: underline;
+}
