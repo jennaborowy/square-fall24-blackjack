@@ -1,29 +1,30 @@
 package edu.loyola.square.controller;
 
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Valid;
 
 import edu.loyola.square.controller.repositories.UserRepository;
 import edu.loyola.square.model.dto.UserDTO;
 
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import edu.loyola.square.model.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.server.ResponseStatusException;
 
-
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
+@Validated
 @RequestMapping("/api/user")
 @CrossOrigin
 public class UserController extends SpringBootServletInitializer {
-
-  private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
   private final UserRepository userRepository;
 
@@ -33,12 +34,13 @@ public class UserController extends SpringBootServletInitializer {
   }
 
   @GetMapping("/")
-  public List<User> all() {
+  public List<User> all()
+  {
     return userRepository.findAll();
   }
 
   @PostMapping("/signup")
-  public ResponseEntity<?> create(@RequestBody UserDTO userDTO) throws ResponseStatusException {
+  public ResponseEntity<?> create(@Valid @RequestBody UserDTO userDTO) throws ResponseStatusException {
     String username = userDTO.getUsername();
     String password = userDTO.getPassword();
     String email = userDTO.getEmail();
@@ -52,18 +54,8 @@ public class UserController extends SpringBootServletInitializer {
     user.setFirstName(firstName);
     user.setLastName(lastName);
 
-    logger.info("user:  " + user);
-
-
-    try {
-      User savedUser = userRepository.save(user);
-      logger.info("User saved with ID: " + savedUser.getId());
-      return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
-    } catch (Exception e) {
-      logger.error("unexpected error: " + e.getMessage());
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("unexpected error occurred");
-    }
-
+    User savedUser = userRepository.save(user);
+    return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
   }
 
   @PostMapping("/login")
@@ -89,9 +81,20 @@ public class UserController extends SpringBootServletInitializer {
     }
   }
 
-  @ExceptionHandler(Exception.class)
-  public ResponseEntity<String> handleException(Exception e) {
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+  @ExceptionHandler(ConstraintViolationException.class)
+  public ResponseEntity<List<String>> handleConstraintViolationException(ConstraintViolationException e) {
+    List<String> errors = new ArrayList<>();
+    for (ConstraintViolation<?> violation : e.getConstraintViolations()) {
+      String message = violation.getMessage();
+      errors.add(message);
+    }
+    return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
   }
 
+  @ExceptionHandler(DataIntegrityViolationException.class)
+  public ResponseEntity<List<String>> handleDataIntegrityViolationException(DataIntegrityViolationException e) {
+    List<String> errors = new ArrayList<>();
+    errors.add("The username or email is already taken. Please choose a different one.");
+    return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+  }
 }
