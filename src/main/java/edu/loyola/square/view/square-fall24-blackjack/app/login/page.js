@@ -42,6 +42,7 @@ function Login() {
                 method: 'POST',
                 headers: headers,
                 body: JSON.stringify(body),
+                cache: 'no-cache',
             })
                 .then((res) => {
                     if (res.ok) {

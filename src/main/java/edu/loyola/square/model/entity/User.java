@@ -19,24 +19,24 @@ public class User {
   @Column(name = "password", nullable = false)
   private String password;
 
-  @Column(name = "firstName", nullable = false)
+  @Column(name = "first_name", nullable = false)
   private String firstName;
 
-  @Column(name = "lastName", nullable = false)
+  @Column(name = "last_name", nullable = false)
   private String lastName;
 
-  @Column(name = "chipBalance", nullable = false, columnDefinition = "INTEGER")
+  @Column(name = "chip_balance", nullable = false, columnDefinition = "INTEGER")
   private int chipBalance = 2500;
 
   @Pattern(regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
           message = "Invalid email address format")
-  @Column(name = "email", nullable = false)
+  @Column(name = "email", nullable = false, unique = true)
   private String email;
 
-  @Column(name = "totalWins", nullable = false, columnDefinition = "INTEGER")
+  @Column(name = "total_wins", nullable = false, columnDefinition = "INTEGER")
   private int totalWins;
 
-  @Column(name = "totalLosses", nullable = false, columnDefinition = "INTEGER")
+  @Column(name = "total_losses", nullable = false, columnDefinition = "INTEGER")
   private int totalLosses;
 
   public User() {} // needed internally

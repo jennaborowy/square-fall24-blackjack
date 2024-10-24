@@ -44,24 +44,6 @@
     margin-top: 15px;
 }
 
-.container {
-    margin-top: 30px;
-    align-items: center;
-    justify-content: center;
-    display: flex;
-}
-
-.form-container {
-    height: 80vh;
-    width: 30vw;
-    min-width: 500px;
-    border-radius: 10px;
-    background: white;
-    overflow: auto;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    justify-items: center;
-    text-align: center;
-    margin: auto;
+.signup {
+    width: 35vw;
 }

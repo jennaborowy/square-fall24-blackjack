@@ -1,14 +1,19 @@
 package edu.loyola.square.controller;
 
-import edu.loyola.square.UserAlreadyExistsException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import edu.loyola.square.controller.repositories.UserRepository;
 import edu.loyola.square.model.dto.UserDTO;
+
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import edu.loyola.square.model.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.server.ResponseStatusException;
 
 
 import java.util.List;
@@ -18,6 +23,7 @@ import java.util.List;
 @CrossOrigin
 public class UserController extends SpringBootServletInitializer {
 
+  private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
   private final UserRepository userRepository;
 
@@ -32,21 +38,12 @@ public class UserController extends SpringBootServletInitializer {
   }
 
   @PostMapping("/signup")
-  public User create(@RequestBody UserDTO userDTO) throws UserAlreadyExistsException {
+  public ResponseEntity<?> create(@RequestBody UserDTO userDTO) throws ResponseStatusException {
     String username = userDTO.getUsername();
     String password = userDTO.getPassword();
     String email = userDTO.getEmail();
     String firstName = userDTO.getFirstName();
     String lastName = userDTO.getLastName();
-
-    if (userRepository != null) {
-      List<User> list = userRepository.findByEmail(email);
-
-      if (!list.isEmpty()) {
-        throw new UserAlreadyExistsException("Account already exists for this email");
-
-      }
-    }
 
     User user = new User();
     user.setUsername(username);
@@ -55,7 +52,17 @@ public class UserController extends SpringBootServletInitializer {
     user.setFirstName(firstName);
     user.setLastName(lastName);
 
-    return userRepository.save(user);
+    logger.info("user:  " + user);
+
+
+    try {
+      User savedUser = userRepository.save(user);
+      logger.info("User saved with ID: " + savedUser.getId());
+      return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
+    } catch (Exception e) {
+      logger.error("unexpected error: " + e.getMessage());
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("unexpected error occurred");
+    }
 
   }
 
@@ -71,14 +78,20 @@ public class UserController extends SpringBootServletInitializer {
       List<User> list = userRepository.findByUsername(username);
 
       if (list.isEmpty()) {
-        return new ResponseEntity<>("User doesn't exist", HttpStatus.UNAUTHORIZED);
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User doesn't exist");
       } else {
         User user = list.get(0);
         if (!user.getPassword().equals(password)) {
-          return new ResponseEntity<>("Wrong password", HttpStatus.UNAUTHORIZED);
+          throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Password doesn't match our records.");
         }
         return new ResponseEntity<>("Welcome back!", HttpStatus.OK);
       }
     }
   }
+
+  @ExceptionHandler(Exception.class)
+  public ResponseEntity<String> handleException(Exception e) {
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+  }
+
 }

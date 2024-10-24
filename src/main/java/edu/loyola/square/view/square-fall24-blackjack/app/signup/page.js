@@ -1,6 +1,8 @@
-"use client"
+"use client";
 
-import React, { useState } from 'react'
+import axios from "axios";
+
+import React, { useState, useEffect } from 'react';
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 
@@ -22,49 +24,64 @@ const Page=()=> {
     const [first, setFirst] = useState("");
     const [last, setLast] = useState("");
     const [confirm, setConfirm] = useState("");
-    const [passMatch, setPassMatch] = useState(true);
+    const [errMsg, setErrMsg] = useState([]);
+    const [err, setErr] = useState(null);
+    const [verifyPass, setVerifyPass] = useState(true)
 
-    // make dialog component? make dialog error list based on backend requirements, pass as prop
-    //  (password length, email validation, etc.)
-
-
-    const [loginErr, setLoginErr] = useState(false);
+    const [success, setSuccess] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        async function createAccount(userUsername, userPassword, userEmail, userFirst, userLast) {
-            let url = `http://localhost:8080/api/user/signup`;
+        let body = {
+            "username": username,
+            "password": password,
+            "email": email,
+            "firstName": first,
+            "lastName": last,
+        };
 
-            let headers = {
-                'Content-Type': 'application/json',
-            };
-
-            let body = {
-                "username": userUsername,
-                "password": userPassword,
-                "email": userEmail,
-                "first_name": userFirst,
-                "last_name": userLast,
-            };
-
-            await fetch(url, {
+        setErr(null);
+        try {
+            const response = await fetch('http://localhost:8080/api/user/signup', {
                 method: 'POST',
-                headers: headers,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
                 body: JSON.stringify(body),
-            })
-                .then((res) => {
-                    if (res.ok) {
-                        console.log(res.status)
-                        router.push('/login') // was ../login
-                    } else {
-                        setLoginErr(true);
-                        console.log(res.json);
-                    }
-                });
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to submit form');
+            }
+
+            setSuccess(true);
+
+        } catch (err) {
+            setErr(err.message);
         }
-        await createAccount(username, password, email, first, last);
+
     }
+
+    // useEffect for handling side effects based on success
+    // runs on success state change
+    useEffect(() => {
+        if (success) {
+            console.log('Form submitted successfully!');
+            router.push('/login');
+            // Handle additional side effects here (e.g., redirect, show a message)
+        }
+    }, [success]);
+
+    // useEffect for handling side effects based on error
+    // runs on err state change
+    useEffect(() => {
+        if (err) {
+            console.error('An error occurred:', err);
+            // Handle error display or logging here
+        }
+    }, [err]);
+
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -80,19 +97,22 @@ const Page=()=> {
             setEmail(value);
         } else if (name === "confirm") {
             setConfirm(value);
-            if (value !== password) {
-                setPassMatch(false);
+            if (confirm !== password) {
+                setErrMsg([... "Password fields do not match."]);
+                setVerifyPass(false);
+            } else {
+                setVerifyPass(true);
             }
         }
     }
 
     const handleClose = () => {
-        setLoginErr(false);
+        setErr(false);
     }
 
     return (
-        <div className="container">
-            <div className="form-container">
+            <div className="container container-sm mt-3 mb-3 rounded shadow bg-light text-center w-50 signup">
+
                 <img src={"/logo-transparent.png"}
                      alt=""
                      height={215}
@@ -105,7 +125,7 @@ const Page=()=> {
                 </div>
 
                 <div className="form">
-                    <form onSubmit={handleSubmit}>
+                    <form onSubmit={(e) => handleSubmit(e)}>
 
                         <div className="input">
                             <input type="text" placeholder="First Name" name="first" onInput={handleChange} required/>
@@ -124,15 +144,15 @@ const Page=()=> {
                         </div>
 
                         <div className="input">
-                            <input type="text" placeholder="Password" name="password" onInput={handleChange} required/>
+                            <input type="password" placeholder="Password" name="password" onInput={handleChange} required/>
                         </div>
 
                         <div className="input">
-                            <input type="text" placeholder="Confirm Password" name="confirm" onInput={handleChange} required/>
+                            <input type="password" placeholder="Confirm Password" name="confirm" onInput={handleChange} required/>
                         </div>
 
-                        <button className="create-acct-btn" >
-                            <Link href="/login"> Create Account</Link>
+                        <button className="btn btn-success" >
+                            Create Account
                         </button>
 
                         <div className="login">
@@ -155,14 +175,14 @@ const Page=()=> {
                     </form>
                     <Dialog
                         onClose={handleClose}
-                        open={loginErr}
+                        open={err}
                     >
                         <DialogTitle id="alert-dialog-title">
                             {"Error"}
                         </DialogTitle>
                         <DialogContent>
                             <DialogContentText id="alert-dialog-description">
-                                Password fields do not match. Please try again.
+                                {errMsg.join("")} Please try again.
                             </DialogContentText>
                         </DialogContent>
                         <DialogActions>
@@ -170,8 +190,9 @@ const Page=()=> {
                         </DialogActions>
                     </Dialog>
                 </div>
+                {err && <p>{err}</p>}
+                {success && <p>Form submitted successfully!</p>}
             </div>
-        </div>
 
     );
 }
