@@ -100,7 +100,7 @@ function Login() {
                     <label htmlFor="password"></label>
                     <input
                         className="form-control"
-                        type="text"
+                        type="password"
                         id="password"
                         name="password"
                         title="Enter password"

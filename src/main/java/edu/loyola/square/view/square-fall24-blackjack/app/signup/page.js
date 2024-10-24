@@ -1,7 +1,5 @@
 "use client";
 
-import axios from "axios";
-
 import React, { useState, useEffect } from 'react';
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
@@ -18,18 +16,20 @@ const Page=()=> {
 
     const router = useRouter();
 
+    // might put user data in one useState()?
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [email, setEmail] = useState("");
     const [first, setFirst] = useState("");
     const [last, setLast] = useState("");
     const [confirm, setConfirm] = useState("");
-    const [errMsg, setErrMsg] = useState([]);
+    const [errMsg, setErrMsg] = useState({});
     const [err, setErr] = useState(null);
     const [verifyPass, setVerifyPass] = useState(true)
 
     const [success, setSuccess] = useState(false);
 
+    // action performed upon submission
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -52,13 +52,14 @@ const Page=()=> {
             });
 
             if (!response.ok) {
-                throw new Error('Failed to submit form');
+                const errorData = await response.json();
+                setErrMsg(errorData);
+                setErr(true);
+            } else {
+                setSuccess(true);
             }
-
-            setSuccess(true);
-
-        } catch (err) {
-            setErr(err.message);
+        } catch (error) {
+            console.error('Error submitting form:', error);
         }
 
     }
@@ -69,7 +70,6 @@ const Page=()=> {
         if (success) {
             console.log('Form submitted successfully!');
             router.push('/login');
-            // Handle additional side effects here (e.g., redirect, show a message)
         }
     }, [success]);
 
@@ -77,12 +77,12 @@ const Page=()=> {
     // runs on err state change
     useEffect(() => {
         if (err) {
-            console.error('An error occurred:', err);
-            // Handle error display or logging here
+            console.error('An error occurred:', errMsg);
         }
     }, [err]);
 
 
+    // handle form input changes
     const handleChange = (e) => {
         const { name, value } = e.target;
         if (name === "username") {
@@ -106,6 +106,7 @@ const Page=()=> {
         }
     }
 
+    // closes error dialog
     const handleClose = () => {
         setErr(false);
     }
@@ -182,7 +183,9 @@ const Page=()=> {
                         </DialogTitle>
                         <DialogContent>
                             <DialogContentText id="alert-dialog-description">
-                                {errMsg.join("")} Please try again.
+                                {Object.entries(errMsg).map(([index, message]) => (
+                                    <li key={index}>{message}</li>
+                                ))}
                             </DialogContentText>
                         </DialogContent>
                         <DialogActions>
@@ -190,7 +193,7 @@ const Page=()=> {
                         </DialogActions>
                     </Dialog>
                 </div>
-                {err && <p>{err}</p>}
+
                 {success && <p>Form submitted successfully!</p>}
             </div>
 
