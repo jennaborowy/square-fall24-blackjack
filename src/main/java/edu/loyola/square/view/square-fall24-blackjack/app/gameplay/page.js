@@ -28,7 +28,6 @@ export default function CardDisplay() {
           })
         if (!response.ok) throw new Error("Connection failed");
         const result = await response.json();
-        console.log("Game started: ", result); // Check the response structure
         setPlayerHand(result.playerHand);
         setDealerHand(result.dealerHand);
         setGameState(result)
@@ -42,7 +41,7 @@ export default function CardDisplay() {
       console.log("Player length", playerHand.length);
       if (playerHand.length === 0) {
         console.log("Game has not started yet.");
-        return; // Prevent hitting if the game has not started
+        return;
       }
       try {
         const response = await fetch('http://localhost:8080/hit', {
