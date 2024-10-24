@@ -71,7 +71,7 @@ const Page=()=> {
 
     return (
         <div className="container">
-            <div className="form-container">
+
                 <img src={"/logo-transparent.png"}
                      alt=""
                      height={215}
@@ -110,7 +110,7 @@ const Page=()=> {
                             <input type="text" placeholder="Confirm Password" required/>
                         </div>
 
-                        <button className="create-acct-btn" >
+                        <button className="mt-3 btn btn-success border">
                             <Link href="/login"> Create Account</Link>
                         </button>
 
@@ -133,7 +133,7 @@ const Page=()=> {
                         </div>
                     </form>
                 </div>
-            </div>
+
         </div>
 
     );

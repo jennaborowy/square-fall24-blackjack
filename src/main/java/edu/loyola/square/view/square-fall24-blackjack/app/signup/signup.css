@@ -49,19 +49,20 @@
     align-items: center;
     justify-content: center;
     display: flex;
-}
-
-.form-container {
     height: 80vh;
-    width: 30vw;
+    width: 35vw;
     min-width: 500px;
     border-radius: 10px;
     background: white;
     overflow: auto;
-    display: flex;
+
     flex-direction: column;
-    justify-content: center;
+
     justify-items: center;
     text-align: center;
-    margin: auto;
+
+}
+
+.form-container {
+
 }
