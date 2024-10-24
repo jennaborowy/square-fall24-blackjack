@@ -10,7 +10,32 @@ export default function CardDisplay() {
   const [gameOver, isGameOver] = useState(false)
   const [gameState, setGameState] = useState(null)
   const [playerStand, setPlayerStand] = useState(false)
+  const [gameStatusMessage, setGameStatusMessage] = useState("")
+  //const [gameStatus, setGameStatus] = useState([])
+  const gameStat = {
+    DEALER_BUST: 'DEALER_BUST',
+    PLAYER_WIN: 'PLAYER_WIN',
+    PLAYER_BUST: 'PLAYER_BUST',
+    BLACKJACK: 'BLACKJACK',
+    DEALER_WIN: 'DEALER_WIN',
+    PUSH: 'PUSH',
+    IN_PLAY: 'IN_PLAY'
+  };
 
+
+
+  function endGame (gameState){
+    if(!gameState || !gameState.gameStatus) {
+      console.log("dont have game state")
+      return;
+    }
+    const status = gameState.gameStatus.endStatus;
+    if (status !== gameState.gameStatus.IN_PLAY) {
+      console.log("game should end")
+      isGameOver(true);
+      setGameStatusMessage(gameState.gameStatus.endMessage);
+    }
+  };
 
   const localhost = "http://localhost:8080";
   const startGame = async () => {
@@ -31,6 +56,8 @@ export default function CardDisplay() {
         setPlayerHand(result.playerHand);
         setDealerHand(result.dealerHand);
         setGameState(result)
+        endGame(result);
+
       } catch (error){
         console.log("Game failed to start", error);
       }
@@ -39,8 +66,7 @@ export default function CardDisplay() {
 
     const playerHits = async() => {
       console.log("Player length", playerHand.length);
-      if (playerHand.length === 0) {
-        console.log("Game has not started yet.");
+      if (gameOver) {
         return;
       }
       try {
@@ -50,23 +76,24 @@ export default function CardDisplay() {
             'Content-type': 'application/json',
           },
           credentials: 'include',
-          body: JSON.stringify({}),
+          body: JSON.stringify({
+            hit: "true",
+          }),
         })
         if (!response.ok) throw new Error("Connection failed");
         const result = await response.json();
         console.log("Player response ", result)
         setPlayerHand(result.playerHand);
         setDealerHand(result.dealerHand);
-        setGameState(result)
-
+        setGameState(result);
+        endGame(result)
       } catch (error) {
         console.log("Hit failed", error)
       }
     }
   const playerStands = async() => {
-    if (playerHand.length === 0) {
-      console.log("Game has not started yet.");
-      return; // Prevent hitting if the game has not started
+    if (gameOver) {
+      return;
     }
     try {
       const response = await fetch('http://localhost:8080/stand', {
@@ -85,6 +112,7 @@ export default function CardDisplay() {
       setDealerHand(result.dealerHand);
       setPlayerStand(true);
       setGameState(result)
+      endGame(result)
 
     } catch (error) {
       console.log("Hit failed", error)
@@ -108,8 +136,12 @@ export default function CardDisplay() {
             <Card key={index} suit={card.suit} rank={card.rank} />
           ))}
         </div> )}
-
-        {gameStarted && !playerStand && (
+        {gameOver && (
+          <div>
+            {gameStatusMessage}
+          </div>
+        )}
+        {gameStarted && !playerStand && !gameOver && (
           <div className="btn-container">
           <button className="action-btn" onClick={playerHits}>Hit</button>
           <button className="action-btn" onClick={playerStands}>Stand</button>
