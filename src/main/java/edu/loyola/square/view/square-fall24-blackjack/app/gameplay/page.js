@@ -9,7 +9,7 @@ export default function CardDisplay() {
   const [gameStarted, setGameStarted] = useState(false)
   const [gameOver, isGameOver] = useState(false)
   const [gameState, setGameState] = useState(null)
-
+  const [playerStand, setPlayerStand] = useState(false)
 
 
   const localhost = "http://localhost:8080";
@@ -82,7 +82,8 @@ export default function CardDisplay() {
       const result = await response.json();
       console.log("Player response ", result)
       setPlayerHand(result.playerHand);
-      setDealerHand(result.playerHand);
+      setDealerHand(result.dealerHand);
+      setPlayerStand(true);
       setGameState(result)
 
     } catch (error) {
@@ -108,7 +109,7 @@ export default function CardDisplay() {
           ))}
         </div> )}
 
-        {gameStarted && (
+        {gameStarted && !playerStand && (
           <div className="btn-container">
           <button className="action-btn" onClick={playerHits}>Hit</button>
           <button className="action-btn" onClick={playerStands}>Stand</button>
