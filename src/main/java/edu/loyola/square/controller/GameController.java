@@ -62,6 +62,8 @@ public class GameController
       if (game != null) {
         game.stand();
         Map<String, Object> gameState = getGameState(game);
+        Map<String, Object> status = game.endGameStatus();
+        gameState.put("gameStatus", status);
         return ResponseEntity.ok(gameState);
       }
       return ResponseEntity.badRequest().body(Map.of("Error:", "Game failed to start"));
@@ -71,6 +73,7 @@ public class GameController
   @PostMapping("/hit")
   public ResponseEntity<Map<String, Object>> playerHit(HttpSession session) {
     //need to lock so http response can come back before updating gamestate
+
     synchronized (lock) {
       System.out.println("hit top; ");
       Game game = (Game) session.getAttribute("game");
@@ -83,7 +86,8 @@ public class GameController
         Map<String, Object> gameState = getGameState(game);
         if(game.getPlayers().getPlayerHand().getValue() >= 21) {
           Map<String, Object> status = game.endGameStatus();
-          gameState.put("status", status);
+          gameState.put("gameStatus", status);
+
         }
         session.setAttribute("game", game);
 
