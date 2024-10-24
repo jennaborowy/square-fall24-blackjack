@@ -13,23 +13,25 @@ export default function CardDisplay() {
 
 
   const localhost = "http://localhost:8080";
-    const startGame = async () => {
-      console.log("fetching game...");
-      setGameStarted(true);
+  const startGame = async () => {
+    console.log("fetching game...");
+    setGameStarted(true);
 
-      try {
-        const response = await fetch('http://localhost:8080/gamestart', {method: 'POST',
-        headers: {
-          'Content-type': 'application/json',
-
-        },
-        body:JSON.stringify({})
-        })
+    try {
+        const response = await fetch('http://localhost:8080/gamestart', {
+          method: 'POST',
+          headers:{
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({}),
+          })
         if (!response.ok) throw new Error("Connection failed");
         const result = await response.json();
         console.log("Game started: ", result); // Check the response structure
         setPlayerHand(result.playerHand);
         setDealerHand(result.dealerHand);
+        setGameState(result)
       } catch (error){
         console.log("Game failed to start", error);
       }
@@ -37,6 +39,7 @@ export default function CardDisplay() {
     }
 
     const playerHits = async() => {
+      console.log("Player length", playerHand.length);
       if (playerHand.length === 0) {
         console.log("Game has not started yet.");
         return; // Prevent hitting if the game has not started
@@ -46,15 +49,16 @@ export default function CardDisplay() {
           method: 'POST',
           headers: {
             'Content-type': 'application/json',
-
           },
+          credentials: 'include',
           body: JSON.stringify({}),
         })
         if (!response.ok) throw new Error("Connection failed");
         const result = await response.json();
         console.log("Player response ", result)
         setPlayerHand(result.playerHand);
-        setDealerHand(result.playerHand);
+        setDealerHand(result.dealerHand);
+        setGameState(result)
 
       } catch (error) {
         console.log("Hit failed", error)
@@ -72,6 +76,7 @@ export default function CardDisplay() {
           'Content-type': 'application/json',
 
         },
+        credentials: 'include',
         body: JSON.stringify({}),
       })
       if (!response.ok) throw new Error("Connection failed");
@@ -79,6 +84,7 @@ export default function CardDisplay() {
       console.log("Player response ", result)
       setPlayerHand(result.playerHand);
       setDealerHand(result.playerHand);
+      setGameState(result)
 
     } catch (error) {
       console.log("Hit failed", error)
