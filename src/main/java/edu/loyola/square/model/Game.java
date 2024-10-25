@@ -112,7 +112,8 @@ public class Game implements Serializable {
    */
   public void stand() {
     takeDealerTurn();
-    gameOver();
+    //gameOver();
+    //endGameStatus();
   }
 
   /**
