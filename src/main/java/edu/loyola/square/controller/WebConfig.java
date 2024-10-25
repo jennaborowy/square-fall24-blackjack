@@ -1,3 +1,6 @@
+/**
+ *This file establishes parameters for the CORS connection
+ */
 package edu.loyola.square.controller;
 
 import org.springframework.context.annotation.Configuration;
