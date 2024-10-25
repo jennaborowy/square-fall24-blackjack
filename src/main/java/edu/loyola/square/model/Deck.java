@@ -29,7 +29,7 @@ public class Deck {
   }
 
   // deal a specific card during testing
-  /*public Card dealCard(String rank, String suit) {
+  public Card dealCard(String rank, String suit) {
     if (cards.isEmpty()) {
       return null;
     }
@@ -38,6 +38,6 @@ public class Deck {
       return card;
     }
     throw new IllegalArgumentException(String.format("the card \"%s\" has already been dealt", card.toString()));
-  }*/
+  }
 
 } // Deck
