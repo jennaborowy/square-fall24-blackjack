@@ -1,3 +1,6 @@
+/**
+ * The file implements main Game logic of blackjack.
+ */
 package edu.loyola.square.model;
 
 import java.io.Serializable;
@@ -6,8 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
-public class Game implements Serializable
-{
+public class Game implements Serializable {
   public enum gameStatus {
     PLAYER_WIN,
     DEALER_WIN,
@@ -26,8 +28,7 @@ public class Game implements Serializable
   private boolean gameOver;
   private gameStatus status;
   private double payout;
-  public Game(Player player)
-  {
+  public Game(Player player) {
     deck = new Deck();
     dealerHand = new Hand(new ArrayList<Card>(), true);
     playerHand = new Hand(new ArrayList<Card>(), false);
@@ -36,29 +37,32 @@ public class Game implements Serializable
     gameOver = false;
   }
 
-  public ArrayList<Card> drawCards(int count)
-  {
+  /**
+   * @param count - the amount of cards to be drawn
+   * @return drawn cards, an array list of cards
+   * This function deals cards. (GameController)
+   */
+  public ArrayList<Card> drawCards(int count) {
     ArrayList<Card> drawnCards = new ArrayList<Card>();
-    for (int i = 0; i < count; i++)
-    {
+    for (int i = 0; i < count; i++) {
       Card card = deck.dealCard();
-      if (card != null)
-      {
+      if (card != null) {
         drawnCards.add(card);
       }
     }
     return drawnCards;
   }
 
-  public void initializeGame()
-  {
+  /**
+   * This function begins the game by dealing out two cards to each player. (GameController)
+   */
+  public void initializeGame() {
     this.deck = new Deck();
     dealerHand = new Hand(drawCards(2), true);
     player.setHand(new Hand(drawCards(2), false));
   }
 
-  public void play()
-  {
+  public void play() {
     // deal dealer hand
     dealerHand.addCard(deck.dealCard());
     dealerHand.addCard(deck.dealCard());
@@ -84,81 +88,68 @@ public class Game implements Serializable
     }
   }
 
-  /**
-   * purpose: refactored hit to perform action of getting a new card at user request
-   *
+  /***
    * @param hand, the player's hand
+   * This function performs the action of getting a new card at user request (GameController)
    */
-  public void hit(Hand hand)
-  {
-    if (deck != null)
-    {
+  public void hit(Hand hand) {
+    if (deck != null) {
       Card newCard = deck.dealCard();
-      if (newCard != null)
-      {
+      if (newCard != null) {
         hand.addCard(newCard);
       }
     }
-    if(player.getPlayerHand().getValue() > 21)
-    {
+    if(player.getPlayerHand().getValue() > 21) {
       gameOver();
     }
-    else if (player.getPlayerHand().getValue() == 21)
-    {
-      //takeDealerTurn();
+    else if (player.getPlayerHand().getValue() == 21) {
       gameOver();
     }
   }
 
   /**
-   * performs stand action in controller
+   * This function performs stand action in controller
    */
-  public void stand()
-  {
+  public void stand() {
     takeDealerTurn();
     gameOver();
   }
-  public Map<String, Object> endGameStatus()
-  {
+
+  /**
+   * @return gameResult - a Hashmap of the game status including the payout ratio, the status, and end game message.
+   * This function determines the outcome of the game and returns the status (GameController)
+   */
+  public Map<String, Object> endGameStatus() {
     gameOver = true;
     Map<String, Object> gameResult = new HashMap<String, Object>();
-    if(player.getPlayerHand().blackjack())
-    {
-      if (dealerHand.getValue() == 21)
-      {
+    if(player.getPlayerHand().blackjack()) {
+      if (dealerHand.getValue() == 21) {
         status =  gameStatus.PUSH;
         payout = 0.0;
       }
-      else
-      {
+      else {
         status =  gameStatus.PLAYER_BLACKJACK;
         payout = 1.5;
       }
     }
-    else
-    {
-      if (playerHand.getValue() == dealerHand.getValue())
-      {
+    else {
+      if (playerHand.getValue() == dealerHand.getValue()) {
         status =  gameStatus.PUSH;
         payout = 0.0;
       }
-      else if (playerHand.getValue() > 21)
-      {
+      else if (playerHand.getValue() > 21) {
         status =  gameStatus.PLAYER_BUST;
         payout = 0.0;
       }
-      else if (dealerHand.getValue() > 21)
-      {
+      else if (dealerHand.getValue() > 21) {
         status = gameStatus.DEALER_BUST;
         payout = 1.0;
       }
-      else if (playerHand.getValue() > dealerHand.getValue())
-      {
+      else if (playerHand.getValue() > dealerHand.getValue()) {
         status =  gameStatus.PLAYER_WIN;
         payout = 1.0;
       }
-      else
-      {
+      else {
         status =  gameStatus.DEALER_WIN;
         payout = 0.0;
       }
@@ -170,9 +161,12 @@ public class Game implements Serializable
    return gameResult;
   }
 
+  /**
+   * @return a string indicating the game results
+   * This function determines the game result message based on the game outcome.
+   */
   public String getResultMessage() {
-    switch (status)
-    {
+    switch (status) {
       case PLAYER_WIN:
         return "Player Wins!";
       case DEALER_WIN:
@@ -190,34 +184,29 @@ public class Game implements Serializable
     }
 
   }
-  public Hand getDealerHand()
-  {
+
+  public Hand getDealerHand() {
     return dealerHand;
   }
 
-  public Hand getPlayerHand()
-  {
+  public Hand getPlayerHand() {
     return player.getPlayerHand();
   }
 
   //can be changed to list of players later
-  public Player getPlayers()
-  {
+  public Player getPlayers() {
     return this.player;
   }
 
-  private void showPlayerHand()
-  {
+  private void showPlayerHand() {
     System.out.println(player.getName() + ": " + playerHand + " (" + playerHand.getValue() + ")");
   }
 
-  private void showDealerHand()
-  {
+  private void showDealerHand() {
     System.out.println("Dealer: " + dealerHand + " (" + dealerHand.getValue() + ")");
   }
 
-  private void showPlayerOptions()
-  {
+  private void showPlayerOptions() {
     System.out.println("(h)it");
     System.out.println("(s)tand");
     if ((playerHand.getAceCount() > 0) && (playerHand.getValue(11) <= 21))
@@ -226,49 +215,39 @@ public class Game implements Serializable
     }
   }
 
-  private void promptPlayerAce()
-  {
+  private void promptPlayerAce() {
     System.out.println("Ace value (1 or 11): ");
-    while (true)
-    {
-      try
-      {
+    while (true) {
+      try {
         int value = Integer.parseInt(scanner.nextLine());
-        if (value == 1 || value == 11)
-        {
+        if (value == 1 || value == 11) {
           playerHand.setAceValue(value);
           showPlayerHand();
           return;
         }
-        else
-        {
+        else {
           System.out.println("Invalid value. Please enter 1 or 11.");
         }
       }
-      catch (NumberFormatException e)
-      {
+      catch (NumberFormatException e) {
         System.out.println("Invalid value. Please enter 1 or 11.");
       }
     }
   }
 
   private void takePlayerTurn() {
-    while (!gameOver)
-    {
+    while (!gameOver) {
       showPlayerOptions();
       String action = scanner.nextLine().toUpperCase();
-      switch (action)
-      {
+      switch (action) {
         case "H":
           Card newCard = deck.dealCard();
           playerHand.addCard(newCard);
           showPlayerHand();
-          if (playerHand.getValue() > 21)
-          {
+          if (playerHand.getValue() > 21) {
             gameOver();
           }
-          else if (playerHand.getValue() == 21)
-          {
+          else if (playerHand.getValue() == 21) {
             takeDealerTurn();
             gameOver();
           }
@@ -278,12 +257,10 @@ public class Game implements Serializable
           gameOver();
           break;
         case "A":
-          if ((playerHand.getAceCount() > 0) && (playerHand.getValue(11) <= 21))
-          {
+          if ((playerHand.getAceCount() > 0) && (playerHand.getValue(11) <= 21)) {
             promptPlayerAce();
           }
-          else
-          {
+          else {
             System.out.println("Invalid option. Please try again.");
           }
           break;
@@ -293,58 +270,46 @@ public class Game implements Serializable
     }
   }
 
-  private void takeDealerTurn()
-  {
-    while (dealerHand.getValue() < 17)
-    {
+  private void takeDealerTurn() {
+    while (dealerHand.getValue() < 17) {
       Card newCard = deck.dealCard();
       dealerHand.addCard(newCard);
     }
   }
 
-  private void gameOver()
-  {
+  private void gameOver() {
     gameOver = true;
     System.out.println("Game Over");
     showDealerHand();
     showPlayerHand();
-    if (playerHand.blackjack())
-    {
-      if (dealerHand.getValue() == 21)
-      {
+    if (playerHand.blackjack()) {
+      if (dealerHand.getValue() == 21) {
         System.out.println("Push!");
         player.setPayout(0.0);
       }
-      else
-      {
+      else {
         System.out.println("Blackjack!");
         player.setPayout(1.5);
       }
     }
-    else
-    {
-      if (playerHand.getValue() == dealerHand.getValue())
-      {
+    else {
+      if (playerHand.getValue() == dealerHand.getValue()) {
         System.out.println("Push!");
         player.setPayout(0.0);
       }
-      else if (playerHand.getValue() > 21)
-      {
+      else if (playerHand.getValue() > 21) {
         System.out.println("Player Bust!");
         player.setPayout(0.0);
       }
-      else if (dealerHand.getValue() > 21)
-      {
+      else if (dealerHand.getValue() > 21) {
         System.out.println("Dealer Bust!");
         player.setPayout(1.0);
       }
-      else if (playerHand.getValue() > dealerHand.getValue())
-      {
+      else if (playerHand.getValue() > dealerHand.getValue()) {
         System.out.println("Player Wins!");
         player.setPayout(1.0);
       }
-      else
-      {
+      else {
         System.out.println("Dealer Wins!");
         player.setPayout(0.0);
       }

@@ -1,3 +1,6 @@
+/**
+ * This file contains the Deck object.
+ */
 package edu.loyola.square.model;
 
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,13 +15,10 @@ public class Deck implements Serializable {
   String[] suitStr = {"H", "D", "C", "S"};
   private ArrayList<Card> cards;
 
-  public Deck()
-  {
+  public Deck() {
     cards = new ArrayList<>();
-    for (String rank : rankStr)
-    {
-      for (String suit : suitStr)
-      {
+    for (String rank : rankStr) {
+      for (String suit : suitStr) {
         cards.add(new Card(rank, suit));
       }
     }
@@ -26,22 +26,18 @@ public class Deck implements Serializable {
   }
 
   // deal a random card
-  public Card dealCard()
-  {
+  public Card dealCard() {
     return cards.isEmpty() ? null : cards.remove(cards.size() - 1);
   }
 
 
   // deal a specific card during testing
-  public Card dealCard(String rank, String suit)
-  {
-    if (cards.isEmpty())
-    {
+  public Card dealCard(String rank, String suit) {
+    if (cards.isEmpty()) {
       return null;
     }
     Card card = new Card(rank, suit);
-    if (cards.removeIf(ii -> ii.getRank() == rank && ii.getSuit() == suit))
-    {
+    if (cards.removeIf(ii -> ii.getRank() == rank && ii.getSuit() == suit)) {
       return card;
     }
     throw new IllegalArgumentException(String.format("the card \"%s\" has already been dealt", card.toString()));

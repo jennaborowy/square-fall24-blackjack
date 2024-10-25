@@ -1,3 +1,6 @@
+/**
+ * This file contains the Player object.
+ */
 package edu.loyola.square.model;
 
 import java.util.ArrayList;
@@ -30,8 +33,7 @@ public class Player {
    * @param hand
    * @return
    */
-  public Hand setHand(Hand hand)
-  {
+  public Hand setHand(Hand hand) {
     return this.hand = hand;
 
   }
