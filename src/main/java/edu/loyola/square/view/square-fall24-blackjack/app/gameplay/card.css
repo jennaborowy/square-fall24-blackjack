@@ -1,0 +1,66 @@
+.cardDisplay {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    justify-content: space-between;
+}
+
+.playerHand-container {
+    display: flex;
+    justify-content: center;
+    margin-top:auto;
+}
+
+.dealerHand-container {
+    display: flex;
+    justify-content: center;
+
+}
+
+.cardArea {
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    margin: 0px 10px;
+}
+
+.cardArea img {
+    max-width:100px;
+}
+.btn-container {
+    display: flex;
+    justify-content: center;
+    margin-top: auto;
+    gap: 75px;
+}
+
+.play-container{
+    display: flex;
+    justify-content: center;
+    margin-top: 350px;
+}
+.play-btn{
+    width: 300px;
+    height:80px;
+    border-radius: 8px;
+    background-color: darkgoldenrod;
+}
+.action-btn {
+    width: 150px;
+    height:50px;
+    border-radius: 6px;
+    background-color: darkgoldenrod;
+}
+.end-container {
+    display: flex;
+    justify-content: center;
+    margin-top: auto;
+    color: white;
+}
+.end-game {
+    width: 150px;
+    height:50px;
+    border-radius: 6px;
+    color: white;
+    align-items: center;
+}

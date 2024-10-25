@@ -1,9 +1,11 @@
 "use client";
 import styles from "./page.module.css";
 import React, { useState } from "react";
-import {Dialog, DialogContent, DialogContentText, DialogTitle, DialogActions} from "@mui/material";
+import { Dialog, DialogContent, DialogContentText, DialogTitle, DialogActions } from "@mui/material";
 import Image from "next/image";
 import "./globals.css"
+import Link from 'next/link'
+import React from "react";
 
 export default function Home() {
     const [open, setOpen] = useState(false);

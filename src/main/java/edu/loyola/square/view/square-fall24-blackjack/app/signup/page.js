@@ -113,87 +113,87 @@ const Page=()=> {
 
     return (
         <div className="container">
-                <img src={"/logo-transparent.png"}
-                     alt=""
-                     height={215}
-                     width={290}
-                     style={{alignSelf:"center"}}
-                     className="mt-5 pt-3"
-                />
+            <img src={"/logo-transparent.png"}
+                 alt=""
+                 height={215}
+                 width={290}
+                 style={{alignSelf:"center"}}
+                 className="mt-5 pt-3"
+            />
 
-                <div className="title">
-                    <h1>Signup</h1>
-                </div>
-
-                <div className="form">
-                    <form onSubmit={(e) => handleSubmit(e)}>
-
-                        <div className="input">
-                            <input type="text" placeholder="First Name" name="first" onInput={handleChange} required/>
-                        </div>
-
-                        <div className="input">
-                            <input type="text" placeholder="Last Name" name="last" onInput={handleChange} required/>
-                        </div>
-
-                        <div className="input">
-                            <input type="text" placeholder="Username" name="username" onInput={handleChange} required/>
-                        </div>
-
-                        <div className="input">
-                            <input type="text" placeholder="Email" name="email" onInput={handleChange} required/>
-                        </div>
-
-                        <div className="input">
-                            <input type="password" placeholder="Password" name="password" onInput={handleChange} required/>
-                        </div>
-
-                        <div className="input">
-                            <input type="password" placeholder="Confirm Password" name="confirm" onInput={handleChange} required/>
-                        </div>
-
-                        <button className="btn btn-success" >
-                            Create Account
-                        </button>
-
-                        <div className="login">
-                            <p>Already a user?
-                                <span>
-                                    <Link href="/login"> Login</Link>
-                                </span>
-                            </p>
-
-                            <p>- or -</p>
-
-                        </div>
-                        <div className={"guest"}>
-                            <p>Continue as
-                                <span>
-                                    <Link href="/lobby"> Guest</Link>
-                                </span>
-                            </p>
-                        </div>
-                    </form>
-                    <Dialog
-                        onClose={handleClose}
-                        open={err}
-                    >
-                        <DialogTitle id="alert-dialog-title">
-                            {"Error"}
-                        </DialogTitle>
-                        <DialogContent>
-                            <DialogContentText id="alert-dialog-description">
-                                {Object.entries(errMsg).map(([index, message]) => (
-                                    <li key={index}>{message}</li>
-                                ))}
-                            </DialogContentText>
-                        </DialogContent>
-                        <DialogActions>
-                            <button className="btn btn-light border" onClick={handleClose}>Exit</button>
-                        </DialogActions>
-                    </Dialog>
-                </div>
+            <div className="title">
+                <h1>Signup</h1>
             </div>
+
+            <div className="form">
+                <form onSubmit={(e) => handleSubmit(e)}>
+
+                    <div className="input">
+                        <input type="text" placeholder="First Name" name="first" onInput={handleChange} required/>
+                    </div>
+
+                    <div className="input">
+                        <input type="text" placeholder="Last Name" name="last" onInput={handleChange} required/>
+                    </div>
+
+                    <div className="input">
+                        <input type="text" placeholder="Username" name="username" onInput={handleChange} required/>
+                    </div>
+
+                    <div className="input">
+                        <input type="text" placeholder="Email" name="email" onInput={handleChange} required/>
+                    </div>
+
+                    <div className="input">
+                        <input type="password" placeholder="Password" name="password" onInput={handleChange} required/>
+                    </div>
+
+                    <div className="input">
+                        <input type="password" placeholder="Confirm Password" name="confirm" onInput={handleChange} required/>
+                    </div>
+
+                    <button className="btn btn-success" >
+                        Create Account
+                    </button>
+
+                    <div className="login">
+                        <p>Already a user?
+                            <span>
+                                <Link href="/login"> Login</Link>
+                            </span>
+                        </p>
+
+                        <p>- or -</p>
+
+                    </div>
+                    <div className={"guest"}>
+                        <p>Continue as
+                            <span>
+                                <Link href="/lobby"> Guest</Link>
+                            </span>
+                        </p>
+                    </div>
+                </form>
+                <Dialog
+                    onClose={handleClose}
+                    open={err}
+                >
+                    <DialogTitle id="alert-dialog-title">
+                        {"Error"}
+                    </DialogTitle>
+                    <DialogContent>
+                        <DialogContentText id="alert-dialog-description">
+                            {Object.entries(errMsg).map(([index, message]) => (
+                                <li key={index}>{message}</li>
+                            ))}
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        <button className="btn btn-light border" onClick={handleClose}>Exit</button>
+                    </DialogActions>
+                </Dialog>
+            </div>
+        </div>
     );
 }
-export default Page
+export default Page;
