@@ -5,7 +5,7 @@
 # I often run 'make | grep Warning' 
 
 
-main.pdf: abstract.tex introduction.tex main.tex requirements-functional.tex testing.tex architecture.tex iterations.tex reflection.tex requirements-nonfunctional.tex tutorial.tex
+main.pdf: abstract.tex introduction.tex main.tex requirements-functional.tex testing.tex architecture.tex iterations.tex AI-Usage.tex reflection.tex requirements-nonfunctional.tex tutorial.tex
 	pdflatex main.tex
 
 .phony: force
