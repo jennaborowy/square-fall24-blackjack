@@ -125,7 +125,7 @@ export default function CardDisplay() {
       <div className="cardDisplay">
         {!gameStarted && (
           <div className="play-container">
-            <button className="play-btn" onClick={startGame}>
+            <button className="btn btn-lg btn-success" onClick={startGame}>
               Start Game
             </button>
           </div>

@@ -5,7 +5,6 @@ import { Dialog, DialogContent, DialogContentText, DialogTitle, DialogActions } 
 import Image from "next/image";
 import "./globals.css"
 import Link from 'next/link'
-import React from "react";
 
 export default function Home() {
     const [open, setOpen] = useState(false);
@@ -38,7 +37,7 @@ export default function Home() {
                        style={{alignSelf: "center"}}/>
                   <a href="/signup" className="mt-3 btn btn-success border" role="button">Signup</a>
                   <a href="/login" className="mt-3 btn btn-success border" role="button">Login</a>
-                  <a href="/lobby" className="mt-3 btn btn-success border" role="button">Play as Guest</a>
+                  <a href="/gameplay" className="mt-3 btn btn-success border" role="button">Play as Guest</a>
                   <button className="mt-3 btn btn-success border" onClick={handleClickOpen}>
                       Tutorial
                   </button>

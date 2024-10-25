@@ -33,6 +33,12 @@ const Page=()=> {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        if (password !== confirm) {
+            setErrMsg({ general: "Password fields do not match."})
+            setErr(true);
+            return;
+        }
+
         let body = {
             "username": username,
             "password": password,
@@ -61,7 +67,6 @@ const Page=()=> {
         } catch (error) {
             console.error('Error submitting form:', error);
         }
-
     }
 
     // useEffect for handling side effects based on success
@@ -81,7 +86,6 @@ const Page=()=> {
         }
     }, [err]);
 
-
     // handle form input changes
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -97,12 +101,7 @@ const Page=()=> {
             setEmail(value);
         } else if (name === "confirm") {
             setConfirm(value);
-            if (confirm !== password) {
-                setErrMsg([... "Password fields do not match."]);
-                setVerifyPass(false);
-            } else {
-                setVerifyPass(true);
-            }
+
         }
     }
 
@@ -169,7 +168,7 @@ const Page=()=> {
                     <div className={"guest"}>
                         <p>Continue as
                             <span>
-                                <Link href="/lobby"> Guest</Link>
+                                <Link href="/gameplay"> Guest</Link>
                             </span>
                         </p>
                     </div>
