@@ -164,9 +164,9 @@ public class Game implements Serializable
       }
     }
     player.setPayout(payout);
-    gameResult.put("status", status);
+    gameResult.put("endStatus", status);
     gameResult.put("payout", payout);
-    gameResult.put("message", getResultMessage());
+    gameResult.put("endMessage", getResultMessage());
    return gameResult;
   }
 
@@ -186,7 +186,7 @@ public class Game implements Serializable
       case PLAYER_BLACKJACK:
         return "Blackjack!";
       default:
-        return "";
+        return "IN_PLAY";
     }
 
   }
@@ -252,8 +252,7 @@ public class Game implements Serializable
     }
   }
 
-  private void takePlayerTurn()
-  {
+  private void takePlayerTurn() {
     while (!gameOver)
     {
       showPlayerOptions();

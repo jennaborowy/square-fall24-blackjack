@@ -45,6 +45,11 @@ public class GameController
       newGame.initializeGame();
       session.setAttribute("game", newGame);
       Map<String, Object> gameState = getGameState(newGame);
+      if(newGame.getPlayers().getPlayerHand().blackjack())
+      {
+      Map<String, Object> status = newGame.endGameStatus();
+      gameState.put("gameStatus", status);
+      }
       System.out.println(gameState);
       //game could end here if winner gets Blackjack, so return the result
       return ResponseEntity.ok(gameState);
