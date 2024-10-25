@@ -1,0 +1,65 @@
+.title {
+    color: #5d0707;
+    font-size: 28px;
+
+}
+.form {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap: 10px;
+    margin: 10px;
+}
+
+.input {
+    width: 25vw;
+    height: 30px;
+    border-radius: 5px;
+    gap: 10px;
+    margin: 15px;
+}
+
+.input input {
+    height: 30px;
+    width: 25vw;
+    font-size: 14px;
+}
+
+.create-acct-btn {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 150px;
+    height: 40px;
+    color: white;
+    background: green;
+    font-size: 20px;
+    font-weight: 10;
+    border-radius: 7px;
+    margin: auto;
+}
+
+.login {
+    margin-top: 15px;
+}
+
+.container {
+    margin-top: 25px;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    height: 93vh;
+    width: 35vw;
+    min-width: 500px;
+    border-radius: 10px;
+    background: white;
+    overflow: auto;
+
+    flex-direction: column;
+
+    justify-items: center;
+    text-align: center;
+
+}
+

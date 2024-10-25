@@ -1,0 +1,24 @@
+.title {
+    color: #5d0707;
+    font-size: 28px;
+}
+
+.container {
+    align-items: center;
+    justify-content: center;
+    justify-items: center;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    height: 80vh;
+    width: 35vw;
+    min-width: 500px;
+    border-radius: 10px;
+    background: white;
+    overflow: auto;
+    margin-top: 30px;
+}
+
+.footer {
+    padding: 20px;
+}
