@@ -1,8 +1,12 @@
+/**
+ * This file contains the Hand object.
+ */
 package edu.loyola.square.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Hand {
+public class Hand implements Serializable {
 
   private boolean isDealer;
   private ArrayList<Card> cards;
@@ -78,7 +82,8 @@ public class Hand {
    */
   public void addCard(Card card) {
     cards.add(card);
-    if (card.getRank().equals("A")) {
+    if (card.getRank().equals("A"))
+    {
       aceCount++;
     }
     optimizeAces();

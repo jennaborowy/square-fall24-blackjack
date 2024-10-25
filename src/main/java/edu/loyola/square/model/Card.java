@@ -1,6 +1,11 @@
+/**
+ * This file contains the Card object.
+ */
 package edu.loyola.square.model;
 
-public class Card {
+import java.io.Serializable;
+
+public class Card implements Serializable {
 
   private String rank;
   private String suit;
