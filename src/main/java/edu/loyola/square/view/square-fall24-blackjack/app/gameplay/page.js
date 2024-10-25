@@ -137,7 +137,7 @@ export default function CardDisplay() {
           ))}
         </div> )}
         {gameOver && (
-          <div>
+          <div className="end-container">
             {gameStatusMessage}
           </div>
         )}
