@@ -44,6 +44,22 @@
     margin-top: 15px;
 }
 
-.signup {
+.container {
+    margin-top: 30px;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    height: 80vh;
     width: 35vw;
+    min-width: 500px;
+    border-radius: 10px;
+    background: white;
+    overflow: auto;
+
+    flex-direction: column;
+
+    justify-items: center;
+    text-align: center;
+
 }
+

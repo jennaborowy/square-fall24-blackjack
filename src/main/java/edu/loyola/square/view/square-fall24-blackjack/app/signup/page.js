@@ -112,7 +112,7 @@ const Page=()=> {
     }
 
     return (
-            <div className="container container-sm mt-3 mb-3 rounded shadow bg-light text-center w-50 signup">
+        <div className="container">
 
                 <img src={"/logo-transparent.png"}
                      alt=""
@@ -193,10 +193,7 @@ const Page=()=> {
                         </DialogActions>
                     </Dialog>
                 </div>
-
-                {success && <p>Form submitted successfully!</p>}
             </div>
-
     );
 }
 export default Page

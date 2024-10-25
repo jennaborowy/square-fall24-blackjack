@@ -116,14 +116,9 @@ function Login() {
                 <Link
                     href="/signup"
                 >
-                    <Image
-                        aria-hidden
-                        src="https://nextjs.org/icons/file.svg"
-                        alt="File icon"
-                        width={16}
-                        height={16}
-                    />
+                    <span>
                     Sign up for Account
+                    </span>
                 </Link>
             </footer>
             <Dialog
