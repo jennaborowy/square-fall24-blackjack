@@ -113,12 +113,12 @@ const Page=()=> {
 
     return (
         <div className="container">
-
                 <img src={"/logo-transparent.png"}
                      alt=""
                      height={215}
                      width={290}
                      style={{alignSelf:"center"}}
+                     className="mt-5 pt-3"
                 />
 
                 <div className="title">
@@ -169,7 +169,7 @@ const Page=()=> {
                         <div className={"guest"}>
                             <p>Continue as
                                 <span>
-                                    <Link href="/table"> Guest</Link>
+                                    <Link href="/lobby"> Guest</Link>
                                 </span>
                             </p>
                         </div>
