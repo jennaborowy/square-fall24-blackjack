@@ -34,8 +34,7 @@ public class UserController extends SpringBootServletInitializer {
   }
 
   @GetMapping("/")
-  public List<User> all()
-  {
+  public List<User> all() {
     return userRepository.findAll();
   }
 
