@@ -24,7 +24,7 @@ function LogoutButton() {
 
     return (
         <form onSubmit={handleLogout}>
-            <button className="btn btn-warning mt-3" type="submit">Logout</button>
+            <button className="btn btn-warning" type="submit">Logout</button>
         </form>
     );
 }
