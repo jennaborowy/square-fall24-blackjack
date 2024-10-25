@@ -51,6 +51,7 @@ public class GameController {
     session.removeAttribute("game");
     //instance of game established at beginning of session (persistence
     Game newGame = new Game(new Player("Player 1", 100));
+
     if (newGame != null) {
       System.out.println("Game is found");
       newGame.initializeGame();
@@ -105,7 +106,7 @@ public class GameController {
         System.out.println("game not null");
         game.hit(game.getPlayers().getPlayerHand());
         Map<String, Object> gameState = getGameState(game);
-        if(game.getPlayers().getPlayerHand().getValue() >= 21) {
+        if(game.getPlayers().getPlayerHand().getValue() > 21) {
           Map<String, Object> status = game.endGameStatus();
           gameState.put("gameStatus", status);
         }
