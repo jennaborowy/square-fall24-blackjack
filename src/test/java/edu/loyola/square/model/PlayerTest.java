@@ -27,7 +27,7 @@ class PlayerTest {
   @Test
   void getHand() {
     // Test initial hand state
-    Hand hand = player.getHand();
+    Hand hand = player.getPlayerHand();
     assertNotNull(hand, "Hand should not be null");
     assertEquals(0, hand.getHand().size(), "Initial hand should be empty");
     assertFalse(hand.isDealer(), "Player hand should not be marked as dealer");
@@ -38,9 +38,9 @@ class PlayerTest {
     hand.addCard(card1);
     hand.addCard(card2);
 
-    assertEquals(2, player.getHand().getHand().size(), "Hand should contain added cards");
-    assertEquals("A", player.getHand().getHand().get(0).getRank(), "First card should be Ace");
-    assertEquals("K", player.getHand().getHand().get(1).getRank(), "Second card should be King");
+    assertEquals(2, player.getPlayerHand().getHand().size(), "Hand should contain added cards");
+    assertEquals("A", player.getPlayerHand().getHand().get(0).getRank(), "First card should be Ace");
+    assertEquals("K", player.getPlayerHand().getHand().get(1).getRank(), "Second card should be King");
   }
 
   @Test
