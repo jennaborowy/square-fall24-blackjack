@@ -18,9 +18,6 @@
   flex-direction: column;
   gap: 32px;
   grid-row-start: 2;
-  background: url("../public/background.jpg") no-repeat center;
-  background-size: cover;
-  min-height: 100vh;
 }
 
 .main ol {
@@ -51,12 +48,11 @@
   flex-direction: column;
   align-items: center;
   align-self: center;
-  width: 100px;
   height: 50px;
-  color: black;
-  background: white;
-  font-size: 24px;
-  font-weight: 15;
+  width: 100px;
+  color: white;
+  background: forestgreen;
+  font-size: 20px;
   border-radius: 7px;
   margin-bottom: 15px;
   padding: 7px;
@@ -70,5 +66,54 @@
   justify-content: center;
   height: 20vh;
   width: 40vh;
+  position: absolute;
+  bottom: 0;
+  padding-bottom: 60vh;
 }
 
+
+.left {
+  float: left;
+  width: 33%;
+  height: 100vh;
+  position: relative;
+}
+.middle {
+  float: left;
+  display: flex;
+  flex-direction: column;
+  width: 34%;
+  height: 90vh;
+  padding: 20px;
+}
+.right {
+  float: left;
+  width: 33%;
+  height: 100vh;
+  position: relative;
+
+}
+
+.leftimg {
+  position:absolute;
+  bottom: 0;
+  left:0;
+  transform: scaleX(-1);
+  max-height: 60vh;
+  max-width: 30vw;
+
+}
+
+.rightimg {
+  position:absolute;
+  bottom: 0;
+  right: 0;
+  max-height: 60vh;
+  max-width: 30vw;
+
+}
+
+.a {
+  display: block;
+  width: 100%;
+}
