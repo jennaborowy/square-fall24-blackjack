@@ -1,59 +1,92 @@
-"use client"
+"use client";
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react';
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 
 import "./signup.css"
 import "../globals.css"
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogActions from "@mui/material/DialogActions";
+import Dialog from "@mui/material/Dialog";
 
 const Page=()=> {
 
     const router = useRouter();
 
+    // might put user data in one useState()?
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [email, setEmail] = useState("");
     const [first, setFirst] = useState("");
     const [last, setLast] = useState("");
+    const [confirm, setConfirm] = useState("");
+    const [errMsg, setErrMsg] = useState({});
+    const [err, setErr] = useState(null);
+    const [verifyPass, setVerifyPass] = useState(true)
 
+    const [success, setSuccess] = useState(false);
+
+    // action performed upon submission
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        async function createAccount(userUsername, userPassword, userEmail, userFirst, userLast) {
-            let url = `http://localhost:8080/api/user/signup`;
-
-            let headers = {
-                'Content-Type': 'application/json',
-            };
-
-            let body = {
-                "username": userUsername,
-                "password": userPassword,
-                "email": userEmail,
-                "first_name": userFirst,
-                "last_name": userLast,
-            };
-
-            await fetch(url, {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify(body),
-            })
-                .then((res) => {
-                    if (res.ok) {
-                        console.log(res.status)
-                        router.push('/login') // was ../login
-                    } else {
-                        // make loginErr
-                        // check if password fields match
-                        // customize dialog message for that (could make function that returns String with errors)
-                    }
-                });
+        if (password !== confirm) {
+            setErrMsg({ general: "Password fields do not match."})
+            setErr(true);
+            return;
         }
-        await createAccount(username, password, email, first, last);
+
+        let body = {
+            "username": username,
+            "password": password,
+            "email": email,
+            "firstName": first,
+            "lastName": last,
+        };
+
+        setErr(null);
+        try {
+            const response = await fetch('http://localhost:8080/api/user/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(body),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                setErrMsg(errorData);
+                setErr(true);
+            } else {
+                setSuccess(true);
+            }
+        } catch (error) {
+            console.error('Error submitting form:', error);
+        }
     }
 
+    // useEffect for handling side effects based on success
+    // runs on success state change
+    useEffect(() => {
+        if (success) {
+            console.log('Form submitted successfully!');
+            router.push('/login');
+        }
+    }, [success]);
+
+    // useEffect for handling side effects based on error
+    // runs on err state change
+    useEffect(() => {
+        if (err) {
+            console.error('An error occurred:', errMsg);
+        }
+    }, [err]);
+
+    // handle form input changes
     const handleChange = (e) => {
         const { name, value } = e.target;
         if (name === "username") {
@@ -66,76 +99,100 @@ const Page=()=> {
             setLast(value);
         } else if (name === "email") {
             setEmail(value);
+        } else if (name === "confirm") {
+            setConfirm(value);
+
         }
+    }
+
+    // closes error dialog
+    const handleClose = () => {
+        setErr(false);
     }
 
     return (
         <div className="container">
+            <img src={"/logo-transparent.png"}
+                 alt=""
+                 height={215}
+                 width={290}
+                 style={{alignSelf:"center"}}
+                 className="mt-5 pt-3"
+            />
 
-                <img src={"/logo-transparent.png"}
-                     alt=""
-                     height={215}
-                     width={290}
-                     style={{alignSelf:"center"}}
-                />
+            <div className="title">
+                <h1>Signup</h1>
+            </div>
 
-                <div className="title">
-                    <h1>Signup</h1>
-                </div>
+            <div className="form">
+                <form onSubmit={(e) => handleSubmit(e)}>
 
-                <div className="form">
-                    <form action={""}>
+                    <div className="input">
+                        <input type="text" placeholder="First Name" name="first" onInput={handleChange} required/>
+                    </div>
 
-                        <div className="input">
-                            <input type="text" placeholder="First Name" required/>
-                        </div>
+                    <div className="input">
+                        <input type="text" placeholder="Last Name" name="last" onInput={handleChange} required/>
+                    </div>
 
-                        <div className="input">
-                            <input type="text" placeholder="Last Name" required/>
-                        </div>
+                    <div className="input">
+                        <input type="text" placeholder="Username" name="username" onInput={handleChange} required/>
+                    </div>
 
-                        <div className="input">
-                            <input type="text" placeholder="Username" required/>
-                        </div>
+                    <div className="input">
+                        <input type="text" placeholder="Email" name="email" onInput={handleChange} required/>
+                    </div>
 
-                        <div className="input">
-                            <input type="text" placeholder="Email" required/>
-                        </div>
+                    <div className="input">
+                        <input type="password" placeholder="Password" name="password" onInput={handleChange} required/>
+                    </div>
 
-                        <div className="input">
-                            <input type="text" placeholder="Password" required/>
-                        </div>
+                    <div className="input">
+                        <input type="password" placeholder="Confirm Password" name="confirm" onInput={handleChange} required/>
+                    </div>
 
-                        <div className="input">
-                            <input type="text" placeholder="Confirm Password" required/>
-                        </div>
+                    <button className="btn btn-success" >
+                        Create Account
+                    </button>
 
-                        <button className="mt-3 btn btn-success border">
-                            <Link href="/login"> Create Account</Link>
-                        </button>
+                    <div className="login">
+                        <p>Already a user?
+                            <span>
+                                <Link href="/login"> Login</Link>
+                            </span>
+                        </p>
 
-                        <div className="login">
-                            <p>Already a user?
-                                <span>
-                                    <Link href="/login"> Login</Link>
-                                </span>
-                            </p>
+                        <p>- or -</p>
 
-                            <p>- or -</p>
-
-                        </div>
-                        <div className={"guest"}>
-                            <p>Continue as
-                                <span>
-                                    <Link href="/table"> Guest</Link>
-                                </span>
-                            </p>
-                        </div>
-                    </form>
-                </div>
-
+                    </div>
+                    <div className={"guest"}>
+                        <p>Continue as
+                            <span>
+                                <Link href="/gameplay"> Guest</Link>
+                            </span>
+                        </p>
+                    </div>
+                </form>
+                <Dialog
+                    onClose={handleClose}
+                    open={err}
+                >
+                    <DialogTitle id="alert-dialog-title">
+                        {"Error"}
+                    </DialogTitle>
+                    <DialogContent>
+                        <DialogContentText id="alert-dialog-description">
+                            {Object.entries(errMsg).map(([index, message]) => (
+                                <li key={index}>{message}</li>
+                            ))}
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        <button className="btn btn-light border" onClick={handleClose}>Exit</button>
+                    </DialogActions>
+                </Dialog>
+            </div>
         </div>
-
     );
 }
-export default Page
+export default Page;

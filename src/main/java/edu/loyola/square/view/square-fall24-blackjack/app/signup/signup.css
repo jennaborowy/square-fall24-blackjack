@@ -45,11 +45,11 @@
 }
 
 .container {
-    margin-top: 30px;
+    margin-top: 25px;
     align-items: center;
     justify-content: center;
     display: flex;
-    height: 80vh;
+    height: 93vh;
     width: 35vw;
     min-width: 500px;
     border-radius: 10px;
@@ -63,6 +63,3 @@
 
 }
 
-.form-container {
-
-}

@@ -1,17 +1,23 @@
+/**
+ * This file contains the Deck object.
+ */
 package edu.loyola.square.model;
 
+import org.springframework.web.bind.annotation.PathVariable;
+
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 
-public class Deck {
+public class Deck implements Serializable {
 
-  String[] rankStr = { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" };
-  String[] suitStr = { "H", "D", "C", "S" };
+  String[] rankStr = {"2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"};
+  String[] suitStr = {"H", "D", "C", "S"};
   private ArrayList<Card> cards;
 
   public Deck() {
     cards = new ArrayList<>();
-    for (String rank: rankStr) {
+    for (String rank : rankStr) {
       for (String suit : suitStr) {
         cards.add(new Card(rank, suit));
       }
@@ -19,10 +25,15 @@ public class Deck {
     Collections.shuffle(cards);
   }
 
+  /**
+   * This function deals a card from the deck
+   * @return The card that is being dealt
+   */
   // deal a random card
   public Card dealCard() {
-    return cards.isEmpty() ? null : cards.remove(cards.size()-1);
+    return cards.isEmpty() ? null : cards.remove(cards.size() - 1);
   }
+
 
   // deal a specific card during testing
   public Card dealCard(String rank, String suit) {

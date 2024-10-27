@@ -42,13 +42,14 @@ function Login() {
                 method: 'POST',
                 headers: headers,
                 body: JSON.stringify(body),
+                cache: 'no-cache',
             })
                 .then((res) => {
                     if (res.ok) {
-                        router.push('/lobby')
+                        router.push('/lobby');
                     } else {
                         setLoginErr(true);
-                        console.log(res.json)
+                        console.log(res.json);
                     }
                 });
         }
@@ -99,7 +100,7 @@ function Login() {
                     <label htmlFor="password"></label>
                     <input
                         className="form-control"
-                        type="text"
+                        type="password"
                         id="password"
                         name="password"
                         title="Enter password"

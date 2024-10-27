@@ -1,3 +1,6 @@
+/**
+ * This file contains the Player object.
+ */
 package edu.loyola.square.model;
 
 import java.util.ArrayList;
@@ -17,23 +20,38 @@ public class Player {
   }
 
   public String getName() {
-    return name;
+    return this.name;
   }
 
-  public Hand getHand() {
-    return hand;
+  public Hand getPlayerHand() {
+    return this.hand;
+  }
+
+  /**
+   *
+   * used in controller to access player's hand
+   * @param hand
+   * @return
+   */
+  public Hand setHand(Hand hand) {
+    return this.hand = hand;
+
   }
 
   public int getBet() {
-    return bet;
+    return this.bet;
   }
 
+  /**
+   * This function sets the players payout (winnings) based on how the game played out
+   * @param multiplier 0, 1.0, or 1.5 depending if they lost, won, or got blackjack
+   */
   public void setPayout(double multiplier) {
     payout = bet * multiplier;
   }
 
   public double getPayout() {
-    return payout;
+    return this.payout;
   }
 
 } // Player

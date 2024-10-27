@@ -1,6 +1,4 @@
 import localFont from 'next/font/local';
-import { CustomProvider } from 'rsuite';
-import 'rsuite/dist/rsuite-no-reset.min.css';
 import './globals.css';
 import 'bootstrap/dist/css/bootstrap.css';
 
@@ -24,7 +22,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <CustomProvider>{children}</CustomProvider>
+        {children}
       </body>
     </html>
   );

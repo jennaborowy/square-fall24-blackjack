@@ -1,6 +1,11 @@
+/**
+ * This file contains the Card object.
+ */
 package edu.loyola.square.model;
 
-public class Card {
+import java.io.Serializable;
+
+public class Card implements Serializable {
 
   private String rank;
   private String suit;
@@ -18,6 +23,11 @@ public class Card {
     return suit;
   }
 
+  /**
+   * this function returns the numeric value of a given card
+   * @param aceValue - the hand's ace value
+   * @return rank - the value of the card
+   */
   public int getValue(int aceValue) {
     switch (rank) {
       case "A":
