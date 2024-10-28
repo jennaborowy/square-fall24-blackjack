@@ -39,7 +39,7 @@ public class UserController extends SpringBootServletInitializer {
   }
 
   @PostMapping("/signup")
-  public ResponseEntity<?> create(@Valid @RequestBody UserDTO userDTO) throws ResponseStatusException {
+  public ResponseEntity<?> create(@Valid @RequestBody UserDTO userDTO) throws ResponseStatusException, ConstraintViolationException, DataIntegrityViolationException {
     String username = userDTO.getUsername();
     String password = userDTO.getPassword();
     String email = userDTO.getEmail();
