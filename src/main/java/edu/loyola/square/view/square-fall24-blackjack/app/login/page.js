@@ -109,7 +109,7 @@ function Login() {
                         onInput={handleChange}
                     />
                 </div>
-                <button className="mt-3 btn btn-success border" type="submit">Submit</button>
+                <button className="mt-3 btn btn-success border" type="submit" name="login">Submit</button>
             </form>
 
             <footer className="footer">
