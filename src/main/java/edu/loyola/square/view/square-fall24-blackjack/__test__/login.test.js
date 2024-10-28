@@ -3,6 +3,7 @@ import '@testing-library/jest-dom/jest-globals'
 import {afterEach, describe, expect, test} from '@jest/globals'
 import Login from "../app/login/page"
 
+
 jest.mock("next/navigation", () => ({
     useRouter() {
         return {
@@ -10,6 +11,8 @@ jest.mock("next/navigation", () => ({
         };
     }
 }));
+
+global.fetch = jest.fn();
 
 describe('Login', () => {
 
@@ -23,18 +26,50 @@ describe('Login', () => {
         expect(placeElement).toBeInTheDocument();
     });
 
+    test("submits username and password", async () => {
+        const username = "me";
+        const password = "password";
+        const onSubmit = jest.fn();
+        render(<Login onSubmit={onSubmit}/>);
+
+       fireEvent.change(screen.getByPlaceholderText("Username"), {target: {value: username}});
+
+       fireEvent.change(screen.getByPlaceholderText("Password"), {target: {value: password}});
+
+       fireEvent.click(screen.getByText("Submit"));
+
+        expect(fetch).toHaveBeenCalledWith('http://localhost:8080/api/user/login', expect.any(Object));
+
+    });
+
 //    test("submits username and password", async () => {
 //        const username = "me";
 //        const password = "password";
 //        const onSubmit = jest.fn();
-//        render(<Login onSubmit={onSubmit}/>);
+ //       render(<Login onSubmit={onSubmit}/>);
 //
-//       fireEvent.change(screen.getByPlaceholderText("Username"), {target: {value: username}});
+ //       fireEvent.change(screen.getByPlaceholderText("Username"), {target: {value: username}});
 //
-//       fireEvent.change(screen.getByPlaceholderText("Password"), {target: {value: password}});
+//        fireEvent.change(screen.getByPlaceholderText("Password"), {target: {value: password}});
 //
 //        fireEvent.click(screen.getByText("Submit"));
 //
-//        expect(screen.getByTestId('alert-dialog-title')).toHaveTextContent('Invalid username or password');
- //   });
+//        expect(fetch).toHaveBeenCalledWith('http://localhost:8080/api/user/login', expect.any(Object));
+
+//    });
+    test('should update username state when username input changes', () => {
+        const { getByLabelText } = render(<Login />);
+
+        const usernameInput = getByLabelText(/username/i);
+        fireEvent.change(usernameInput, { target: { value: 'newUsername' } });
+        expect(usernameInput.value).toBe('newUsername');
+    });
+
+    test('should update password state when password input changes', () => {
+        const { getByLabelText } = render(<Login />);
+
+        const passwordInput = getByLabelText(/password/i);
+        fireEvent.change(passwordInput, { target: { value: 'newPassword' } });
+        expect(passwordInput.value).toBe('newPassword');
+    });
 });
