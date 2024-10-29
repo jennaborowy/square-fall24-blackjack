@@ -2,6 +2,18 @@
 import {useState, useEffect} from "react";
 import Card from './card';
 import './card.css'
+
+const FlippableCard = ({ suit, rank, isFlipped }) => {
+  return (
+      <div className={`cardArea card-flip ${isFlipped ? 'has-flipped' : ''}`}>
+        <div className="card-front">
+          <Card suit={suit} rank={rank} />
+        </div>
+        <div className="card-back" />
+      </div>
+  );
+};
+
 export default function CardDisplay() {
   //going to be list of cards
   const [playerHand, setPlayerHand] = useState([])
@@ -37,6 +49,7 @@ export default function CardDisplay() {
     }
   };
 
+  //HERE
   const localhost = "http://localhost:8080";
   const startGame = async () => {
     console.log("fetching game...");
@@ -132,9 +145,26 @@ export default function CardDisplay() {
         )}
         {gameStarted && (
         <div className="dealerHand-container">
-          {dealerHand.map((card, index) => (
-            <Card key={index} suit={card.suit} rank={card.rank} />
-          ))}
+          {dealerHand.map((card, index) => {
+            if (index === 0) {
+              // First card is always shown
+              return <Card key={index} suit={card.suit} rank={card.rank} />;
+            } else if (index === 1) {
+              // Second card is flippable
+              return (
+                  <FlippableCard
+                      key={index}
+                      suit={card.suit}
+                      rank={card.rank}
+                      isFlipped={!playerStand && !gameOver}
+                  />
+              );
+            } else if (playerStand || gameOver) {
+              // Show additional cards only after standing or game over
+              return <Card key={index} suit={card.suit} rank={card.rank} />;
+            }
+            return null;
+          })}
         </div> )}
         {gameOver && (
           <div className="end-container">
