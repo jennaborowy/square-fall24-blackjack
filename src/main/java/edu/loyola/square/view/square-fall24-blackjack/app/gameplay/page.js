@@ -115,11 +115,10 @@ export default function CardDisplay() {
       endGame(result)
 
     } catch (error) {
-      console.log("Hit failed", error)
+      console.log("Stand failed", error)
     }
 
   };
-
   return (
     <div>
       <div className="cardDisplay">

@@ -16,6 +16,7 @@ import java.util.Map;
 public class GameController {
   //utilized in hit and stand, game should lock to perform action before updating gameState
   private final Object lock = new Object();
+  private int endGameLocation;
   //game needs to persist for the session. Establishes a cookie
   @ModelAttribute("game")
   //parameter could be edited later to have a list of players
@@ -58,7 +59,8 @@ public class GameController {
       session.setAttribute("game", newGame);
       Map<String, Object> gameState = getGameState(newGame);
       if(newGame.getPlayers().getPlayerHand().blackjack()) {
-        Map<String, Object> status = newGame.endGameStatus();
+        endGameLocation = 1;
+        Map<String, Object> status = newGame.endGameStatus(1);
         gameState.put("gameStatus", status);
       }
       System.out.println(gameState);
@@ -82,8 +84,9 @@ public class GameController {
       Game game = (Game) session.getAttribute("game");
       if (game != null) {
         game.stand();
+        endGameLocation = 2;
         Map<String, Object> gameState = getGameState(game);
-        Map<String, Object> status = game.endGameStatus();
+        Map<String, Object> status = game.endGameStatus(3);
         gameState.put("gameStatus", status);
         return ResponseEntity.ok(gameState);
       }
@@ -107,7 +110,8 @@ public class GameController {
         game.hit(game.getPlayers().getPlayerHand());
         Map<String, Object> gameState = getGameState(game);
         if(game.getPlayers().getPlayerHand().getValue() > 21) {
-          Map<String, Object> status = game.endGameStatus();
+          endGameLocation = 3;
+          Map<String, Object> status = game.endGameStatus(2);
           gameState.put("gameStatus", status);
         }
         session.setAttribute("game", game);
@@ -133,6 +137,13 @@ public class GameController {
       if (game.getDealerHand() != null) {
         gameState.put("dealerHand", game.getDealerHand().getHand());
         gameState.put("dealerValue", game.getDealerHand().getValue());
+      }
+      if(game.getPlayers().getHasAce() == true) {
+        //indicate to front-end to prompt the user.
+        gameState.put("hasAce", true);
+      }
+      else {
+        gameState.put("hasAce", false);
       }
       System.out.println("Game state is: " + gameState);
     }
