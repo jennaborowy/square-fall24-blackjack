@@ -1,99 +1,135 @@
 package edu.loyola.square.controller;
 
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.Valid;
-
-import edu.loyola.square.controller.repositories.UserRepository;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthException;
+import com.google.firebase.auth.UserRecord;
+import com.google.firebase.auth.UserRecord.CreateRequest;
+import com.google.firebase.cloud.FirestoreClient;
+import com.google.cloud.firestore.Firestore;
+import com.google.cloud.firestore.DocumentReference;
+import edu.loyola.square.controller.repositories.UserService;
 import edu.loyola.square.model.dto.UserDTO;
-
-import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
 import edu.loyola.square.model.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-
+import jakarta.validation.Valid;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 @RestController
-@Validated
 @RequestMapping("/api/user")
 @CrossOrigin
-public class UserController extends SpringBootServletInitializer {
+public class UserController {
 
-  private final UserRepository userRepository;
+  private final FirebaseAuth firebaseAuth;
+  private final Firestore firestore;
+
+  public UserController() {
+    this.firebaseAuth = FirebaseAuth.getInstance();
+    this.firestore = FirestoreClient.getFirestore();
+  }
 
   @Autowired
-  public UserController(UserRepository userRepository) {
-    this.userRepository = userRepository;
+  private UserService userService;
+
+  // Example usage
+  @GetMapping("/{uid}")
+  public ResponseEntity<User> getUser(@PathVariable String uid) {
+    try {
+      User user = userService.getUser(uid);
+      if (user == null) {
+        return ResponseEntity.notFound().build();
+      }
+      return ResponseEntity.ok(user);
+    } catch (Exception e) {
+      return ResponseEntity.internalServerError().build();
+    }
   }
 
   @GetMapping("/")
-  public List<User> all() {
-    return userRepository.findAll();
+  public ResponseEntity<List<Map<String, Object>>> all() throws ExecutionException, InterruptedException {
+    List<Map<String, Object>> users = new ArrayList<>();
+    firestore.collection("users").get().get().getDocuments().forEach(document ->
+            users.add(document.getData())
+    );
+    return ResponseEntity.ok(users);
   }
 
   @PostMapping("/signup")
-  public ResponseEntity<?> create(@Valid @RequestBody UserDTO userDTO) throws ResponseStatusException, ConstraintViolationException, DataIntegrityViolationException {
-    String username = userDTO.getUsername();
-    String password = userDTO.getPassword();
-    String email = userDTO.getEmail();
-    String firstName = userDTO.getFirstName();
-    String lastName = userDTO.getLastName();
+  public ResponseEntity<?> create(@Valid @RequestBody UserDTO userDTO) {
+    try {
+      // Create the user in Firebase Authentication
+      CreateRequest request = new CreateRequest()
+              .setEmail(userDTO.getEmail())
+              .setPassword(userDTO.getPassword())
+              .setDisplayName(userDTO.getFirstName() + " " + userDTO.getLastName());
 
-    User user = new User();
-    user.setUsername(username);
-    user.setPassword(password);
-    user.setEmail(email);
-    user.setFirstName(firstName);
-    user.setLastName(lastName);
+      // this createUser uses firebase's authentication
+      UserRecord userRecord = firebaseAuth.createUser(request);
 
-    User savedUser = userRepository.save(user);
-    return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
+      // Store additional user data in Firestore
+      Map<String, Object> userData = new HashMap<>();
+      userData.put("username", userDTO.getUsername());
+      userData.put("email", userDTO.getEmail());
+      userData.put("firstName", userDTO.getFirstName());
+      userData.put("lastName", userDTO.getLastName());
+      userData.put("uid", userRecord.getUid());
+
+      DocumentReference docRef = firestore.collection("users").document(userRecord.getUid());
+      docRef.set(userData).get();
+
+      return ResponseEntity.status(HttpStatus.CREATED).body(userData);
+
+    } catch (FirebaseAuthException e) {
+      if (e.getErrorCode().equals("EMAIL_EXISTS")) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email already exists");
+      }
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+    } catch (Exception e) {
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+    }
   }
 
   @PostMapping("/login")
   public ResponseEntity<Object> login(@RequestBody UserDTO login) {
+    try {
+      // Verify the user exists using function defined in UserService (firebase doesn't provide finding by username)
+      User user = userService.getUserByUsername(login.getUsername());
 
-    String username = login.getUsername();
-    String password = login.getPassword();
+      // Generate a custom token for the client
+      String customToken = firebaseAuth.createCustomToken(user.getUid());
 
-    if (userRepository == null) {
-      return new ResponseEntity<>("user repository empty", HttpStatus.BAD_REQUEST);
-    } else {
-      List<User> list = userRepository.findByUsername(username);
+      Map<String, Object> response = new HashMap<>();
+      response.put("token", customToken);
+      response.put("message", "Welcome back!");
 
-      if (list.isEmpty()) {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User doesn't exist");
-      } else {
-        User user = list.get(0);
-        if (!user.getPassword().equals(password)) {
-          throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Password doesn't match our records.");
-        }
-        return new ResponseEntity<>("Welcome back!", HttpStatus.OK);
+      return ResponseEntity.ok(response);
+
+    } catch (FirebaseAuthException e) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
+    } catch (ExecutionException e) {
+      throw new RuntimeException(e);
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  // Add this middleware to verify Firebase ID tokens in protected routes
+  private String verifyFirebaseToken(String authHeader) {
+    try {
+      if (authHeader != null && authHeader.startsWith("Bearer ")) {
+        String idToken = authHeader.substring(7);
+        return firebaseAuth.verifyIdToken(idToken).getUid();
       }
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No token provided");
+    } catch (FirebaseAuthException e) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token");
     }
-  }
-
-  @ExceptionHandler(ConstraintViolationException.class)
-  public ResponseEntity<List<String>> handleConstraintViolationException(ConstraintViolationException e) {
-    List<String> errors = new ArrayList<>();
-    for (ConstraintViolation<?> violation : e.getConstraintViolations()) {
-      String message = violation.getMessage();
-      errors.add(message);
-    }
-    return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
-  }
-
-  @ExceptionHandler(DataIntegrityViolationException.class)
-  public ResponseEntity<List<String>> handleDataIntegrityViolationException(DataIntegrityViolationException e) {
-    List<String> errors = new ArrayList<>();
-    errors.add("The username or email is already taken. Please choose a different one.");
-    return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
   }
 }
