@@ -110,7 +110,7 @@ public class Game implements Serializable {
       }
     }
     if(player.getPlayerHand().getValue() > 21) {
-      gameOver();
+
     }
     else if (player.getPlayerHand().getValue() == 21) {
       gameOver();
@@ -156,6 +156,11 @@ public class Game implements Serializable {
       if (player.getPlayerHand().getValue() > 21)
       {
         status = gameStatus.PLAYER_BUST;
+        payout = 0.0;
+      }
+      if (player.getPlayerHand().getValue() == 21)
+      {
+        status = gameStatus.PLAYER_WIN;
         payout = 0.0;
       }
     }

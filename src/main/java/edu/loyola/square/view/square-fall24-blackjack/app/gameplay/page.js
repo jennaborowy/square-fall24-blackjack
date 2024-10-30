@@ -2,6 +2,7 @@
 import {useState, useEffect} from "react";
 import Card from './card';
 import './card.css'
+import AceModal from './AceModal'
 export default function CardDisplay() {
   //going to be list of cards
   const [playerHand, setPlayerHand] = useState([])
@@ -12,6 +13,8 @@ export default function CardDisplay() {
   const [playerStand, setPlayerStand] = useState(false)
   const [gameStatusMessage, setGameStatusMessage] = useState("")
   //const [gameStatus, setGameStatus] = useState([])
+  const [showAceModal, setShowAceModal] = useState(false)
+
   const gameStat = {
     DEALER_BUST: 'DEALER_BUST',
     PLAYER_WIN: 'PLAYER_WIN',
@@ -23,9 +26,8 @@ export default function CardDisplay() {
   };
 
 
-
-  function endGame (gameState){
-    if(!gameState || !gameState.gameStatus) {
+  function endGame(gameState) {
+    if (!gameState || !gameState.gameStatus) {
       console.log("dont have game state")
       return;
     }
@@ -43,55 +45,55 @@ export default function CardDisplay() {
     setGameStarted(true);
 
     try {
-        const response = await fetch('http://localhost:8080/gamestart', {
-          method: 'POST',
-          headers:{
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({}),
-          })
-        if (!response.ok) throw new Error("Connection failed");
-        const result = await response.json();
-        setPlayerHand(result.playerHand);
-        setDealerHand(result.dealerHand);
-        setGameState(result)
-        endGame(result);
+      const response = await fetch('http://localhost:8080/gamestart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({}),
+      })
+      if (!response.ok) throw new Error("Connection failed");
+      const result = await response.json();
+      setPlayerHand(result.playerHand);
+      setDealerHand(result.dealerHand);
+      setGameState(result)
+      setGameStarted(true);
+      endGame(result);
 
-      } catch (error){
-        console.log("Game failed to start", error);
-      }
-
+    } catch (error) {
+      console.log("Game failed to start", error);
     }
 
-    const playerHits = async() => {
-      console.log("Player length", playerHand.length);
-      if (gameOver) {
-        return;
-      }
-      try {
-        const response = await fetch('http://localhost:8080/hit', {
-          method: 'POST',
-          headers: {
-            'Content-type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({
-            hit: "true",
-          }),
-        })
-        if (!response.ok) throw new Error("Connection failed");
-        const result = await response.json();
-        console.log("Player response ", result)
-        setPlayerHand(result.playerHand);
-        setDealerHand(result.dealerHand);
-        setGameState(result);
-        endGame(result)
-      } catch (error) {
-        console.log("Hit failed", error)
-      }
+  }
+  const playerHits = async () => {
+    console.log("Player length", playerHand.length);
+    if (gameOver) {
+      return;
     }
-  const playerStands = async() => {
+    try {
+      const response = await fetch('http://localhost:8080/hit', {
+        method: 'POST',
+        headers: {
+          'Content-type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          hit: "true",
+        }),
+      })
+      if (!response.ok) throw new Error("Connection failed");
+      const result = await response.json();
+      console.log("Player response ", result)
+      setPlayerHand(result.playerHand);
+      setDealerHand(result.dealerHand);
+      setGameState(result);
+      endGame(result)
+    } catch (error) {
+      console.log("Hit failed", error)
+    }
+  }
+  const playerStands = async () => {
     if (gameOver) {
       return;
     }
@@ -119,6 +121,40 @@ export default function CardDisplay() {
     }
 
   };
+
+  const promptAce = async (selectedValue) => {
+    if (!gameStarted || !gameState) return;
+    try {
+      const response = await fetch('http://localhost:8080/promptAce', {
+        method: 'POST',
+        headers: {
+          'Content-type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({aceValue: selectedValue}),
+      })
+      if (!response.ok) throw new Error("Connection failed");
+      const result = await response.json();
+      console.log("Player response ", result)
+      setPlayerHand(result.playerHand);
+      setDealerHand(result.dealerHand);
+      setGameState(result)
+      setShowAceModal(false);
+
+    } catch (error) {
+      console.log("Prompt Ace failed", error)
+    }
+  };
+
+  useEffect(() => {
+    if (gameStarted && gameState && gameState.hasAce  === true) {
+      setShowAceModal(true);
+    }
+  }, [gameState?.hasAce]);
+
+  const handleAceValueSelect = (value) => {
+    promptAce(value);
+  };
   return (
     <div>
       <div className="cardDisplay">
@@ -130,11 +166,11 @@ export default function CardDisplay() {
           </div>
         )}
         {gameStarted && (
-        <div className="dealerHand-container">
-          {dealerHand.map((card, index) => (
-            <Card key={index} suit={card.suit} rank={card.rank} />
-          ))}
-        </div> )}
+          <div className="dealerHand-container">
+            {dealerHand.map((card, index) => (
+              <Card key={index} suit={card.suit} rank={card.rank}/>
+            ))}
+          </div>)}
         {gameOver && (
           <div className="end-container">
             {gameStatusMessage}
@@ -142,17 +178,21 @@ export default function CardDisplay() {
         )}
         {gameStarted && !playerStand && !gameOver && (
           <div className="btn-container">
-          <button className="action-btn" onClick={playerHits}>Hit</button>
-          <button className="action-btn" onClick={playerStands}>Stand</button>
-        </div> )}
+            <button className="action-btn" onClick={playerHits}>Hit</button>
+            <button className="action-btn" onClick={playerStands}>Stand</button>
+          </div>)}
 
         {gameStarted && (
-          <div className= "playerHand-container">
-          {playerHand.map((card, index) => (
-              <Card key={index} suit={card.suit} rank={card.rank} />
+          <div className="playerHand-container">
+            {playerHand.map((card, index) => (
+              <Card key={index} suit={card.suit} rank={card.rank}/>
             ))}
-        </div> )}
+          </div>)}
+        <AceModal
+          showModal={showAceModal}
+          onSelectValue={handleAceValueSelect}
+        />
       </div>
     </div>
-    );
+  );
 }

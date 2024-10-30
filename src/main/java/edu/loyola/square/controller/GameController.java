@@ -84,7 +84,7 @@ public class GameController {
       Game game = (Game) session.getAttribute("game");
       if (game != null) {
         game.stand();
-        endGameLocation = 2;
+        endGameLocation = 3;
         Map<String, Object> gameState = getGameState(game);
         Map<String, Object> status = game.endGameStatus(3);
         gameState.put("gameStatus", status);
@@ -109,8 +109,11 @@ public class GameController {
         System.out.println("game not null");
         game.hit(game.getPlayers().getPlayerHand());
         Map<String, Object> gameState = getGameState(game);
-        if(game.getPlayers().getPlayerHand().getValue() > 21) {
-          endGameLocation = 3;
+        if (game.getPlayers().getHasAce()) {
+          return ResponseEntity.ok(gameState);
+        }
+        if(game.getPlayers().getPlayerHand().getValue() >= 21) {
+          endGameLocation = 2;
           Map<String, Object> status = game.endGameStatus(2);
           gameState.put("gameStatus", status);
         }
@@ -122,6 +125,33 @@ public class GameController {
     }
   }
 
+  @PostMapping("/promptAce")
+  public ResponseEntity<Map<String, Object>> promptAce(HttpSession session, @RequestBody Map<String, Object> requestAce)
+  {
+    synchronized (lock) {
+      Game game = (Game) session.getAttribute("game");
+      if(game != null) {
+        Integer aceValue = (Integer) requestAce.get("aceValue");
+        if (aceValue != null && (aceValue == 1 || aceValue == 11)) {
+          game.getPlayerHand().setAceValue(aceValue);
+        }
+        Map<String, Object> gameState = getGameState(game);
+        gameState.put("aceValue", aceValue);
+        int handValue = game.getPlayers().getPlayerHand().getValue();
+        if (handValue > 21) {
+          Map<String, Object> status = game.endGameStatus(2);
+          gameState.put("gameStatus", status);
+        } else if (handValue == 21) {
+          Map<String, Object> status = game.endGameStatus(1);
+          gameState.put("gameStatus", status);
+        }
+
+        return ResponseEntity.ok(gameState);
+
+      }
+      return ResponseEntity.badRequest().body(Map.of("Error:", "Failed to store ace"));
+    }
+  }
   /**
    *@param game Game - the Game that has been persisted in the current session
    *Returns gameState - a hashmap including the player's hand, dealer's dan
