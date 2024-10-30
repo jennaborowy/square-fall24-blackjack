@@ -1,0 +1,21 @@
+button.table-info-button {
+    padding: 0.25rem 0.75rem !important;
+    background-color: #22c55e !important;  /* Base green color */
+    color: white !important;
+    border: black !important;
+    border-radius: 3px !important;
+    font-size: 0.875rem !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease-in-out !important;
+    font-family: Arial, sans-serif !important;
+}
+
+/* Slightly darker green on hover */
+button.table-info-button:hover {
+    background-color: #16a34a !important;
+}
+
+/* Even darker green when clicked */
+button.table-info-button:active {
+    background-color: #15803d !important;
+}

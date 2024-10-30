@@ -1,5 +1,7 @@
-import "./TableView.css"
+import "./TableList.css"
 import React from 'react';
+import JoinTableButton from "@/app/table/JoinTableButton";
+import TableInfoButton from "@/app/table/TableInfoButton";
 
 const TableList = ({ tables }) => {
     return (
@@ -8,17 +10,21 @@ const TableList = ({ tables }) => {
                 {tables.map((table, index) => (
                     <div
                         key={index}
-                        className="p-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow bg-gray-50"
+                        className="p-4 mt-2 border rounded-lg shadow-sm hover:shadow-md transition-shadow bg-gray-50"
                     >
                         <div className="flex justify-between items-center">
                             <div>
                                 <h3 className="font-medium">Table #{index + 1}</h3>
                                 <p className="text-sm text-gray-600">
-                                    Players: {table.playerAmount} | Min Bet: ${table.minBet}
+                                    Max Players: {table.playerAmount} | Current Players: {table.playerAmount} | Min Bet:
+                                    ${table.minBet}
                                 </p>
                             </div>
-                            <div className="text-sm text-gray-500">
-                                {table.playerAmount === '1' ? '1 Player' : `${table.playerAmount} Players`}
+                            <div className="mt-2">
+                                <div className="button-container">
+                                    <JoinTableButton tableId={index + 1}/>
+                                    <TableInfoButton tableId={index + 1}/>
+                                </div>
                             </div>
                         </div>
                     </div>
