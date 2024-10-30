@@ -7,7 +7,7 @@ import com.google.firebase.auth.UserRecord.CreateRequest;
 import com.google.firebase.cloud.FirestoreClient;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.DocumentReference;
-import edu.loyola.square.controller.repositories.UserService;
+import edu.loyola.square.controller.service.UserService;
 import edu.loyola.square.model.dto.UserDTO;
 import edu.loyola.square.model.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
