@@ -1,3 +1,7 @@
+/**
+ * This file contains the lobby page which is the main landing page after signing in
+ */
+
 "use client";
 import LogoutButton from "@/app/lobby/LogoutButton";
 import TableManagement from "@/app/table/TableManagement";

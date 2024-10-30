@@ -49,7 +49,6 @@ export default function CardDisplay() {
     }
   };
 
-  //HERE
   const localhost = "http://localhost:8080";
   const startGame = async () => {
     console.log("fetching game...");

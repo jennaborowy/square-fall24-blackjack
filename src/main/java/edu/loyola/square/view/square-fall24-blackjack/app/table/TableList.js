@@ -1,7 +1,7 @@
-import "./TableList.css"
 import React from 'react';
 import JoinTableButton from "@/app/table/JoinTableButton";
 import TableInfoButton from "@/app/table/TableInfoButton";
+import "./TableList.css"
 
 const TableList = ({ tables }) => {
     return (
@@ -23,7 +23,10 @@ const TableList = ({ tables }) => {
                             <div className="mt-2">
                                 <div className="button-container">
                                     <JoinTableButton tableId={index + 1}/>
-                                    <TableInfoButton tableId={index + 1}/>
+                                    <TableInfoButton
+                                        tableId={index + 1}
+                                        table={table}
+                                    />
                                 </div>
                             </div>
                         </div>
