@@ -150,7 +150,7 @@ export default function CardDisplay() {
               // First card is always shown
               return <Card key={index} suit={card.suit} rank={card.rank} />;
             } else if (index === 1) {
-              // Second card is flippable
+              // Second card is hidden originally and then flipped after the player stands or wins
               return (
                   <FlippableCard
                       key={index}

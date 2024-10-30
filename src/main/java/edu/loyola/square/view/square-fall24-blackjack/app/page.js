@@ -61,7 +61,7 @@ export default function Home() {
                                   leaves you with your current cards.
                               </p>
                               <p>
-                                  You win if your hand's value is greater than the value of the dealer's hand.
+                                  You win if your hand's value is greater than the value of the dealer's hand, or if the dealer goes over 21.
                               </p>
                               <p>
                                   <span>
