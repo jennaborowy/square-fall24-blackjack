@@ -100,7 +100,11 @@ public class UserController {
   public ResponseEntity<Object> login(@RequestBody UserDTO login) {
     try {
       // Verify the user exists using function defined in UserService (firebase doesn't provide finding by username)
-      User user = userService.getUserByUsername(login.getUsername());
+      User user = userService.getUserByUsernameAndPassword(login.getUsername(), login.getPassword());
+
+      if (user == null) {
+        return ResponseEntity.notFound().build();
+      }
 
       // Generate a custom token for the client
       String customToken = firebaseAuth.createCustomToken(user.getUid());

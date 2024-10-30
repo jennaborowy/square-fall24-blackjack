@@ -2,8 +2,10 @@ package edu.loyola.square.controller.service;
 
 import java.util.concurrent.ExecutionException;
 import com.google.cloud.firestore.*;
+import com.google.firebase.auth.hash.Bcrypt;
 import com.google.firebase.cloud.FirestoreClient;
 import edu.loyola.square.model.entity.User;
+import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.stereotype.Service;// UserService class to handle Firestore operations
 
 @Service
@@ -21,7 +23,7 @@ public class UserService {
     return User.fromDocument(document);
   }
 
-  public User getUserByUsername(String username) throws ExecutionException, InterruptedException {
+  public User getUserByUsernameAndPassword(String username, String password) throws ExecutionException, InterruptedException {
     QuerySnapshot query = usersCollection
             .whereEqualTo("username", username)
             .limit(1)
@@ -31,8 +33,21 @@ public class UserService {
     if (query.isEmpty()) {
       return null;
     }
+    User user = User.fromDocument(query.getDocuments().get(0));
 
-    return User.fromDocument(query.getDocuments().get(0));
+    if (!verifyPassword(user, password)) {
+      return null;
+    }
+
+    return user;
+  }
+
+  public boolean verifyPassword(User user, String password) throws ExecutionException, InterruptedException {
+    DocumentReference docRef = usersCollection.document(user.getUid());
+    String storedPassword = docRef.get().get().getString("password");
+    String storedHash = BCrypt.hashpw(storedPassword, BCrypt.gensalt());
+    String attemptedHash = BCrypt.hashpw(password, BCrypt.gensalt());
+    return BCrypt.checkpw(password, storedHash);
   }
 
   public void saveUser(User user) throws ExecutionException, InterruptedException {
