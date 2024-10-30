@@ -63,6 +63,14 @@ public class GameController {
         Map<String, Object> status = newGame.endGameStatus(1);
         gameState.put("gameStatus", status);
       }
+      //should handle the case that player is dealt aces at game start
+      else if (newGame.getPlayers().getPlayerHand().getAceCount() > 0) {
+        gameState.put("hasAce", true);
+        return ResponseEntity.ok(gameState);
+      }
+      else {
+        gameState.put("hasAce", false);
+      }
       System.out.println(gameState);
       //game could end here if winner gets Blackjack, so return the result
       //using hashmap, so information of the game can be added in key,value pairs and returned in JSON
@@ -109,7 +117,7 @@ public class GameController {
         System.out.println("game not null");
         game.hit(game.getPlayers().getPlayerHand());
         Map<String, Object> gameState = getGameState(game);
-        if (game.getPlayers().getHasAce()) {
+        if (gameState.get("hasAce").equals(true)) {
           return ResponseEntity.ok(gameState);
         }
         if(game.getPlayers().getPlayerHand().getValue() >= 21) {

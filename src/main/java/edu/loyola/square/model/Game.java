@@ -61,6 +61,10 @@ public class Game implements Serializable {
     this.deck = new Deck();
     dealerHand = new Hand(drawCards(2), true);
     player.setHand(new Hand(drawCards(2), false));
+    if(player.getPlayerHand().getAceCount() > 1)
+    {
+
+    }
   }
 
   public void hasAce() {
