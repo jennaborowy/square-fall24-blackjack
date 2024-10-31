@@ -28,6 +28,7 @@ public class Game implements Serializable {
   private boolean gameOver;
   private gameStatus status;
   private double payout;
+
   public Game(Player player) {
     deck = new Deck();
     dealerHand = new Hand(new ArrayList<Card>(), true);
