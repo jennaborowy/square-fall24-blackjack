@@ -1,8 +1,9 @@
 import LogoutButton from "@/app/lobby/LogoutButton";
-import axios from "axios";
+import { auth } from "@/firebaseConfig";
 
 function Lobby() {
 
+    console.log(auth?.currentUser?.uid)
     return (
         <div className="m-3">
             <LogoutButton></LogoutButton>

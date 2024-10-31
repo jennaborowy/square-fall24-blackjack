@@ -23,6 +23,9 @@ function Login() {
     const errMsg = "User credentials invalid";
     const router = useRouter();
 
+    console.log(auth?.currentUser?.uid)
+
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
