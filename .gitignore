@@ -7,3 +7,5 @@ secrets.properties
 logs/
 
 out/
+
+./src/main/resources/square-fall24-blackjack-firebase-adminsdk-bp4ir-20879538b8.json
