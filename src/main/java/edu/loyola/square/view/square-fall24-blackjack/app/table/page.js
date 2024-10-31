@@ -1,8 +1,9 @@
+"use client"
 import React, { useState } from 'react';
 import TableList from "@/app/table/TableList";
 import CreateTableButton from "@/app/lobby/CreateTableButton";
 
-const TableManagement = () => {
+const Page = () => {
     const [tables, setTables] = useState([]);
 
     const handleTableCreate = (newTable) => {
@@ -17,4 +18,4 @@ const TableManagement = () => {
     );
 };
 
-export default TableManagement;
+export default Page;
