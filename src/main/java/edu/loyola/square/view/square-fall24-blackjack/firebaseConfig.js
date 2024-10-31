@@ -1,7 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, signOut } from 'firebase/auth';
 import "firebase/firestore";
 import { getFirestore } from "firebase/firestore";
 import firebase from "firebase/compat/app";
@@ -21,16 +21,16 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app)
-const analytics = getAnalytics(app);
+//const analytics = getAnalytics(app);
 const auth = getAuth(app);
 
-onAuthStateChanged(auth, user => {
-    if(user != null) {
-        console.log('logged in!');
-    } else {
-        console.log('No user');
-    }
-});
+// onAuthStateChanged(auth, user => {
+//     if(user != null) {
+//         console.log('logged in!');
+//     } else {
+//         console.log('No user');
+//     }
+// });
 
 
-export { app, db, analytics, auth };
+export { app, db, auth, signOut };

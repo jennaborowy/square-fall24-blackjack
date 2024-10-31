@@ -12,13 +12,14 @@
 # next.js
 /.next/
 /out/
-
 # production
 /build
 
 # misc
 .DS_Store
 *.pem
+.env.local
+src/main/java/edu/loyola/square/config/square-fall24-blackjack-firebase-adminsdk-bp4ir-20879538b8.json
 
 # debug
 npm-debug.log*
