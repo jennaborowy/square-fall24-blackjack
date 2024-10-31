@@ -31,6 +31,8 @@ import java.util.regex.Matcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// use data access layer info from next.js
+
 @RestController
 @RequestMapping("/api/user")
 @CrossOrigin

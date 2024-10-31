@@ -4,8 +4,6 @@ import java.util.concurrent.ExecutionException;
 
 import com.google.cloud.firestore.*;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseAuthException;
-import com.google.firebase.auth.UserRecord;
 import com.google.firebase.cloud.FirestoreClient;
 import edu.loyola.square.model.entity.User;
 import org.springframework.stereotype.Service;
@@ -51,32 +49,6 @@ public class UserService {
     }
     return User.fromDocument(query.getDocuments().get(0));
   }
-
-  public User getUserByUsernameAndPassword(String username, String password) throws ExecutionException, InterruptedException {
-    QuerySnapshot query = usersCollection
-            .whereEqualTo("username", username)
-            .limit(1)
-            .get()
-            .get();
-
-    if (query.isEmpty()) {
-      return null; // Username not found
-    }
-
-    return User.fromDocument(query.getDocuments().get(0));
-  }
-
-  public String authenticateUser(String username) throws FirebaseAuthException, ExecutionException, InterruptedException {
-    User user = getUserByUsername(username);
-
-    if (user == null) {
-      throw new IllegalArgumentException("User not found");
-    }
-
-    UserRecord userRecord = firebaseAuth.getUserByEmail(user.getEmail());
-    return firebaseAuth.createCustomToken(userRecord.getUid());
-  }
-
 
   public void saveUser(User user) throws ExecutionException, InterruptedException {
     usersCollection.document(user.getUid()).set(user.toDocument()).get();

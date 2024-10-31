@@ -11,7 +11,7 @@ public class User {
   @DocumentId
   private String uid; // Firebase Auth UID
 
-  @Size(min = 3, message = "Username must be at least 3 characters")
+  //@Size(min = 3, message = "Username must be at least 3 characters")
   private String username;
 
   private String firstName;
