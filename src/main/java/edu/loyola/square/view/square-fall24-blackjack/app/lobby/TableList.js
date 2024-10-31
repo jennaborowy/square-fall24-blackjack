@@ -1,6 +1,6 @@
 import React from 'react';
-import JoinTableButton from "@/app/table/JoinTableButton";
-import TableInfoButton from "@/app/table/TableInfoButton";
+import JoinTableButton from "@/app/lobby/JoinTableButton";
+import TableInfoButton from "@/app/lobby/TableInfoButton";
 import "./TableList.css"
 
 const TableList = ({ tables }) => {

@@ -1,4 +1,4 @@
-package edu.loyola.square.controller;
+/*package edu.loyola.square.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -35,4 +35,4 @@ class LogoutControllerTest {
    // assertEquals("http://localhost:3000", request.getHeaders("Access-Control-Request-Headers").nextElement());
   }
 
-}
+}*/

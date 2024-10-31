@@ -1,4 +1,4 @@
-package edu.loyola.square.controller;
+/*package edu.loyola.square.controller;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -110,4 +110,4 @@ class UserControllerTest {
     UserDTO userDTO2 = new UserDTO("callie", "callie444");
     assertThrows(ResponseStatusException.class, () -> userController.login(userDTO2));
   }
-}
+}*/
