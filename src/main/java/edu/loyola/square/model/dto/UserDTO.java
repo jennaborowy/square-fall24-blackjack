@@ -1,42 +1,23 @@
 package edu.loyola.square.model.dto;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 public class UserDTO {
 
-//  @Id
-//  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long userID;
 
-//  @Column(name = "username", nullable = false, unique = true)
   private String username;
 
-//  @Size(min = 8, message = "Password must be at least 8 characters")
-//  @Column(name = "password", nullable = false)
   private String password;
 
-//  @Column(name = "first_name", nullable = false)
   private String firstName;
 
-//  @Column(name = "last_name", nullable = false)
   private String lastName;
 
-//  @Column(name = "chip_balance", nullable = false, columnDefinition = "INTEGER")
   private int chipBalance = 2500;
 
-//  @Pattern(regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
-//          message = "Invalid email address format")
-//  @Column(name = "email", nullable = false, unique = true)
   private String email;
 
-//  @Column(name = "total_wins", nullable = false, columnDefinition = "INTEGER")
   private int totalWins;
 
-//  @Column(name = "total_losses", nullable = false, columnDefinition = "INTEGER")
   private int totalLosses;
 
   protected UserDTO() {} // needed internally
