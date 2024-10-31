@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { auth, signOut } from "@/firebaseConfig";
 
 function LogoutButton() {
 
@@ -9,14 +10,8 @@ function LogoutButton() {
     const handleLogout = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch("http://localhost:8080/api/logout/", {
-                method: 'POST',
-            })
-            if (!response.ok) {
-                const error = await response.json();
-            } else {
-                router.push('/');
-            }
+            await signOut(auth);
+            router.push('/');
         } catch (error) {
             console.error('Logout error:', error);
         }

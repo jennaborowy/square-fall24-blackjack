@@ -2,6 +2,7 @@ package edu.loyola.square.controller;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
+import com.google.firebase.auth.FirebaseToken;
 import com.google.firebase.auth.UserRecord;
 import com.google.firebase.auth.UserRecord.CreateRequest;
 import com.google.firebase.cloud.FirestoreClient;
@@ -10,22 +11,36 @@ import com.google.cloud.firestore.DocumentReference;
 import edu.loyola.square.controller.service.UserService;
 import edu.loyola.square.model.dto.UserDTO;
 import edu.loyola.square.model.entity.User;
+import jakarta.validation.ValidationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import jakarta.validation.Valid;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+// use data access layer info from next.js
 
 @RestController
 @RequestMapping("/api/user")
 @CrossOrigin
 public class UserController {
+
+  private static final String EMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
+  private static final Pattern pattern = Pattern.compile(EMAIL_REGEX);
+  private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
   private final FirebaseAuth firebaseAuth;
   private final Firestore firestore;
@@ -62,13 +77,25 @@ public class UserController {
   }
 
   @PostMapping("/signup")
-  public ResponseEntity<?> create(@Valid @RequestBody UserDTO userDTO) {
+  public ResponseEntity<?> create(@Valid @RequestBody UserDTO userDTO) throws ExecutionException, InterruptedException, FirebaseAuthException {
     try {
+      logger.info(userDTO.getEmail());
+      logger.info(userDTO.getPassword());
+
       // Create the user in Firebase Authentication
       CreateRequest request = new CreateRequest()
               .setEmail(userDTO.getEmail())
               .setPassword(userDTO.getPassword())
               .setDisplayName(userDTO.getFirstName() + " " + userDTO.getLastName());
+
+      User user = userService.getUserByUsername(userDTO.getUsername());
+      if (user != null) {
+        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Username is already in our records");
+      }
+      user = userService.getUserByEmail(userDTO.getEmail());
+      if (user != null) {
+        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email is already in our records");
+      }
 
       // this createUser uses firebase's authentication
       UserRecord userRecord = firebaseAuth.createUser(request);
@@ -79,49 +106,58 @@ public class UserController {
       userData.put("email", userDTO.getEmail());
       userData.put("firstName", userDTO.getFirstName());
       userData.put("lastName", userDTO.getLastName());
+      userData.put("chipBalance", 2500);
+      userData.put("totalWins", 0);
+      userData.put("totalLosses", 0);
       userData.put("uid", userRecord.getUid());
 
       DocumentReference docRef = firestore.collection("users").document(userRecord.getUid());
       docRef.set(userData).get();
 
+      System.out.println("Response: " + ResponseEntity.status(HttpStatus.CREATED).body(userData));
       return ResponseEntity.status(HttpStatus.CREATED).body(userData);
-
-    } catch (FirebaseAuthException e) {
-      if (e.getErrorCode().equals("EMAIL_EXISTS")) {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email already exists");
+    } catch (IllegalArgumentException e) {
+      if (!pattern.matcher(userDTO.getEmail()).matches()) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid email format");
       }
-      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
-    } catch (Exception e) {
-      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());
     }
   }
 
   @PostMapping("/login")
   public ResponseEntity<Object> login(@RequestBody UserDTO login) {
     try {
-      // Verify the user exists using function defined in UserService (firebase doesn't provide finding by username)
-      User user = userService.getUserByUsernameAndPassword(login.getUsername(), login.getPassword());
+          // grab user info from backend
+          User user = userService.getUserByUsername(login.getUsername());
 
-      if (user == null) {
-        return ResponseEntity.notFound().build();
-      }
+          // check if account exists for username
+          if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
+          }
 
-      // Generate a custom token for the client
-      String customToken = firebaseAuth.createCustomToken(user.getUid());
+          Map<String, Object> response = new HashMap<>();
 
-      Map<String, Object> response = new HashMap<>();
-      response.put("token", customToken);
-      response.put("message", "Welcome back!");
+          // add the email from the user
+          response.put("email", user.getEmail());
 
-      return ResponseEntity.ok(response);
+          // frontend verifies password with "signInWithUsernameAndPassword()" by firebase
 
-    } catch (FirebaseAuthException e) {
-      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
-    } catch (ExecutionException e) {
-      throw new RuntimeException(e);
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
-    }
+          return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+          return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+        } catch (ExecutionException e) {
+          throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+          throw new RuntimeException(e);
+        }
+
+  }
+
+  @ExceptionHandler(ResponseStatusException.class)
+  public ResponseEntity<Map<String, String>> handleConstraintViolationException(ResponseStatusException e) {
+    Map<String, String> errorResponse = new HashMap<>();
+    errorResponse.put("message", e.getReason());
+    return new ResponseEntity<>(errorResponse, e.getStatusCode());
   }
 
   // Add this middleware to verify Firebase ID tokens in protected routes
@@ -136,4 +172,8 @@ public class UserController {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token");
     }
   }
+
+
+
+
 }

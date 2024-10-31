@@ -1,21 +1,23 @@
 package edu.loyola.square.controller.service;
 
 import java.util.concurrent.ExecutionException;
+
 import com.google.cloud.firestore.*;
-import com.google.firebase.auth.hash.Bcrypt;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.cloud.FirestoreClient;
 import edu.loyola.square.model.entity.User;
-import org.mindrot.jbcrypt.BCrypt;
-import org.springframework.stereotype.Service;// UserService class to handle Firestore operations
+import org.springframework.stereotype.Service;
 
 @Service
 public class UserService {
   private final Firestore firestore;
   private final CollectionReference usersCollection;
+  private final FirebaseAuth firebaseAuth;
 
   public UserService() {
     this.firestore = FirestoreClient.getFirestore();
     this.usersCollection = firestore.collection("users");
+    this.firebaseAuth = FirebaseAuth.getInstance();
   }
 
   public User getUser(String uid) throws ExecutionException, InterruptedException {
@@ -23,7 +25,19 @@ public class UserService {
     return User.fromDocument(document);
   }
 
-  public User getUserByUsernameAndPassword(String username, String password) throws ExecutionException, InterruptedException {
+  public User getUserByEmail(String email) throws ExecutionException, InterruptedException {
+    QuerySnapshot query = usersCollection
+            .whereEqualTo("email", email)
+            .limit(1)
+            .get()
+            .get();
+    if (query.isEmpty()) {
+      return null;
+    }
+    return User.fromDocument(query.getDocuments().get(0));
+  }
+
+  public User getUserByUsername(String username) throws ExecutionException, InterruptedException {
     QuerySnapshot query = usersCollection
             .whereEqualTo("username", username)
             .limit(1)
@@ -33,21 +47,7 @@ public class UserService {
     if (query.isEmpty()) {
       return null;
     }
-    User user = User.fromDocument(query.getDocuments().get(0));
-
-    if (!verifyPassword(user, password)) {
-      return null;
-    }
-
-    return user;
-  }
-
-  public boolean verifyPassword(User user, String password) throws ExecutionException, InterruptedException {
-    DocumentReference docRef = usersCollection.document(user.getUid());
-    String storedPassword = docRef.get().get().getString("password");
-    String storedHash = BCrypt.hashpw(storedPassword, BCrypt.gensalt());
-    String attemptedHash = BCrypt.hashpw(password, BCrypt.gensalt());
-    return BCrypt.checkpw(password, storedHash);
+    return User.fromDocument(query.getDocuments().get(0));
   }
 
   public void saveUser(User user) throws ExecutionException, InterruptedException {

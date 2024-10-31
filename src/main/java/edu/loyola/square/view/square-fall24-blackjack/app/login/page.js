@@ -2,7 +2,7 @@
 import "../globals.css";
 import { useRouter } from "next/navigation";
 import { auth } from "@/firebaseConfig";
-import { signInWithCustomToken } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
@@ -14,16 +14,17 @@ import Link from "next/Link";
 
 import "./login.css";
 
-
 function Login() {
 
     const [username, setUsername] = useState("");
-    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loginErr, setLoginErr] = useState(false);
 
     const errMsg = "User credentials invalid";
     const router = useRouter();
+
+    console.log(auth?.currentUser?.uid)
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -37,7 +38,6 @@ function Login() {
 
             let body = {
                 "username": userUsername,
-                "password": userPassword,
             };
 
             try {
@@ -52,26 +52,17 @@ function Login() {
                     setLoginErr(true);
                     console.log(res);
                 } else {
-                    const { token } = await res.json();
+                    const { email } = await res.json();
+                    await signInWithEmailAndPassword(auth, email, password);
 
-                    if (token) {
-                        const userCredential = await signInWithCustomToken(auth, token);
-                        const user = userCredential.user;
-
-                        console.log("user signed in: ", user);
-                        router.push('/lobby');
-                    } else {
-                        throw new Error(errMsg);
-                    }
-
-
+                    console.log("user signed in!");
+                    router.push('/lobby');
                 }
             } catch (error) {
                 setLoginErr(true);
                 console.log("Sign in Error: ", error);
             }
         }
-
         await login(username, password);
     }
 
@@ -89,7 +80,6 @@ function Login() {
     };
 
     return (
-
         <div className="container">
             <img src={"/logo-transparent.png"}
                  alt=""
@@ -129,7 +119,6 @@ function Login() {
                 </div>
                 <button className="mt-3 btn btn-success border" type="submit" name="login">Submit</button>
             </form>
-
             <footer className="footer">
                 <Link
                     href="/signup"
