@@ -34,4 +34,23 @@ describe('Main page', () => {
         expect(await screen.findByText("Login")).toBeInTheDocument();
     });
 
+    test('handle open', async () => {
+        render(<Main />);
+        expect(screen.queryByText('Ok')).not.toBeInTheDocument();
+        const button = screen.getByText('Tutorial');
+        fireEvent.click(button);
+        expect(screen.getByText('Ok')).toBeInTheDocument();
+    });
+
+    test('handle close', async () => {
+        render(<Main />);
+        expect(screen.queryByText('Ok')).not.toBeInTheDocument();
+        const button = screen.getByText('Tutorial');
+        fireEvent.click(button);
+        expect(screen.getByText('Ok')).toBeInTheDocument();
+        const button2 = screen.getByText('Ok');
+        fireEvent.click(button2);
+        expect(screen.queryByText('Tutorial')).toBeInTheDocument();
+    });
+
 });

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 
 import "./signup.css"
 import "../globals.css"
+import "../loading/loading"
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";

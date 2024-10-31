@@ -1,0 +1,21 @@
+.main {
+    height: 100vh;
+    background: url("../../../public/background.jpg") no-repeat center;
+    background-size: cover;
+
+}
+
+.gif {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+}
+
+.gif > img {
+    max-height: 400px;
+    max-width: 400px;
+    margin: 30vh;
+
+
+}
+
