@@ -16,10 +16,25 @@ import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import {createTheme, ThemeProvider} from "@mui/material";
+import { useRouter } from "next/navigation";
+import { auth, signOut } from "@/firebaseConfig";
+
 
 function LobbyLayout({children}) {
     const [anchorElNav, setAnchorElNav] = React.useState(null);
     const [anchorElUser, setAnchorElUser] = React.useState(null);
+
+    const router = useRouter();
+
+    const handleLogout = async (e) => {
+        e.preventDefault();
+        try {
+            await signOut(auth);
+            router.push('/');
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
+    }
 
     const handleOpenNavMenu = (event) => {
         setAnchorElNav(event.currentTarget);
@@ -153,7 +168,7 @@ function LobbyLayout({children}) {
                                 <MenuItem component='a' href='/lobby/manageaccount' onClick={handleCloseUserMenu}>
                                     <Typography sx={{textAlign: 'center'}}>Manage Account</Typography>
                                 </MenuItem>
-                                <MenuItem component='a' href='/' onClick={handleCloseUserMenu}>
+                                <MenuItem component='a' onClick={handleLogout}>
                                     <Typography sx={{textAlign: 'center'}}>Logout</Typography>
                                 </MenuItem>
 
