@@ -41,7 +41,7 @@ public class Hand implements Serializable {
   /**
    * This function optimizes the players ace(s) to not let them change their ace(s) to 11 if they would bust, or give them 21 by changing the ace to an 11 if applicable
    */
-  private void optimizeAces() {
+  public void optimizeAces() {
     if (aceCount > 0) {
       if (getValue(11) > 21) {
         setAceValue(1);
@@ -57,11 +57,22 @@ public class Hand implements Serializable {
     this.isDealer = isDealer;
     this.cards = cards;
     aceValue = 1;
+    Card firstAce = null;
     for (Card card : cards) {
       if (card.getRank().equals("A")) {
         aceCount++;
+        //in the case the player is dealt two aces, the first must be set to 1
+        if(firstAce == null)
+        {
+          firstAce = card;
+        }
       }
     }
+    if (aceCount > 1 && firstAce != null) {
+      setAceValue(1);
+    }
+
+
   }
 
   public boolean isDealer() {

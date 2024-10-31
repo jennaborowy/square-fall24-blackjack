@@ -10,11 +10,13 @@ import java.util.Map;
 import java.util.Scanner;
 
 public class Game implements Serializable {
-  public enum gameStatus {
+  public enum gameStatus
+  {
     PLAYER_WIN,
     DEALER_WIN,
     PUSH,
     PLAYER_BLACKJACK,
+    DEALER_BLACKJACK,
     PLAYER_BUST,
     DEALER_BUST,
     IN_PROGRESS
@@ -61,6 +63,11 @@ public class Game implements Serializable {
     this.deck = new Deck();
     dealerHand = new Hand(drawCards(2), true);
     player.setHand(new Hand(drawCards(2), false));
+    //if dealer gets an ace in their initial hand
+    if(dealerHand.getAceCount() > 0)
+    {
+      dealerHand.optimizeAces();
+    }
     if(player.getPlayerHand().getAceCount() > 1)
     {
 
@@ -113,21 +120,6 @@ public class Game implements Serializable {
         hand.addCard(newCard);
       }
     }
-    if(player.getPlayerHand().getValue() > 21) {
-
-    }
-    else if (player.getPlayerHand().getValue() == 21) {
-      gameOver();
-    }
-  }
-
-  /**
-   * This function performs stand action in controller
-   */
-  public void stand() {
-    takeDealerTurn();
-    gameOver = true;
-    //endGameStatus(3);
   }
 
   /**
@@ -164,8 +156,16 @@ public class Game implements Serializable {
       }
       if (player.getPlayerHand().getValue() == 21)
       {
-        status = gameStatus.PLAYER_WIN;
-        payout = 0.0;
+        if(dealerHand.getValue() == 21)
+        {
+          status = gameStatus.PUSH;
+          payout = 0.0;
+        }
+        else
+        {
+          status = gameStatus.PLAYER_WIN;
+          payout = 0.0;
+        }
       }
     }
     else if (endpoint == 3)
@@ -186,6 +186,11 @@ public class Game implements Serializable {
         payout = 1.0;
       }
       //player has less and dealer
+      else if(player.getPlayerHand().getValue() < dealerHand.getValue() && dealerHand.blackjack())
+      {
+        status = gameStatus.DEALER_BLACKJACK;
+        payout = 0.0;
+      }
       else if (player.getPlayerHand().getValue() < dealerHand.getValue() && dealerHand.getValue() <= 21)
       {
         status = gameStatus.DEALER_WIN;
@@ -217,6 +222,8 @@ public class Game implements Serializable {
         return "Dealer Busted!";
       case PLAYER_BLACKJACK:
         return "Blackjack!";
+      case DEALER_BLACKJACK:
+        return "Dealer Blackjack!";
       default:
         return "IN_PLAY";
     }
@@ -323,7 +330,7 @@ public class Game implements Serializable {
   /**
    * This function plays the dealer's turn once the player's turn is over
    */
-  private void takeDealerTurn() {
+  public void takeDealerTurn() {
     while (dealerHand.getValue() < 17) {
       Card newCard = deck.dealCard();
       dealerHand.addCard(newCard);

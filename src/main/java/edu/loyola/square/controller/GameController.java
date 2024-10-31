@@ -62,6 +62,9 @@ public class GameController {
         endGameLocation = 1;
         Map<String, Object> status = newGame.endGameStatus(1);
         gameState.put("gameStatus", status);
+        //so the front-end wont prompt ace value (user should automatically win with 11_
+        gameState.put("hasAce", false);
+        return ResponseEntity.ok(gameState);
       }
       //should handle the case that player is dealt aces at game start
       else if (newGame.getPlayers().getPlayerHand().getAceCount() > 0) {
@@ -91,11 +94,13 @@ public class GameController {
     synchronized (lock) {
       Game game = (Game) session.getAttribute("game");
       if (game != null) {
-        game.stand();
+        game.takeDealerTurn();
         endGameLocation = 3;
         Map<String, Object> gameState = getGameState(game);
         Map<String, Object> status = game.endGameStatus(3);
         gameState.put("gameStatus", status);
+        session.setAttribute("game", game);
+        System.out.println("Standing gameState is: " + gameState);
         return ResponseEntity.ok(gameState);
       }
       return ResponseEntity.badRequest().body(Map.of("Error:", "Game failed to start"));
@@ -115,8 +120,13 @@ public class GameController {
       System.out.println(gameNull);
       if (game != null) {
         System.out.println("game not null");
-        game.hit(game.getPlayers().getPlayerHand());
+        //intialize gamestate to check if hand already has ace (from intial hand or after hitting)
         Map<String, Object> gameState = getGameState(game);
+        //set it to false to allow prompting for second ace value (if hand would still be < 21)
+        gameState.put("hasAce", false);
+        game.hit(game.getPlayers().getPlayerHand());
+        //update gameState after hitting
+        gameState = getGameState(game);
         if (gameState.get("hasAce").equals(true)) {
           return ResponseEntity.ok(gameState);
         }
