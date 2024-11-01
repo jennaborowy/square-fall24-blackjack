@@ -5,7 +5,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
-import './JoinTable.css';
+//import './JoinTable.css';
 
 const JoinTableButton = ({ tableId, disabled = false }) => {
     const [open, setOpen] = useState(false);

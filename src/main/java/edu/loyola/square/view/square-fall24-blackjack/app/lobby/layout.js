@@ -17,7 +17,11 @@ import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import {createTheme, ThemeProvider} from "@mui/material";
 import { useRouter } from "next/navigation";
-import { auth, signOut } from "@/firebaseConfig";
+import {auth, db, signOut} from "@/firebaseConfig";
+import {doc, getDoc} from 'firebase/firestore';
+import {useEffect, useState} from "react";
+
+
 
 
 function LobbyLayout({children}) {
@@ -25,6 +29,22 @@ function LobbyLayout({children}) {
     const [anchorElUser, setAnchorElUser] = React.useState(null);
 
     const router = useRouter();
+
+    const [username, setUsername] = useState("");
+
+    useEffect( () => {
+        const display = auth.onAuthStateChanged(async ()=>
+        {
+            const user = auth.currentUser.uid;
+            const docRef = doc(db, 'users', user);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                setUsername(docSnap.data()['username']);
+            }
+        });
+        return ()=> display;
+    });
 
     const handleLogout = async (e) => {
         e.preventDefault();
@@ -145,7 +165,7 @@ function LobbyLayout({children}) {
                                             margin: '5px',
                                         }}
                                     >
-                                        Username
+                                        {username}
                                     </Typography>
                                 </IconButton>
                             </Tooltip>
