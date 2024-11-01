@@ -1,9 +1,11 @@
+//TableList
 import React from 'react';
 import JoinTableButton from "@/app/lobby/JoinTableButton";
 import TableInfoButton from "@/app/lobby/TableInfoButton";
 import "./TableList.css"
 
-const TableList = ({ tables }) => {
+const TableList = ({ tables, onJoinTable, users }) => {
+
     return (
         <div className="TableList-container mt-4 p-10 h-96 border rounded-lg overflow-y-auto shadow-md">
             <div className="space-y-2 p-4">
@@ -14,18 +16,24 @@ const TableList = ({ tables }) => {
                     >
                         <div className="flex justify-between items-center">
                             <div>
-                                <h3 className="font-medium">Table #{index + 1}</h3>
+                                <h3 className="font-medium">{table.table_Name}</h3>
                                 <p className="text-sm text-gray-600">
-                                    Max Players: {table.playerAmount} | Current Players: {table.playerAmount} | Min Bet:
-                                    ${table.minBet}
+                                    Max Players: {table.max_players} | Current Players: {table.players.length} | Min Bet:
+                                    ${table.minimum_bet}
                                 </p>
                             </div>
                             <div className="mt-2">
                                 <div className="button-container">
-                                    <JoinTableButton tableId={index + 1}/>
-                                    <TableInfoButton
-                                        tableId={index + 1}
+                                    <JoinTableButton
+                                        tableId={table.id}
+                                        onJoinTable={onJoinTable}
                                         table={table}
+                                    />
+                                    <TableInfoButton
+                                        tableId={table.id}
+                                        table={table}
+                                        users={users}
+                                        onJoinTable={onJoinTable}
                                     />
                                 </div>
                             </div>
