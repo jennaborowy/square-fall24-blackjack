@@ -9,11 +9,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import java.util.Scanner;
 
 @SpringBootApplication
-public class Main implements WebMvcConfigurer
-{
+public class Main implements WebMvcConfigurer {
 
-  public static void main(String[] args)
-  {
+  public static void main(String[] args) {
     SpringApplication.run(Main.class, args);
 
     Scanner scanner = new Scanner(System.in);

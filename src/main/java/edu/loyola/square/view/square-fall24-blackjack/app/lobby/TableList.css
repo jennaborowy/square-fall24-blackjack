@@ -1,0 +1,28 @@
+/* Style for TableList container */
+.TableList-container {
+    width: 500px;
+    height: 600px;
+    background-color: rgba(0, 0, 0, 0.7);
+    margin-bottom: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+/* Style for individual tables in the list */
+.TableList-container > div > div {
+    /* Dark maroon for table items */
+    background-color: #290000;
+    border: 1px solid #5B0F0F;
+}
+
+/* Hover effect for tables */
+.TableList-container > div > div:hover {
+    /* Slightly lighter on hover */
+    background-color: #3D0A0A;
+}
+
+/* Button container spacing */
+.button-container {
+    display: flex;
+    gap: 4px;  /* Adds space between buttons */
+}

@@ -6,11 +6,14 @@ import { useRouter } from 'next/navigation';
 
 import "./signup.css"
 import "../globals.css"
+import "../loading/loading"
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogActions from "@mui/material/DialogActions";
 import Dialog from "@mui/material/Dialog";
+
+import { auth } from "@/firebaseConfig";
 
 const Page=()=> {
 
@@ -23,10 +26,8 @@ const Page=()=> {
     const [first, setFirst] = useState("");
     const [last, setLast] = useState("");
     const [confirm, setConfirm] = useState("");
-    const [errMsg, setErrMsg] = useState({});
+    const [errMsg, setErrMsg] = useState("");
     const [err, setErr] = useState(null);
-    const [verifyPass, setVerifyPass] = useState(true)
-
     const [success, setSuccess] = useState(false);
 
     // action performed upon submission
@@ -34,7 +35,7 @@ const Page=()=> {
         e.preventDefault();
 
         if (password !== confirm) {
-            setErrMsg({ general: "Password fields do not match."})
+            setErrMsg("Password fields do not match.")
             setErr(true);
             return;
         }
@@ -57,15 +58,19 @@ const Page=()=> {
                 body: JSON.stringify(body),
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                setErrMsg(errorData);
-                setErr(true);
-            } else {
+            if (response.ok) {
                 setSuccess(true);
             }
+            else {
+                const errorData = await response.json();
+                console.log(errorData)
+                setErrMsg(errorData.message);
+                setErr(true);
+            }
         } catch (error) {
-            console.error('Error submitting form:', error);
+            console.log('Error submitting form:', error);
+            setErrMsg(error.message);
+            setErr(true);
         }
     }
 
@@ -82,7 +87,7 @@ const Page=()=> {
     // runs on err state change
     useEffect(() => {
         if (err) {
-            console.error('An error occurred:', errMsg);
+            console.log('An error occurred:', errMsg);
         }
     }, [err]);
 
@@ -182,9 +187,10 @@ const Page=()=> {
                     </DialogTitle>
                     <DialogContent>
                         <DialogContentText id="alert-dialog-description">
-                            {Object.entries(errMsg).map(([index, message]) => (
-                                <li key={index}>{message}</li>
-                            ))}
+                            {/*{Object.entries(errMsg).map(([index, message]) => (*/}
+                            {/*    <li key={index}>{message}</li>*/}
+                            {/*))}*/}
+                            {errMsg}
                         </DialogContentText>
                     </DialogContent>
                     <DialogActions>

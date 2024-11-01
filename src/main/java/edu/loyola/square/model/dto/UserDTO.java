@@ -1,6 +1,5 @@
 package edu.loyola.square.model.dto;
 
-import jakarta.validation.constraints.Size;
 public class UserDTO {
 
   private Long userID;
@@ -23,10 +22,17 @@ public class UserDTO {
 
   protected UserDTO() {} // needed internally
 
-  public UserDTO(String username, String password)
-  {
+  public UserDTO(String username, String password) {
     this.username = username;
     this.password = password;
+  }
+
+  public UserDTO(String username, String password, String firstName, String lastName, String email) {
+    this.username = username;
+    this.password = password;
+    this.firstName = firstName;
+    this.lastName = lastName;
+    this.email = email;
   }
 
   public String toString() {

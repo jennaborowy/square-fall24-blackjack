@@ -1,6 +1,8 @@
 "use client";
 import "../globals.css";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
+import { auth } from "@/firebaseConfig";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
@@ -10,18 +12,19 @@ import DialogTitle from '@mui/material/DialogTitle';
 import React, { useState } from "react";
 import Link from "next/Link";
 
-import styles from "@/app/page.module.css";
 import "./login.css";
-import Image from "next/image";
 
 function Login() {
 
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
-
     const [loginErr, setLoginErr] = useState(false);
 
+    const errMsg = "User credentials invalid";
     const router = useRouter();
+
+    console.log(auth?.currentUser?.uid)
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -35,25 +38,31 @@ function Login() {
 
             let body = {
                 "username": userUsername,
-                "password": userPassword,
             };
 
-            await fetch(url, {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify(body),
-                cache: 'no-cache',
-            })
-                .then((res) => {
-                    if (res.ok) {
-                        router.push('/lobby');
-                    } else {
-                        setLoginErr(true);
-                        console.log(res.json);
-                    }
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(body),
+                    cache: 'no-cache',
                 });
-        }
 
+                if (!res.ok) {
+                    setLoginErr(true);
+                    console.log(res);
+                } else {
+                    const { email } = await res.json();
+                    await signInWithEmailAndPassword(auth, email, password);
+
+                    console.log("user signed in!");
+                    router.push('/lobby');
+                }
+            } catch (error) {
+                setLoginErr(true);
+                console.log("Sign in Error: ", error);
+            }
+        }
         await login(username, password);
     }
 
@@ -71,7 +80,6 @@ function Login() {
     };
 
     return (
-
         <div className="container">
             <img src={"/logo-transparent.png"}
                  alt=""
@@ -90,7 +98,7 @@ function Login() {
                         type="text"
                         id="username"
                         name="username"
-                        title="Enter username"
+                        title="username"
                         placeholder="Username"
                         value={username}
                         onInput={handleChange}
@@ -111,7 +119,6 @@ function Login() {
                 </div>
                 <button className="mt-3 btn btn-success border" type="submit" name="login">Submit</button>
             </form>
-
             <footer className="footer">
                 <Link
                     href="/signup"
@@ -130,7 +137,7 @@ function Login() {
                 </DialogTitle>
                 <DialogContent>
                     <DialogContentText id="alert-dialog-description">
-                        Username or password is incorrect. Please try again.
+                        {errMsg}
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
