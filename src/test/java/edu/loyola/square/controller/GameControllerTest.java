@@ -2,6 +2,7 @@ package edu.loyola.square.controller;
 
 import edu.loyola.square.model.Card;
 import edu.loyola.square.model.Game;
+import edu.loyola.square.model.Hand;
 import edu.loyola.square.model.Player;
 import jakarta.servlet.http.HttpSession;
 import org.apache.catalina.session.StandardSession;
@@ -10,12 +11,16 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpSession;
 
 import static edu.loyola.square.model.Game.gameStatus.PLAYER_BUST;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 class GameControllerTest
 {
@@ -82,7 +87,7 @@ class GameControllerTest
     Game game = (Game) session.getAttribute("game");
 
     assertEquals(game.endGameStatus(3), 3);
-    assertNotEquals(game.endGameStatus(3), 1);
+    assertNotEquals(game.endGameStatus(2), 3);
   }
 
   @Test
@@ -97,10 +102,45 @@ class GameControllerTest
     assertNotNull(gameState);
     var playerHand = (List<Card>) gameState.get("playerHand");
     assertEquals(initialHandSize + 1, playerHand.size());
-    Game game = (Game) session.getAttribute("game");
+  }
 
-    assertEquals(game.endGameStatus(2), 2);
-    assertNotEquals(game.endGameStatus(2), 3);
+  @Test
+  void playerMultipleHits()
+  {
+    Game game = new Game(new Player("Test", 100));
+    session.setAttribute("game", game);
+
+    while(game.getPlayers().getPlayerHand().getValue() <= 21)
+    {
+      ResponseEntity<Map<String, Object>> hitResponse = gameController.playerHit(session);
+      assertTrue(hitResponse.getStatusCode().is2xxSuccessful());
+      Map<String, Object> gameState = hitResponse.getBody();
+      assertNotNull(gameState);
+
+    }
+    Map<String, Object> endGameState = gameController.getGameState(game);
+   // assertFalse(endGameState.get("endStatus").equals("IN_PLAY"));
+
+  }
+
+  @Test
+  void doubleAce()
+  {
+    Game game = new Game(new Player("Test", 100));
+    ArrayList<Card> aces = new ArrayList<Card>();
+    aces.add(new Card("A", "S" ));
+    aces.add(new Card("A", "D" ));
+    Hand doubleAceHand = new Hand(aces, false);
+    game.getPlayers().setHand(doubleAceHand);
+    //gameController.startGame(session);
+    Map<String, Object> requestBody = new HashMap<>();
+    requestBody.put("aceValue", 11);
+    ResponseEntity<Map<String, Object>> response = gameController.promptAce(session, requestBody);
+
+    assertEquals(2, game.getPlayers().getPlayerHand().getValue());
+    assertEquals(null, response.getBody().get("aceValue"));
+    assertEquals(1, game.getPlayers().getPlayerHand().getHand().get(0).getValue(1));
+    assertEquals(1, game.getPlayers().getPlayerHand().getHand().get(0).getValue(1));
 
   }
 

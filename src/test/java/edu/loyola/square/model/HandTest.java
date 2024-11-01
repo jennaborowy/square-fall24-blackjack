@@ -104,6 +104,7 @@ class HandTest {
     aceHandBust.add(new Card("5", "D"));
     Hand hand3 = new Hand(aceHandBust, false);
     assertEquals(16, hand3.getValue()); // Should automatically optimize to use ace as 1
+
   }
 
   @Test
