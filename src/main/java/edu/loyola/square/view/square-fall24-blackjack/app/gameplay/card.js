@@ -8,7 +8,6 @@ const Card = ({ suit, rank }) => {
 
           <div className="cardArea">
             <img src={imageUrl} alt={`${rank} of ${suit}`}/>
-            <p>{rank} of {suit}</p>
           </div>
 
     );

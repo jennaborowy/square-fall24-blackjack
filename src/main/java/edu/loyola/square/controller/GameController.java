@@ -62,7 +62,7 @@ public class GameController {
         endGameLocation = 1;
         Map<String, Object> status = newGame.endGameStatus(1);
         gameState.put("gameStatus", status);
-        //so the front-end wont prompt ace value (user should automatically win with 11_
+        //so the front-end wont prompt ace value (user should automatically win with 11
         gameState.put("hasAce", false);
         return ResponseEntity.ok(gameState);
       }
@@ -120,10 +120,8 @@ public class GameController {
       System.out.println(gameNull);
       if (game != null) {
         System.out.println("game not null");
-        //intialize gamestate to check if hand already has ace (from intial hand or after hitting)
+        //initialize gamestate to check if hand already has ace (from initial hand or after hitting)
         Map<String, Object> gameState = getGameState(game);
-        //set it to false to allow prompting for second ace value (if hand would still be < 21)
-        gameState.put("hasAce", false);
         game.hit(game.getPlayers().getPlayerHand());
         //update gameState after hitting
         gameState = getGameState(game);
@@ -176,7 +174,7 @@ public class GameController {
    *This function updates a gameState hashmap to pass updated game information.
    */
   //updates the game parameters/information (hands, points, status)
-  private Map<String, Object> getGameState(Game game) {
+  public Map<String, Object> getGameState(Game game) {
     Map<String, Object> gameState = new HashMap<String, Object>();
     if (game != null) {
       //updates json hashmap of hand data as game continues

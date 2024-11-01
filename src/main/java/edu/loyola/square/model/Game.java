@@ -68,21 +68,8 @@ public class Game implements Serializable {
     {
       dealerHand.optimizeAces();
     }
-    if(player.getPlayerHand().getAceCount() > 1)
-    {
-
-    }
   }
 
-  public void hasAce() {
-    if ((player.getPlayerHand().getAceCount() > 0) && (player.getPlayerHand().getValue(11) <= 21)) {
-      int value = player.getPlayerHand().getValue(11);
-      if (value == 1 || value == 11)
-      {
-        player.getPlayerHand().setAceValue(value);
-      }
-    }
-  }
   public void play() {
     // deal dealer hand
     dealerHand.addCard(deck.dealCard());

@@ -57,22 +57,11 @@ public class Hand implements Serializable {
     this.isDealer = isDealer;
     this.cards = cards;
     aceValue = 1;
-    Card firstAce = null;
     for (Card card : cards) {
       if (card.getRank().equals("A")) {
         aceCount++;
-        //in the case the player is dealt two aces, the first must be set to 1
-        if(firstAce == null)
-        {
-          firstAce = card;
-        }
       }
     }
-    if (aceCount > 1 && firstAce != null) {
-      setAceValue(1);
-    }
-
-
   }
 
   public boolean isDealer() {
