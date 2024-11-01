@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogContentText, DialogTitle, DialogActions } 
 const CreateTableButton = ({ onTableCreate }) => {
     const [open, setOpen] = useState(false);
     const [formData, setFormData] = useState({
+        tableName: '',
         playerAmount: '',
         minBet: ''
     });
@@ -15,12 +16,16 @@ const CreateTableButton = ({ onTableCreate }) => {
 
     const handleClose = () => {
         setOpen(false);
-        setFormData({ playerAmount: '', minBet: '' });
+        setFormData({ tableName: '', playerAmount: '', minBet: '' });
         setErrors({});
     };
 
     const validateForm = () => {
         const newErrors = {};
+
+        if (!formData.tableName) {
+            newErrors.tableName = 'Table name is required';
+        }
 
         if (!formData.playerAmount) {
             newErrors.playerAmount = 'Player amount is required';
@@ -46,9 +51,11 @@ const CreateTableButton = ({ onTableCreate }) => {
 
         if (validateForm()) {
             const submissionData = {
-                ...formData,
+                tableName: formData.tableName,
+                playerAmount: parseInt(formData.playerAmount),
                 minBet: parseInt(formData.minBet)
             };
+            console.log("Submitting table data:", submissionData);
             onTableCreate(submissionData);
             handleClose();
         }
@@ -94,6 +101,22 @@ const CreateTableButton = ({ onTableCreate }) => {
                             Please fill in the details below to create a new table.
                         </DialogContentText>
                         <div className="space-y-6">
+                            <div className="p-4 bg-gray-50 rounded-lg">
+                                <label className="block text-sm font-medium">
+                                    Table Name
+                                </label>
+                                <input
+                                    type="text"
+                                    name="tableName"
+                                    value={formData.tableName}
+                                    onChange={handleChange}
+                                    className="w-full p-3 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="Enter table name"
+                                />
+                                {errors.tableName && (
+                                    <p className="text-red-500 text-sm mt-2">{errors.tableName}</p>
+                                )}
+                            </div>
                             <div className="p-4 bg-gray-50 rounded-lg">
                                 <label className="block text-sm font-medium">
                                     Player Amount (max 6)
