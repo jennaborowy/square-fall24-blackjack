@@ -9,11 +9,13 @@
     display: flex;
     justify-content: center;
     margin-top:auto;
+    margin-bottom: 20px;
 }
 
 .dealerHand-container {
     display: flex;
     justify-content: center;
+    margin-top: 20px;
 
 }
 
@@ -61,18 +63,6 @@
     margin-top: auto;
     gap: 75px;
 }
-
-.play-container{
-    display: flex;
-    justify-content: center;
-    margin-top: 350px;
-}
-.play-btn{
-    width: 300px;
-    height:80px;
-    border-radius: 8px;
-    background-color: darkgoldenrod;
-}
 .action-btn {
     width: 150px;
     height:50px;
@@ -92,3 +82,44 @@
     color: white;
     align-items: center;
 }
+.leave-btn {
+    justify-content: left;
+    display: flex;
+    padding-left: 10px;
+    padding-bottom: 5px;
+}
+.stats-container {
+    justify-content: right;
+    display: flex;
+    padding-right: 10px;
+    padding-bottom: 5px;
+}
+.bet-container{
+    justify-content: center;
+    margin-top: 250px;
+}
+.start-container{
+    justify-content: center;
+    margin-top: 150px;
+}
+.start-btn{
+    width: 300px;
+    height:80px;
+    border-radius: 8px;
+    background-color: darkgoldenrod;
+}
+.place-bet-tag, .bet-container, .play-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 250px;
+}
+
+.bet-value{
+    display: flex;
+    justify-content: center;
+    width: 50%;
+}
+
+

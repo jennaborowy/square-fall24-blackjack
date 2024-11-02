@@ -11,12 +11,14 @@ public class Player {
   private Hand hand;
   private int bet;
   private double payout;
+  private boolean hasAce;
 
   public Player(String name, int bet) {
     this.name = name;
     hand = new Hand(new ArrayList<Card>(), false);
     this.bet = bet;
     payout = 0.0;
+    this.hasAce = false;
   }
 
   public String getName() {
@@ -54,4 +56,14 @@ public class Player {
     return this.payout;
   }
 
+  public boolean getHasAce() {
+    if ((getPlayerHand().getAceCount() > 0) && (getPlayerHand().getValue(11) <= 21))
+    {
+      hasAce = true;
+    }
+    else {
+      hasAce = false;
+    }
+    return hasAce;
+  }
 } // Player
