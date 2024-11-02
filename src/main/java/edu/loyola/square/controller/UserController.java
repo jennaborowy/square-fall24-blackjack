@@ -1,5 +1,6 @@
 package edu.loyola.square.controller;
 
+import com.google.auth.oauth2.JwtClaims;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
@@ -9,9 +10,9 @@ import com.google.firebase.cloud.FirestoreClient;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.DocumentReference;
 import edu.loyola.square.controller.service.UserService;
+import edu.loyola.square.model.dto.AuthDTO;
 import edu.loyola.square.model.dto.UserDTO;
 import edu.loyola.square.model.entity.User;
-import jakarta.validation.ValidationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,19 +20,15 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import jakarta.validation.Valid;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
-import java.util.regex.Matcher;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-// use data access layer info from next.js
 
 @RestController
 @RequestMapping("/api/user")
@@ -67,6 +64,21 @@ public class UserController {
     }
   }
 
+//  @PostMapping("/check-type")
+//  public ResponseEntity<Object> checkType(@RequestBody AuthDTO authDTO) throws FirebaseAuthException {
+//    try {
+//      FirebaseToken token = firebaseAuth.verifyIdToken(authDTO.getIdToken());
+//      UserRecord user = firebaseAuth.getUser(token.getUid());
+//
+//      Map<String, Object> userInfo = new HashMap<>();
+//      userInfo.put("admin", user.getCustomClaims() != null ? user.getCustomClaims().get("admin") : null);
+//      userInfo.put("accountUser", user.getCustomClaims() != null ? user.getCustomClaims().get("accountUser") : null);
+//      return ResponseEntity.status(HttpStatus.OK).body(userInfo);
+//    } catch(FirebaseAuthException e) {
+//      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());
+//    }
+//  }
+
   @GetMapping("/")
   public ResponseEntity<List<Map<String, Object>>> all() throws ExecutionException, InterruptedException {
     List<Map<String, Object>> users = new ArrayList<>();
@@ -86,7 +98,7 @@ public class UserController {
       CreateRequest request = new CreateRequest()
               .setEmail(userDTO.getEmail())
               .setPassword(userDTO.getPassword())
-              .setDisplayName(userDTO.getFirstName() + " " + userDTO.getLastName());
+              .setDisplayName(userDTO.getUsername());
 
       User user = userService.getUserByUsername(userDTO.getUsername());
       if (user != null) {
@@ -114,6 +126,10 @@ public class UserController {
       DocumentReference docRef = firestore.collection("users").document(userRecord.getUid());
       docRef.set(userData).get();
 
+      Map<String, Object> claims = new HashMap<>();
+      claims.put("accountUser", true);
+      FirebaseAuth.getInstance().setCustomUserClaims(userRecord.getUid(), claims);
+
       System.out.println("Response: " + ResponseEntity.status(HttpStatus.CREATED).body(userData));
       return ResponseEntity.status(HttpStatus.CREATED).body(userData);
     } catch (IllegalArgumentException e) {
@@ -122,6 +138,15 @@ public class UserController {
       }
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());
     }
+  }
+
+  @PostMapping("/guest")
+  public ResponseEntity<Object> playAsGuest(@RequestBody UserDTO userDTO) throws ExecutionException, InterruptedException {
+    User user = userService.getUserByUsername(userDTO.getUsername());
+    if (user != null) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Username is already in our records");
+    }
+    return ResponseEntity.status(HttpStatus.OK).body("Username is available for guest play");
   }
 
   @PostMapping("/login")
