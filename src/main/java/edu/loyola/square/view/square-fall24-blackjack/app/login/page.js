@@ -25,7 +25,6 @@ function Login() {
 
     console.log(auth?.currentUser?.uid)
 
-
     const handleSubmit = async (e) => {
         e.preventDefault();
 
