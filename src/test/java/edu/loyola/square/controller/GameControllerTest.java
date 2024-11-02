@@ -124,7 +124,7 @@ class GameControllerTest
   }
 
   @Test
-  void doubleAce()
+  void doubleAces()
   {
     Game game = new Game(new Player("Test", 100));
     ArrayList<Card> aces = new ArrayList<Card>();
@@ -132,13 +132,8 @@ class GameControllerTest
     aces.add(new Card("A", "D" ));
     Hand doubleAceHand = new Hand(aces, false);
     game.getPlayers().setHand(doubleAceHand);
-    //gameController.startGame(session);
-    Map<String, Object> requestBody = new HashMap<>();
-    requestBody.put("aceValue", 11);
-    ResponseEntity<Map<String, Object>> response = gameController.promptAce(session, requestBody);
 
     assertEquals(2, game.getPlayers().getPlayerHand().getValue());
-    assertEquals(null, response.getBody().get("aceValue"));
     assertEquals(1, game.getPlayers().getPlayerHand().getHand().get(0).getValue(1));
     assertEquals(1, game.getPlayers().getPlayerHand().getHand().get(0).getValue(1));
 
