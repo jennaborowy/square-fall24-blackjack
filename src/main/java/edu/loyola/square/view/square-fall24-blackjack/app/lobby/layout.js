@@ -32,29 +32,14 @@ function LobbyLayout({children}) {
     const myAuth = useAuth();
     const router = useRouter();
 
-    // Function to retrieve claims from localStorage
-    const loadClaimsFromLocalStorage = () => {
-        const adminStatus = localStorage.getItem("isAdmin") === "true";
-        const accountUserStatus = localStorage.getItem("isAccountUser") === "true";
-        //const userDispStatus = localStorage.getItem("userDisp") ===
-        setIsAdmin(adminStatus);
-        setIsAccountUser(accountUserStatus);
-    };
-
-    // Function to set claims in both state and localStorage
+    // Function to set claims in state
     const setClaims = (admin, accountUser, userDisp) => {
         setIsAdmin(admin);
         setIsAccountUser(accountUser);
         setUserDisp(userDisp);
-        localStorage.setItem("isAdmin", admin);
-        localStorage.setItem("isAccountUser", accountUser);
-        localStorage.setItem("userDisp", userDisp);
     };
 
     useEffect(() => {
-        // Load claims from localStorage on initial render
-        //loadClaimsFromLocalStorage();
-
         // Listen to auth state changes
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
