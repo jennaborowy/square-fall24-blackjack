@@ -64,20 +64,20 @@ public class UserController {
     }
   }
 
-//  @PostMapping("/check-type")
-//  public ResponseEntity<Object> checkType(@RequestBody AuthDTO authDTO) throws FirebaseAuthException {
-//    try {
-//      FirebaseToken token = firebaseAuth.verifyIdToken(authDTO.getIdToken());
-//      UserRecord user = firebaseAuth.getUser(token.getUid());
-//
-//      Map<String, Object> userInfo = new HashMap<>();
-//      userInfo.put("admin", user.getCustomClaims() != null ? user.getCustomClaims().get("admin") : null);
-//      userInfo.put("accountUser", user.getCustomClaims() != null ? user.getCustomClaims().get("accountUser") : null);
-//      return ResponseEntity.status(HttpStatus.OK).body(userInfo);
-//    } catch(FirebaseAuthException e) {
-//      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());
-//    }
-//  }
+  @DeleteMapping("/delete")
+  public ResponseEntity<String> deleteUser(@RequestBody AuthDTO authDTO) throws FirebaseAuthException {
+    try {
+      // deletes auth instance
+      firebaseAuth.deleteUser(authDTO.getUid());
+      DocumentReference docRef = firestore.collection("users").document(authDTO.getUid());
+      // deletes document from users collection
+      docRef.delete();
+      System.out.println("Successfully deleted user.");
+      return ResponseEntity.noContent().build();
+    } catch (FirebaseAuthException e) {
+      return ResponseEntity.status(500).body("Failed to delete user from Authentication: " + e.getMessage());
+    }
+  }
 
   @GetMapping("/")
   public ResponseEntity<List<Map<String, Object>>> all() throws ExecutionException, InterruptedException {
@@ -88,17 +88,32 @@ public class UserController {
     return ResponseEntity.ok(users);
   }
 
+  @PostMapping("/guest")
+  public ResponseEntity<Object> createGuest(@Valid @RequestBody UserDTO userDTO) throws ExecutionException, InterruptedException {
+    User user = userService.getUserByUsername(userDTO.getUsername());
+    if (user != null) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Username is already in our records");
+    }
+    Map<String, Object> userData = new HashMap<>();
+    userData.put("username", userDTO.getUsername());
+    userData.put("chipBalance", 2500);
+    userData.put("totalWins", 0);
+    userData.put("totalLosses", 0);
+
+    return ResponseEntity.status(HttpStatus.CREATED).body(userData);
+  }
+
   @PostMapping("/signup")
   public ResponseEntity<?> create(@Valid @RequestBody UserDTO userDTO) throws ExecutionException, InterruptedException, FirebaseAuthException {
     try {
-      logger.info(userDTO.getEmail());
-      logger.info(userDTO.getPassword());
-
-      // Create the user in Firebase Authentication
+      // create account user
       CreateRequest request = new CreateRequest()
               .setEmail(userDTO.getEmail())
               .setPassword(userDTO.getPassword())
               .setDisplayName(userDTO.getUsername());
+
+      logger.info(userDTO.getEmail());
+      logger.info(userDTO.getPassword());
 
       User user = userService.getUserByUsername(userDTO.getUsername());
       if (user != null) {
@@ -115,12 +130,12 @@ public class UserController {
       // Store additional user data in Firestore
       Map<String, Object> userData = new HashMap<>();
       userData.put("username", userDTO.getUsername());
-      userData.put("email", userDTO.getEmail());
-      userData.put("firstName", userDTO.getFirstName());
-      userData.put("lastName", userDTO.getLastName());
       userData.put("chipBalance", 2500);
       userData.put("totalWins", 0);
       userData.put("totalLosses", 0);
+      userData.put("email", userDTO.getEmail());
+      userData.put("firstName", userDTO.getFirstName());
+      userData.put("lastName", userDTO.getLastName());
       userData.put("uid", userRecord.getUid());
 
       DocumentReference docRef = firestore.collection("users").document(userRecord.getUid());
@@ -130,6 +145,7 @@ public class UserController {
       claims.put("accountUser", true);
       FirebaseAuth.getInstance().setCustomUserClaims(userRecord.getUid(), claims);
 
+
       System.out.println("Response: " + ResponseEntity.status(HttpStatus.CREATED).body(userData));
       return ResponseEntity.status(HttpStatus.CREATED).body(userData);
     } catch (IllegalArgumentException e) {
@@ -138,15 +154,6 @@ public class UserController {
       }
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());
     }
-  }
-
-  @PostMapping("/guest")
-  public ResponseEntity<Object> playAsGuest(@RequestBody UserDTO userDTO) throws ExecutionException, InterruptedException {
-    User user = userService.getUserByUsername(userDTO.getUsername());
-    if (user != null) {
-      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Username is already in our records");
-    }
-    return ResponseEntity.status(HttpStatus.OK).body("Username is available for guest play");
   }
 
   @PostMapping("/login")
