@@ -1,0 +1,6 @@
+.game-stats-container{
+    position: fixed;
+    bottom: 15px;
+    right: 20px;
+    z-index: 100;
+}
