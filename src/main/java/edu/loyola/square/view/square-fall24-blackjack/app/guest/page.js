@@ -8,10 +8,11 @@ import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogActions from "@mui/material/DialogActions";
-import { auth, db } from "@/firebaseConfig";
+import { db, auth } from "@/firebaseConfig";
 import { collection, setDoc, doc } from "firebase/firestore";
+import { useAuth } from "../context/auth";
 
-import { signInAnonymously } from "firebase/auth";
+import { signInAnonymously, updateProfile } from "firebase/auth";
 
 import "./guest.css";
 
@@ -21,14 +22,16 @@ function Guest() {
     const [err, setErr] = useState(false);
 
     const errMsg = "Guest sign in failed";
+    const { currentUser, setCurrentUser } = useAuth();
 
-    console.log(auth?.currentUser?.uid)
+    //console.log(currentUser.uid)
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (auth.currentUser) {
+        if (currentUser) {
             router.push("/lobby");
+            return;
         }
 
         let body = {
@@ -45,29 +48,43 @@ function Guest() {
             });
 
             if(response.ok) {
-                await signInAnonymously(auth);
-                console.log("anonymous user created");
+                console.log("username: ", username);
+                await signInAnonymously(auth)
 
-                if (auth.currentUser) {
-                    const userRef = doc(collection(db, "users"), auth.currentUser.uid);
-                    await setDoc(userRef, {
-                        username: username,
-                        chipBalance: 2500,
-                        totalWins: 0,
-                        totalLoses: 0,
-                    })
+                await updateProfile(auth.currentUser, {
+                    displayName: username
+                })
 
-                    console.log("guest user in")
-                    router.push('/lobby');
-                }
+                const userRef = doc(collection(db, "users"), auth.currentUser.uid);
+                await setDoc(userRef, {
+                    username: username,
+                    chipBalance: 2500,
+                    totalWins: 0,
+                    totalLoses: 0,
+                })
+
+                setCurrentUser({
+                    uid: auth.currentUser.uid,
+                    displayName: username
+                });
+
+                console.log("guest user in")
+                router.push('/lobby');
+
             } else {
                 const errorData = await response.json();
                 console.log(errorData);
+                setErr(true);
             }
         } catch (error) {
+            setErr(true);
             console.log('Error trying playing as guest:', error);
         }
     }
+
+    const handleClose = () => {
+        setErr(false);
+    };
 
     return (
         <div className="container">
@@ -125,7 +142,7 @@ function Guest() {
                 </DialogTitle>
                 <DialogContent>
                     <DialogContentText id="alert-dialog-description">
-                        {errMsg}
+                        {"Username already exists in our records"}
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>

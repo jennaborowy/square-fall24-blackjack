@@ -18,7 +18,8 @@ import MenuItem from '@mui/material/MenuItem';
 import { createTheme, ThemeProvider } from "@mui/material";
 import { useRouter } from "next/navigation";
 import { auth, signOut } from "@/firebaseConfig";
-import {onAuthStateChanged} from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
+import { useAuth } from "../context/auth";
 
 function LobbyLayout({children}) {
     const [anchorElNav, setAnchorElNav] = useState(null);
@@ -27,6 +28,8 @@ function LobbyLayout({children}) {
     const [isAccountUser, setIsAccountUser] = useState(false);
     const [userDisp, setUserDisp] = useState(null);
 
+    const currentUser = useAuth().currentUser;
+    const myAuth = useAuth();
     const router = useRouter();
 
     // Function to retrieve claims from localStorage
@@ -50,7 +53,7 @@ function LobbyLayout({children}) {
 
     useEffect(() => {
         // Load claims from localStorage on initial render
-        loadClaimsFromLocalStorage();
+        //loadClaimsFromLocalStorage();
 
         // Listen to auth state changes
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -78,8 +81,36 @@ function LobbyLayout({children}) {
         e.preventDefault();
         try {
             await signOut(auth);
-            if (!isAccountUser && !isAdmin) {
+            if (!isAdmin && !isAccountUser) {
                 // delete the auth AND account
+                console.log("auth.currentUser: ", auth.currentUser)
+                console.log("my currentUser: ", currentUser)
+                console.log("myAuth: ", myAuth)
+                const uid = currentUser.uid;
+                try {
+                    const response = await fetch('http://localhost:8080/api/user/delete', {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({"uid": uid}),
+                    });
+
+                    if (response.ok) {
+                        console.log("deleted user");
+                        console.log(currentUser?.uid);
+                    } else {
+                        const errorData = await response.json();
+                        console.log(errorData)
+                        // setErrMsg(errorData.message);
+                        // setErr(true);
+                    }
+                } catch (error) {
+                    console.log('Error submitting form:', error);
+                    // setErrMsg(error.message);
+                    // setErr(true);
+                }
+
             }
             router.push('/');
         } catch (error) {
@@ -113,6 +144,7 @@ function LobbyLayout({children}) {
 
     console.log("is user ", isAccountUser)
     console.log("is admin ", isAdmin)
+    console.log("my curr user: ", currentUser)
 
     return (
         <ThemeProvider theme={theme}>
@@ -204,7 +236,7 @@ function LobbyLayout({children}) {
                                             margin: '5px',
                                         }}
                                     >
-                                        {userDisp}
+                                        {currentUser ? currentUser.displayName : ""}
                                     </Typography>
                                 </IconButton>
                             </Tooltip>
