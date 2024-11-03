@@ -29,7 +29,6 @@ function LobbyLayout({children}) {
     const [userDisp, setUserDisp] = useState(null);
 
     const currentUser = useAuth().currentUser;
-    const myAuth = useAuth();
     const router = useRouter();
 
     // Function to set claims in state
@@ -68,9 +67,6 @@ function LobbyLayout({children}) {
             await signOut(auth);
             if (!isAdmin && !isAccountUser) {
                 // delete the auth AND account
-                console.log("auth.currentUser: ", auth.currentUser)
-                console.log("my currentUser: ", currentUser)
-                console.log("myAuth: ", myAuth)
                 const uid = currentUser.uid;
                 try {
                     const response = await fetch('http://localhost:8080/api/user/delete', {
@@ -126,10 +122,6 @@ function LobbyLayout({children}) {
             },
         },
     });
-
-    console.log("is user ", isAccountUser)
-    console.log("is admin ", isAdmin)
-    console.log("my curr user: ", currentUser)
 
     return (
         <ThemeProvider theme={theme}>
@@ -240,12 +232,13 @@ function LobbyLayout({children}) {
                                 }}
                                 open={Boolean(anchorElUser)}
                                 onClose={handleCloseUserMenu}
-                            >
+                            > {( isAccountUser || isAdmin ) && (
                                 <MenuItem component='a' href='/lobby/manageaccount' onClick={handleCloseUserMenu}>
                                     <Typography sx={{textAlign: 'center'}}>Manage Account</Typography>
                                 </MenuItem>
+                                )}
                                 <MenuItem component='a' onClick={handleLogout}>
-                                    <Typography sx={{textAlign: 'center'}}>Logout</Typography>
+                                    <Typography sx={{textAlign: 'center'}}>{ (isAccountUser || isAdmin)? "Logout" : "Exit Game"}</Typography>
                                 </MenuItem>
                             </Menu>
                         </Box>
