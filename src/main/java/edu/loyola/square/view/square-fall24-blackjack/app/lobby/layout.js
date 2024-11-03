@@ -1,4 +1,5 @@
 //This layout is edited from Material UI's docs: https://mui.com/material-ui/react-app-bar/
+//This layout appears at the top of the lobby pages and subpages to handle navigation between lobby pages
 
 "use client"
 
@@ -22,8 +23,7 @@ import {doc, getDoc} from 'firebase/firestore';
 import {useEffect, useState} from "react";
 
 
-
-
+//Apply the app bar to all subpages of lobby
 function LobbyLayout({children}) {
     const [anchorElNav, setAnchorElNav] = React.useState(null);
     const [anchorElUser, setAnchorElUser] = React.useState(null);
@@ -32,6 +32,7 @@ function LobbyLayout({children}) {
 
     const [username, setUsername] = useState("");
 
+    //Get the user's username and display in top right corner
     useEffect( () => {
         const display = auth.onAuthStateChanged(async ()=>
         {
@@ -46,6 +47,7 @@ function LobbyLayout({children}) {
         return ()=> display;
     });
 
+    //log user out
     const handleLogout = async (e) => {
         e.preventDefault();
         try {
@@ -56,9 +58,11 @@ function LobbyLayout({children}) {
         }
     }
 
+    //Nav menu opens in top left when window is smaller
     const handleOpenNavMenu = (event) => {
         setAnchorElNav(event.currentTarget);
     };
+    //User menu is in top right
     const handleOpenUserMenu = (event) => {
         setAnchorElUser(event.currentTarget);
     };
@@ -71,6 +75,7 @@ function LobbyLayout({children}) {
         setAnchorElUser(null);
     };
 
+    //sets the color of the app bar
     const theme = createTheme({
         palette: {
             primary: {
@@ -84,6 +89,7 @@ function LobbyLayout({children}) {
             <AppBar position="static">
                 <Container maxWidth="xl">
                     <Toolbar disableGutters variant='dense' sx={{minHeight: 85, height: 85}}>
+                        {/*Display the logo in the top left*/}
                         <a href='/lobby'>
                             <img
                                 alt='menu-logo'
@@ -94,6 +100,7 @@ function LobbyLayout({children}) {
                         </a>
 
                         <Box sx={{flexGrow: 1, display: {xs: 'flex', md: 'none'}}}>
+                            {/*Display three line bar for menu when window is small*/}
                             <IconButton
                                 size="large"
                                 aria-label="account of current user"
@@ -120,6 +127,7 @@ function LobbyLayout({children}) {
                                 onClose={handleCloseNavMenu}
                                 sx={{display: {xs: 'block', md: 'none'}}}
                             >
+                                {/*Display the possible redirection pages when under the menu in a small window*/}
                                 <MenuItem component='a' href='/lobby/stats' onClick={handleCloseUserMenu}>
                                     <Typography sx={{textAlign: 'center'}}>View Stats</Typography>
                                 </MenuItem>
@@ -129,6 +137,7 @@ function LobbyLayout({children}) {
                             </Menu>
                         </Box>
 
+                        {/*This box displays the redirection button for possible pages when displayed next to logo*/}
                         <Box sx={{flexGrow: 1, display: {xs: 'none', md: 'flex'}}}>
                             <Button
                                 component='a'
@@ -147,8 +156,10 @@ function LobbyLayout({children}) {
                                 Manage Friends
                             </Button>
                         </Box>
+                        {/*This box displays dropdown menu under the user in top right*/}
                         <Box sx={{flexGrow: 0}}>
                             <Tooltip title="Open settings">
+                                {/*Set user's avatar image and display unique username*/}
                                 <IconButton onClick={handleOpenUserMenu} sx={{p: 0}}>
                                     <Avatar alt="icon" src="/icon.png"/>
                                     <Typography
@@ -169,6 +180,7 @@ function LobbyLayout({children}) {
                                     </Typography>
                                 </IconButton>
                             </Tooltip>
+                            {/*Display possible redirection pages in a dropdown menu*/}
                             <Menu
                                 sx={{mt: '45px'}}
                                 id="menu-appbar"

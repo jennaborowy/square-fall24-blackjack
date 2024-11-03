@@ -129,6 +129,7 @@ const Page=()=> {
                 <h1>Signup</h1>
             </div>
 
+            {/*This is the input form for the user's info*/}
             <div className="form">
                 <form onSubmit={(e) => handleSubmit(e)}>
 
@@ -160,6 +161,7 @@ const Page=()=> {
                         Create Account
                     </button>
 
+                    {/*These are the other options to redirect if user does not want to create acct*/}
                     <div className="login">
                         <p>Already a user?
                             <span>

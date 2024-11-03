@@ -4,10 +4,11 @@ import React, { useState } from "react";
 import { Dialog, DialogContent, DialogContentText, DialogTitle, DialogActions } from "@mui/material";
 import Image from "next/image";
 import "./globals.css"
-import Link from 'next/link'
 
 export default function Home() {
     const [open, setOpen] = useState(false);
+
+    //actions for open/close tutorial
     const handleClickOpen = () => {
         setOpen(true);
     };
@@ -19,6 +20,7 @@ export default function Home() {
       <div className="main">
           <div className={styles.left}>
               <div className={styles.leftimg}>
+                  {/* This div just holds a picture of coins */}
                   <img src={"/coins.png"}
                          alt=""
                          height={500}
@@ -28,16 +30,18 @@ export default function Home() {
           </div>
           <div className={styles.middle}>
 
-
               <div className={styles.container}>
+                  {/*Display the logo and signup, login, play as guest, and tutorial buttons*/}
                   <img src={"/logo-transparent.png"}
                        alt=""
                        height={415}
                        width={530}
                        style={{alignSelf: "center"}}/>
+                  {/*These buttons redirect to different pages*/}
                   <a href="/signup" className="mt-3 btn btn-success border" role="button">Signup</a>
                   <a href="/login" className="mt-3 btn btn-success border" role="button">Login</a>
                   <a href="/gameplay" className="mt-3 btn btn-success border" role="button">Play as Guest</a>
+                  {/*This button displays a popup*/}
                   <button className="mt-3 btn btn-success border" onClick={handleClickOpen}>
                       Tutorial
                   </button>
@@ -81,6 +85,7 @@ export default function Home() {
               </div>
           </div>
           <div className={styles.right}>
+              {/* This div just holds a picture of coins */}
               <div className={styles.rightimg}>
                   <Image src={"/coins.png"}
                          alt=""

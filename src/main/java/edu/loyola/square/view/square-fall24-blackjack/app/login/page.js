@@ -25,7 +25,7 @@ function Login() {
 
     console.log(auth?.currentUser?.uid)
 
-
+    //handles submitting inputted login info from user
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -66,10 +66,12 @@ function Login() {
         await login(username, password);
     }
 
+    //close error popup
     const handleClose = () => {
         setLoginErr(false);
     };
 
+    //handle changing input form
     const handleChange = (e) => {
         const { name, value } = e.target;
         if (name === "username") {
@@ -90,6 +92,7 @@ function Login() {
             <div className="title">
                 <h1>Login</h1>
             </div>
+            {/*This is the form where user inputs info*/}
             <form onSubmit={handleSubmit}>
                 <div className="form-group">
                     <label htmlFor="username"></label>
@@ -119,6 +122,7 @@ function Login() {
                 </div>
                 <button className="mt-3 btn btn-success border" type="submit" name="login">Submit</button>
             </form>
+            {/*Redirect to signup page by clicking button*/}
             <footer className="footer">
                 <Link
                     href="/signup"
@@ -128,6 +132,7 @@ function Login() {
                     </span>
                 </Link>
             </footer>
+            {/*This is the popup for when there is a login error*/}
             <Dialog
                 onClose={handleClose}
                 open={loginErr}
