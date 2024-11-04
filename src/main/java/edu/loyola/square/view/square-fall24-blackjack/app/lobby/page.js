@@ -55,15 +55,21 @@ function Lobby() {
 
     const handleTableCreate = async (newTable) => {
         try {
+
             const tableData = {
                 table_Name: newTable.tableName,
                 max_players: Number(newTable.playerAmount),
                 minimum_bet: newTable.minBet,
-                players: [],
-                createdBy: auth?.currentUser?.uid,
+                players: [], // Start with empty players array
+                createdBy: auth.currentUser.uid,
             };
 
-            await addDoc(collection(db, "Table"), tableData);
+            // Create the table
+            const docRef = await addDoc(collection(db, "Table"), tableData);
+
+            // Join the table as the creator
+            await handleJoinTable(docRef.id, auth.currentUser.uid);
+
         } catch (error) {
             console.error("Error creating table: ", error);
         }
@@ -81,15 +87,26 @@ function Lobby() {
             const tableData = tableDoc.data();
             const currentPlayers = tableData.players || [];
 
-            // Check if table is full
+            // If this is the creator joining their own newly created table
+            if (tableData.createdBy === userId) {
+                // Add them to players list if they're not already in it
+                if (!currentPlayers.includes(userId)) {
+                    await updateDoc(tableRef, {
+                        players: arrayUnion(userId)
+                    });
+                }
+                // Navigate immediately for the creator
+                router.push(`/gameplay/${tableId}`);  // Changed from /game to /gameplay
+                return true;
+            }
+
             if (currentPlayers.length >= tableData.max_players) {
                 throw new Error("Table is full");
             }
 
-            // Check if player is already in the table
             if (currentPlayers.includes(userId)) {
                 console.log("Player already in table, navigating to game...");
-                router.push(`/game/${tableId}`);
+                router.push(`/gameplay/${tableId}`);
                 return true;
             }
 
@@ -100,7 +117,7 @@ function Lobby() {
 
             // Navigate to game page
             console.log("Successfully joined table, navigating to game...");
-            router.push(`/game/${tableId}`);
+            router.push(`/gameplay/${tableId}`);
             return true;
 
         } catch (error) {
