@@ -10,11 +10,13 @@ import java.util.Map;
 import java.util.Scanner;
 
 public class Game implements Serializable {
-  public enum gameStatus {
+  public enum gameStatus
+  {
     PLAYER_WIN,
     DEALER_WIN,
     PUSH,
     PLAYER_BLACKJACK,
+    DEALER_BLACKJACK,
     PLAYER_BUST,
     DEALER_BUST,
     IN_PROGRESS
@@ -29,7 +31,8 @@ public class Game implements Serializable {
   private gameStatus status;
   private double payout;
 
-  public Game(Player player) {
+  public Game(Player player)
+  {
     deck = new Deck();
     dealerHand = new Hand(new ArrayList<Card>(), true);
     playerHand = new Hand(new ArrayList<Card>(), false);
@@ -37,7 +40,6 @@ public class Game implements Serializable {
     scanner = new Scanner(System.in);
     gameOver = false;
   }
-
   /**
    * @param count - the amount of cards to be drawn
    * @return drawn cards, an array list of cards
@@ -61,6 +63,11 @@ public class Game implements Serializable {
     this.deck = new Deck();
     dealerHand = new Hand(drawCards(2), true);
     player.setHand(new Hand(drawCards(2), false));
+    //if dealer gets an ace in their initial hand
+    if(dealerHand.getAceCount() > 0)
+    {
+      dealerHand.optimizeAces();
+    }
   }
 
   public void play() {
@@ -100,59 +107,80 @@ public class Game implements Serializable {
         hand.addCard(newCard);
       }
     }
-    if(player.getPlayerHand().getValue() > 21) {
-      gameOver();
-    }
-    else if (player.getPlayerHand().getValue() == 21) {
-      gameOver();
-    }
-  }
-
-  /**
-   * This function performs stand action in controller
-   */
-  public void stand() {
-    takeDealerTurn();
-    //gameOver();
-    //endGameStatus();
   }
 
   /**
    * @return gameResult - a Hashmap of the game status including the payout ratio, the status, and end game message.
    * This function determines the outcome of the game and returns the status (GameController)
    */
-  public Map<String, Object> endGameStatus() {
+  public Map<String, Object> endGameStatus(int endpoint) {
     gameOver = true;
     Map<String, Object> gameResult = new HashMap<String, Object>();
-    if(player.getPlayerHand().blackjack()) {
-      if (dealerHand.getValue() == 21) {
-        status =  gameStatus.PUSH;
-        payout = 0.0;
-      }
-      else {
-        status =  gameStatus.PLAYER_BLACKJACK;
-        payout = 1.5;
+    //gamestart endpoint - game can end if one has blackjack or if the both have blackjack and its a push
+    if(endpoint == 1)
+    {
+      if (player.getPlayerHand().blackjack())
+      {
+        if (dealerHand.getValue() == 21)
+        {
+          status = gameStatus.PUSH;
+          payout = 0.0;
+        }
+        else
+        {
+          status = gameStatus.PLAYER_BLACKJACK;
+          payout = 1.5;
+        }
       }
     }
-    else {
-      if (playerHand.getValue() == dealerHand.getValue()) {
-        status =  gameStatus.PUSH;
+    //Hitting: the game can end by the player busting
+    else if(endpoint == 2)
+    {
+      if (player.getPlayerHand().getValue() > 21)
+      {
+        status = gameStatus.PLAYER_BUST;
         payout = 0.0;
       }
-      else if (playerHand.getValue() > 21) {
-        status =  gameStatus.PLAYER_BUST;
+      if (player.getPlayerHand().getValue() == 21)
+      {
+        if(dealerHand.getValue() == 21)
+        {
+          status = gameStatus.PUSH;
+          payout = 0.0;
+        }
+        else
+        {
+          status = gameStatus.PLAYER_WIN;
+          payout = 0.0;
+        }
+      }
+    }
+    else if (endpoint == 3)
+    {
+      if (player.getPlayerHand().getValue() == dealerHand.getValue())
+      {
+        status = gameStatus.PUSH;
         payout = 0.0;
       }
-      else if (dealerHand.getValue() > 21) {
+      else if (player.getPlayerHand().getValue() > dealerHand.getValue() && playerHand.getValue() <= 21)
+      {
+        status = gameStatus.PLAYER_WIN;
+        payout = 1.0;
+      }
+      else if (dealerHand.getValue() > 21)
+      {
         status = gameStatus.DEALER_BUST;
         payout = 1.0;
       }
-      else if (playerHand.getValue() > dealerHand.getValue()) {
-        status =  gameStatus.PLAYER_WIN;
-        payout = 1.0;
+      //player has less and dealer
+      else if(player.getPlayerHand().getValue() < dealerHand.getValue() && dealerHand.blackjack())
+      {
+        status = gameStatus.DEALER_BLACKJACK;
+        payout = 0.0;
       }
-      else {
-        status =  gameStatus.DEALER_WIN;
+      else if (player.getPlayerHand().getValue() < dealerHand.getValue() && dealerHand.getValue() <= 21)
+      {
+        status = gameStatus.DEALER_WIN;
         payout = 0.0;
       }
     }
@@ -181,6 +209,8 @@ public class Game implements Serializable {
         return "Dealer Busted!";
       case PLAYER_BLACKJACK:
         return "Blackjack!";
+      case DEALER_BLACKJACK:
+        return "Dealer Blackjack!";
       default:
         return "IN_PLAY";
     }
@@ -287,7 +317,7 @@ public class Game implements Serializable {
   /**
    * This function plays the dealer's turn once the player's turn is over
    */
-  private void takeDealerTurn() {
+  public void takeDealerTurn() {
     while (dealerHand.getValue() < 17) {
       Card newCard = deck.dealCard();
       dealerHand.addCard(newCard);

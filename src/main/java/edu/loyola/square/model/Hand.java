@@ -41,7 +41,7 @@ public class Hand implements Serializable {
   /**
    * This function optimizes the players ace(s) to not let them change their ace(s) to 11 if they would bust, or give them 21 by changing the ace to an 11 if applicable
    */
-  private void optimizeAces() {
+  public void optimizeAces() {
     if (aceCount > 0) {
       if (getValue(11) > 21) {
         setAceValue(1);

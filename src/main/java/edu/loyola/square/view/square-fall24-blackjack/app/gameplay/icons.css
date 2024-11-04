@@ -1,0 +1,13 @@
+.friend-icon {
+    position: fixed;
+    top: 15px;
+    right: 20px;
+    z-index: 100;
+}
+
+.message-icon {
+    position: fixed;
+    bottom: 15px;
+    left: 20px;
+    z-index: 100;
+}

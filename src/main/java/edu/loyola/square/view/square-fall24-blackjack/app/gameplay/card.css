@@ -1,19 +1,23 @@
 .cardDisplay {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    min-height: 100vh;
     justify-content: space-between;
+    position: relative;
+    padding: 20px;
 }
 
 .playerHand-container {
     display: flex;
     justify-content: center;
     margin-top:auto;
+    margin-bottom: 20px;
 }
 
 .dealerHand-container {
     display: flex;
     justify-content: center;
+    margin-top: 20px;
 
 }
 
@@ -61,18 +65,6 @@
     margin-top: auto;
     gap: 75px;
 }
-
-.play-container{
-    display: flex;
-    justify-content: center;
-    margin-top: 350px;
-}
-.play-btn{
-    width: 300px;
-    height:80px;
-    border-radius: 8px;
-    background-color: darkgoldenrod;
-}
 .action-btn {
     width: 150px;
     height:50px;
@@ -91,4 +83,72 @@
     border-radius: 6px;
     color: white;
     align-items: center;
+}
+.leave-btn {
+    position: fixed;
+    justify-content: left;
+    display: flex;
+    padding-left: 30px;
+    padding-top: 15px;
+    z-index: 100;
+}
+.stats-container {
+    justify-content: right;
+    display: flex;
+    padding-right: 10px;
+    padding-bottom: 5px;
+}
+.bet-container{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    margin-top: 0;
+}
+.start-container{
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+.start-btn{
+    width: 300px;
+    height:80px;
+    border-radius: 8px;
+    background-color: darkgoldenrod;
+}
+.play-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 250px;
+}
+
+.bet-value{
+    display: flex;
+    justify-content: center;
+    width: 25%;
+    margin: 20px auto;
+    color: #15803d;
+}
+.place-bet-title {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 50%;
+    height: 80px;
+    background: linear-gradient(to bottom, #8B0000, #5B0F0F);
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border: 2px solid #960000;
+    margin: 20px auto;
+}
+
+.place-bet-content {
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    letter-spacing: 1px;
 }

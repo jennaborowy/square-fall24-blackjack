@@ -2,17 +2,10 @@
 import {useState, useEffect} from "react";
 import Card from './card';
 import './card.css'
-
-const FlippableCard = ({ suit, rank, isFlipped }) => {
-  return (
-      <div className={`cardArea card-flip ${isFlipped ? 'has-flipped' : ''}`}>
-        <div className="card-front">
-          <Card suit={suit} rank={rank} />
-        </div>
-        <div className="card-back" />
-      </div>
-  );
-};
+import AceModal from './AceModal'
+import BetInput from './PlaceBet'
+import InputGroup from "react-bootstrap/InputGroup";
+import Form from "react-bootstrap/Form";
 
 export default function CardDisplay() {
   //going to be list of cards
@@ -24,20 +17,47 @@ export default function CardDisplay() {
   const [playerStand, setPlayerStand] = useState(false)
   const [gameStatusMessage, setGameStatusMessage] = useState("")
   //const [gameStatus, setGameStatus] = useState([])
-  const gameStat = {
-    DEALER_BUST: 'DEALER_BUST',
-    PLAYER_WIN: 'PLAYER_WIN',
-    PLAYER_BUST: 'PLAYER_BUST',
-    BLACKJACK: 'BLACKJACK',
-    DEALER_WIN: 'DEALER_WIN',
-    PUSH: 'PUSH',
-    IN_PLAY: 'IN_PLAY'
-  };
+  const [showAceModal, setShowAceModal] = useState(false)
+  const [betAmount, setBetAmount] = useState("")
+  const [betError, setBetError] = useState("")
 
 
+  const MIN_BET = 0; //will be changed when getting table
+  const MAX_BET = 10000;
+  const BET_INCREMENT = 5;
 
-  function endGame (gameState){
-    if(!gameState || !gameState.gameStatus) {
+  const validateBet = async (betAmount) => {
+    const bet = parseFloat(betAmount)
+    if (isNaN(bet))
+    {
+      setBetError("Your bet should be a valid number!")
+      return false
+    }
+    else if(bet < MIN_BET)
+    {
+      setBetError("You cannot bet less than $ ${MIN_BET} at this table!")
+      return false
+    }
+    else if(bet > MAX_BET)
+    {
+      setBetError("You cannot bet more than $ ${MAX_BET} at this table!")
+      return false
+    }
+    else if (bet % BET_INCREMENT !== 0)
+    {
+      setBetError("Your bet must satisfy increments of $ ${BET_INCREMENT}")
+      return false
+    }
+    else
+    {
+      //valid bet
+      setBetError("")
+      return true;
+    }
+  }
+
+  function endGame(gameState) {
+    if (!gameState || !gameState.gameStatus) {
       console.log("dont have game state")
       return;
     }
@@ -55,55 +75,55 @@ export default function CardDisplay() {
     setGameStarted(true);
 
     try {
-        const response = await fetch('http://localhost:8080/gamestart', {
-          method: 'POST',
-          headers:{
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({}),
-          })
-        if (!response.ok) throw new Error("Connection failed");
-        const result = await response.json();
-        setPlayerHand(result.playerHand);
-        setDealerHand(result.dealerHand);
-        setGameState(result)
-        endGame(result);
+      const response = await fetch('http://localhost:8080/gamestart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({}),
+      })
+      if (!response.ok) throw new Error("Connection failed");
+      const result = await response.json();
+      setPlayerHand(result.playerHand);
+      setDealerHand(result.dealerHand);
+      setGameState(result)
+      setGameStarted(true);
+      endGame(result);
 
-      } catch (error){
-        console.log("Game failed to start", error);
-      }
-
+    } catch (error) {
+      console.log("Game failed to start", error);
     }
 
-    const playerHits = async() => {
-      console.log("Player length", playerHand.length);
-      if (gameOver) {
-        return;
-      }
-      try {
-        const response = await fetch('http://localhost:8080/hit', {
-          method: 'POST',
-          headers: {
-            'Content-type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({
-            hit: "true",
-          }),
-        })
-        if (!response.ok) throw new Error("Connection failed");
-        const result = await response.json();
-        console.log("Player response ", result)
-        setPlayerHand(result.playerHand);
-        setDealerHand(result.dealerHand);
-        setGameState(result);
-        endGame(result)
-      } catch (error) {
-        console.log("Hit failed", error)
-      }
+  }
+  const playerHits = async () => {
+    console.log("Player length", playerHand.length);
+    if (gameOver) {
+      return;
     }
-  const playerStands = async() => {
+    try {
+      const response = await fetch('http://localhost:8080/hit', {
+        method: 'POST',
+        headers: {
+          'Content-type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          hit: "true",
+        }),
+      })
+      if (!response.ok) throw new Error("Connection failed");
+      const result = await response.json();
+      console.log("Player response ", result)
+      setPlayerHand(result.playerHand);
+      setDealerHand(result.dealerHand);
+      setGameState(result);
+      endGame(result)
+    } catch (error) {
+      console.log("Hit failed", error)
+    }
+  }
+  const playerStands = async () => {
     if (gameOver) {
       return;
     }
@@ -127,62 +147,123 @@ export default function CardDisplay() {
       endGame(result)
 
     } catch (error) {
-      console.log("Hit failed", error)
+      console.log("Stand failed", error)
     }
 
   };
 
+  const promptAce = async (selectedValue) => {
+    if (!gameStarted || !gameState) return;
+    try {
+      const response = await fetch('http://localhost:8080/promptAce', {
+        method: 'POST',
+        headers: {
+          'Content-type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({aceValue: selectedValue}),
+      })
+      if (!response.ok) throw new Error("Connection failed");
+      const result = await response.json();
+      console.log("Player response ", result)
+      setPlayerHand(result.playerHand);
+      setDealerHand(result.dealerHand);
+      setGameState(result)
+      setShowAceModal(false);
+
+    } catch (error) {
+      console.log("Prompt Ace failed", error)
+    }
+  };
+
+  useEffect(() => {
+    if (gameStarted && gameState && gameState.hasAce  === true) {
+      setShowAceModal(true);
+    }
+  }, [gameState?.hasAce]);
+
+  const handleAceValueSelect = (value) => {
+    promptAce(value);
+  };
+
+  const handleBetPlaced = (betValue) => {
+    const bet = betValue.target.value
+    if(validateBet(bet)) {
+      setBetAmount(bet)
+    }
+  }
   return (
     <div>
       <div className="cardDisplay">
         {!gameStarted && (
-          <div className="play-container">
-            <button className="btn btn-lg btn-success" onClick={startGame}>
-              Start Game
-            </button>
-          </div>
-        )}
-        {gameStarted && (
-        <div className="dealerHand-container">
-          {dealerHand.map((card, index) => {
-            if (index === 0) {
-              // First card is always shown
-              return <Card key={index} suit={card.suit} rank={card.rank} />;
-            } else if (index === 1) {
-              // Second card is hidden originally and then flipped after the player stands or wins
-              return (
-                  <FlippableCard
-                      key={index}
-                      suit={card.suit}
-                      rank={card.rank}
-                      isFlipped={!playerStand && !gameOver}
-                  />
-              );
-            } else if (playerStand || gameOver) {
-              // Show additional cards only after standing or game over
-              return <Card key={index} suit={card.suit} rank={card.rank} />;
-            }
-            return null;
-          })}
-        </div> )}
-        {gameOver && (
-          <div className="end-container">
-            {gameStatusMessage}
-          </div>
-        )}
-        {gameStarted && !playerStand && !gameOver && (
-          <div className="btn-container">
-          <button className="action-btn" onClick={playerHits}>Hit</button>
-          <button className="action-btn" onClick={playerStands}>Stand</button>
-        </div> )}
+          <div className="bet-container">
+            {/*
+            <div className="place-bet-tag">
+              Place Your Bet!
+            </div>
 
+            <div className="bet-value">
+              <InputGroup className="mb-3">
+                <InputGroup.Text>$</InputGroup.Text>
+                <Form.Control
+                  type="number"
+                  min={MIN_BET}
+                  max={MAX_BET}
+                  step={BET_INCREMENT}
+                  onChange={handleBetPlaced}
+                  isInvalid={!!betError}
+                  aria-label="Amount (to the nearest dollar)"/>
+                <InputGroup.Text>.00</InputGroup.Text>
+              </InputGroup>
+            </div>
+            */}
+            <div className="start-container">
+              <button className="btn btn-lg btn-success" onClick={startGame}> {/*disabled={!betAmount || !!betError}> */}
+                Start Game
+              </button>
+            </div>
+          </div>
+        )}
         {gameStarted && (
-          <div className= "playerHand-container">
-          {playerHand.map((card, index) => (
-              <Card key={index} suit={card.suit} rank={card.rank} />
-            ))}
-        </div> )}
-      </div>
-    </div>
-    );
-}
+          <div className="dealerHand-container">
+                {dealerHand.map((card, index) => (
+                  <Card key={index} suit={card.suit} rank={card.rank}/>
+                ))}
+              </div>)}
+            {gameOver && (
+              <div className="end-container">
+                {gameStatusMessage}
+              </div>
+            )}
+            {gameStarted && !playerStand && !gameOver && (
+              <div className="btn-container">
+                <button className="action-btn" onClick={playerHits}>Hit</button>
+                <button className="action-btn" onClick={playerStands}>Stand</button>
+              </div>)}
+
+            {gameStarted && (
+              <div className="playerHand-container">
+                {playerHand.map((card, index) => (
+                  <Card key={index} suit={card.suit} rank={card.rank}/>
+                ))}
+              </div>)}
+            {gameStarted && (
+              <div className="leave-btn">
+                <button type="button" className="btn btn-primary btn-danger" onClick={startGame}>
+                  Leave Table
+                </button>
+              </div>
+            )}
+              <div className="bet-value">
+                {betAmount}
+              </div>
+
+
+            <AceModal
+              showModal={showAceModal}
+              onSelectValue={handleAceValueSelect}
+            />
+          </div>
+          </div>
+          );
+        }
