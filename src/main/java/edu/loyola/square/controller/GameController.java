@@ -1,96 +1,71 @@
-/**
- * This file contains the GameController which connects gameplay requests from the front end.
- */
 package edu.loyola.square.controller;
+
 import edu.loyola.square.model.Player;
 import edu.loyola.square.model.Game;
 
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class GameController {
-  //utilized in hit and stand, game should lock to perform action before updating gameState
   private final Object lock = new Object();
   private int endGameLocation;
-  //game needs to persist for the session. Establishes a cookie
-  @ModelAttribute("game")
-  //parameter could be edited later to have a list of players
 
-  /**
-   *
-   *Output: a new Game with players
-   *Purpose: to create a new game with Players
-   */
+  @ModelAttribute("game")
   public Game newGame() {
-    Game game = new Game(new Player("Player 1", 100));
-    return game;
+    List<Player> players = new ArrayList<>();
+    players.add(new Player("Player 1", 100));
+    players.add(new Player("Player 2", 100));
+    return new Game(players);
   }
 
-  /**
-   *
-   *Returns 'Hello World' in the server
-   *This function tests to make sure the server is receiving requests
-   */
   @GetMapping("/hello")
   public String hello() {
     return "Hello World";
   }
 
-  /**
-   *@param session HttpSession - instantiates a http session to persist data across endpoints
-   *Returns gameState as a map of strings and objects as a response entity
-   *This function starts a game of blackjack and sends a Hashmap response to the front end
-   */
   @PostMapping("/gamestart")
   public ResponseEntity<Map<String, Object>> startGame(HttpSession session) {
-    //remove existing game (reset cookies for a new session)
     session.removeAttribute("game");
-    //instance of game established at beginning of session (persistence
-    Game newGame = new Game(new Player("Player 1", 100));
+    List<Player> players = new ArrayList<>();
+    players.add(new Player("Player 1", 100));
+    players.add(new Player("Player 2", 100));
+    Game newGame = new Game(players);
 
     if (newGame != null) {
       System.out.println("Game is found");
       newGame.initializeGame();
       session.setAttribute("game", newGame);
       Map<String, Object> gameState = getGameState(newGame);
-      if(newGame.getPlayers().getPlayerHand().blackjack()) {
+
+      Player currentPlayer = newGame.getCurrentPlayer();
+      if(currentPlayer.getPlayerHand().blackjack()) {
         endGameLocation = 1;
         Map<String, Object> status = newGame.endGameStatus(1);
         gameState.put("gameStatus", status);
-        //so the front-end wont prompt ace value (user should automatically win with 11
         gameState.put("hasAce", false);
         return ResponseEntity.ok(gameState);
-      }
-      //should handle the case that player is dealt aces at game start
-      else if (newGame.getPlayers().getPlayerHand().getAceCount() > 0) {
+      } else if (currentPlayer.getPlayerHand().getAceCount() > 0) {
         gameState.put("hasAce", true);
         return ResponseEntity.ok(gameState);
-      }
-      else {
+      } else {
         gameState.put("hasAce", false);
       }
+
       System.out.println(gameState);
-      //game could end here if winner gets Blackjack, so return the result
-      //using hashmap, so information of the game can be added in key,value pairs and returned in JSON
       return ResponseEntity.ok(gameState);
     }
     return ResponseEntity.badRequest().body(Map.of("Error:", "Game failed to start"));
-
   }
 
-  /**
-   *@session HttpSession - instantiates a http session to persist data across endpoints.
-   *Returns gameState as a map of strings and objects as a response entity.
-   *This function performs player 'stand' action and intiates dealer's turn. Sends a Hashmap response to the front end.
-   */
   @PostMapping("/stand")
   public ResponseEntity<Map<String, Object>> playerStand(HttpSession session) {
-    //need to lock so http response can come back before updating gamestate
     synchronized (lock) {
       Game game = (Game) session.getAttribute("game");
       if (game != null) {
@@ -99,6 +74,7 @@ public class GameController {
         Map<String, Object> gameState = getGameState(game);
         Map<String, Object> status = game.endGameStatus(3);
         gameState.put("gameStatus", status);
+        game.nextPlayer();
         session.setAttribute("game", game);
         System.out.println("Standing gameState is: " + gameState);
         return ResponseEntity.ok(gameState);
@@ -106,33 +82,32 @@ public class GameController {
       return ResponseEntity.badRequest().body(Map.of("Error:", "Game failed to start"));
     }
   }
-  /**
-   *@param session HttpSession - instantiates a http session to persist data across endpoints.
-   *Returns gameState as a map of strings and objects as a response entity.
-   *This function performs player 'hit' action and ends the game if player busts. Sends a Hashmap response to the front end.
-   */
+
   @PostMapping("/hit")
   public ResponseEntity<Map<String, Object>> playerHit(HttpSession session) {
-    //need to lock so http response can come back before updating gamestate
     synchronized (lock) {
       Game game = (Game) session.getAttribute("game");
-      boolean gameNull = game != null ? true : false;
+      boolean gameNull = game != null;
       System.out.println(gameNull);
+
       if (game != null) {
         System.out.println("game not null");
-        //initialize gamestate to check if hand already has ace (from initial hand or after hitting)
         Map<String, Object> gameState = getGameState(game);
-        game.hit(game.getPlayers().getPlayerHand());
-        //update gameState after hitting
+        Player currentPlayer = game.getCurrentPlayer();
+        game.hit(currentPlayer.getPlayerHand());
         gameState = getGameState(game);
+
         if (gameState.get("hasAce").equals(true)) {
           return ResponseEntity.ok(gameState);
         }
-        if(game.getPlayers().getPlayerHand().getValue() >= 21) {
+
+        if(currentPlayer.getPlayerHand().getValue() >= 21) {
           endGameLocation = 2;
           Map<String, Object> status = game.endGameStatus(2);
           gameState.put("gameStatus", status);
+          game.nextPlayer();
         }
+
         session.setAttribute("game", game);
         System.out.println("Hit Gamestate" + gameState);
         return ResponseEntity.ok(gameState);
@@ -142,59 +117,68 @@ public class GameController {
   }
 
   @PostMapping("/promptAce")
-  public ResponseEntity<Map<String, Object>> promptAce(HttpSession session, @RequestBody Map<String, Object> requestAce)
-  {
+  public ResponseEntity<Map<String, Object>> promptAce(HttpSession session, @RequestBody Map<String, Object> requestAce) {
     synchronized (lock) {
       Game game = (Game) session.getAttribute("game");
       if(game != null) {
         Integer aceValue = (Integer) requestAce.get("aceValue");
+        Player currentPlayer = game.getCurrentPlayer();
+
         if (aceValue != null && (aceValue == 1 || aceValue == 11)) {
-          game.getPlayerHand().setAceValue(aceValue);
+          currentPlayer.getPlayerHand().setAceValue(aceValue);
         }
+
         Map<String, Object> gameState = getGameState(game);
         gameState.put("aceValue", aceValue);
-        int handValue = game.getPlayers().getPlayerHand().getValue();
+
+        int handValue = currentPlayer.getPlayerHand().getValue();
         if (handValue > 21) {
           Map<String, Object> status = game.endGameStatus(2);
           gameState.put("gameStatus", status);
+          game.nextPlayer();
         } else if (handValue == 21) {
           Map<String, Object> status = game.endGameStatus(1);
           gameState.put("gameStatus", status);
+          game.nextPlayer();
         }
 
+        session.setAttribute("game", game);
         return ResponseEntity.ok(gameState);
-
       }
       return ResponseEntity.badRequest().body(Map.of("Error:", "Failed to store ace"));
     }
   }
-  /**
-   *@param game Game - the Game that has been persisted in the current session
-   *Returns gameState - a hashmap including the player's hand, dealer's dan
-   *This function updates a gameState hashmap to pass updated game information.
-   */
-  //updates the game parameters/information (hands, points, status)
+
   public Map<String, Object> getGameState(Game game) {
-    Map<String, Object> gameState = new HashMap<String, Object>();
+    Map<String, Object> gameState = new HashMap<>();
     if (game != null) {
-      //updates json hashmap of hand data as game continues
-      gameState.put("playerHand", game.getPlayers().getPlayerHand().getHand());
-      gameState.put("playerValue", game.getPlayers().getPlayerHand().getValue());
+      List<Map<String, Object>> playerStates = new ArrayList<>();
+
+      // Add state for each player
+      for (Player player : game.getPlayers()) {
+        Map<String, Object> playerState = new HashMap<>();
+        playerState.put("name", player.getName());
+        playerState.put("hand", player.getPlayerHand().getHand());
+        playerState.put("value", player.getPlayerHand().getValue());
+        playerState.put("hasAce", player.getHasAce());
+        playerStates.add(playerState);
+      }
+
+      gameState.put("players", playerStates);
+      gameState.put("currentPlayerIndex", game.getPlayers().indexOf(game.getCurrentPlayer()));
+
+      // Add dealer information
       if (game.getDealerHand() != null) {
         gameState.put("dealerHand", game.getDealerHand().getHand());
         gameState.put("dealerValue", game.getDealerHand().getValue());
       }
-      if(game.getPlayers().getHasAce() == true) {
-        //indicate to front-end to prompt the user.
-        gameState.put("hasAce", true);
-      }
-      else {
-        gameState.put("hasAce", false);
-      }
+
+      // Set hasAce for current player
+      Player currentPlayer = game.getCurrentPlayer();
+      gameState.put("hasAce", currentPlayer.getHasAce());
+
       System.out.println("Game state is: " + gameState);
     }
     return gameState;
   }
 }
-
-
