@@ -1,11 +1,20 @@
 'use client'
-import {useState, useEffect} from "react";
+import React, {useState, useEffect} from "react";
 import Card from './card';
 import './card.css'
+import './icons.css'
+import './gameinfo.css'
 import AceModal from './AceModal'
+import GameInfo from './GameInfo'
 import BetInput from './PlaceBet'
 import InputGroup from "react-bootstrap/InputGroup";
 import Form from "react-bootstrap/Form";
+import {FriendsIcon, MessageIcon } from './icons';
+import PlaceBetAnimation from './BetTypeAnimation'
+import ChatBox from "../messages/chatbox/chatbox";
+import {CometChatConversationsWithMessages} from "@cometchat/chat-uikit-react";
+import CometChat from "@/app/messages/cometChatUiInit";
+
 
 export default function CardDisplay() {
   //going to be list of cards
@@ -21,7 +30,8 @@ export default function CardDisplay() {
   const [betAmount, setBetAmount] = useState("")
   const [betError, setBetError] = useState("")
 
-
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const openChat = () => setIsChatOpen(true);
   const MIN_BET = 0; //will be changed when getting table
   const MAX_BET = 10000;
   const BET_INCREMENT = 5;
@@ -192,16 +202,27 @@ export default function CardDisplay() {
       setBetAmount(bet)
     }
   }
+
   return (
     <div>
       <div className="cardDisplay">
+        <div className="friend-icon">
+          <FriendsIcon/>
+        </div>
+        {gameStarted && (
+          <div className="leave-btn">
+            <a href="/lobby" className="mt-3 btn btn-danger" role="button">Leave Game</a>
+          </div>
+        )}
         {!gameStarted && (
           <div className="bet-container">
-            {/*
-            <div className="place-bet-tag">
-              Place Your Bet!
+            <div className="place-bet-title">
+              <div className="place-bet-content">
+                <PlaceBetAnimation>
+                  Place Your Bet!
+                </PlaceBetAnimation>
+              </div>
             </div>
-
             <div className="bet-value">
               <InputGroup className="mb-3">
                 <InputGroup.Text>$</InputGroup.Text>
@@ -216,9 +237,9 @@ export default function CardDisplay() {
                 <InputGroup.Text>.00</InputGroup.Text>
               </InputGroup>
             </div>
-            */}
             <div className="start-container">
-              <button className="btn btn-lg btn-success" onClick={startGame}> {/*disabled={!betAmount || !!betError}> */}
+              <button className="btn btn-lg btn-success"
+                      onClick={startGame}> {/*disabled={!betAmount || !!betError}> */}
                 Start Game
               </button>
             </div>
@@ -226,44 +247,47 @@ export default function CardDisplay() {
         )}
         {gameStarted && (
           <div className="dealerHand-container">
-                {dealerHand.map((card, index) => (
-                  <Card key={index} suit={card.suit} rank={card.rank}/>
-                ))}
-              </div>)}
-            {gameOver && (
-              <div className="end-container">
-                {gameStatusMessage}
-              </div>
-            )}
-            {gameStarted && !playerStand && !gameOver && (
-              <div className="btn-container">
-                <button className="action-btn" onClick={playerHits}>Hit</button>
-                <button className="action-btn" onClick={playerStands}>Stand</button>
-              </div>)}
-
-            {gameStarted && (
-              <div className="playerHand-container">
-                {playerHand.map((card, index) => (
-                  <Card key={index} suit={card.suit} rank={card.rank}/>
-                ))}
-              </div>)}
-            {gameStarted && (
-              <div className="leave-btn">
-                <button type="button" className="btn btn-primary btn-danger" onClick={startGame}>
-                  Leave Table
-                </button>
-              </div>
-            )}
-              <div className="bet-value">
-                {betAmount}
-              </div>
-
-
-            <AceModal
-              showModal={showAceModal}
-              onSelectValue={handleAceValueSelect}
-            />
+            {dealerHand.map((card, index) => (
+              <Card key={index} suit={card.suit} rank={card.rank}/>
+            ))}
+          </div>)}
+        {gameOver && (
+          <div className="end-container">
+            {gameStatusMessage}
           </div>
+        )}
+        {gameStarted && !playerStand && !gameOver && (
+          <div className="btn-container">
+            {/*<button type="button" class="btn action-btn" onClick={playerHits}>Hit</button>*/}
+            <button className="action-btn" onClick={playerHits}>Hit</button>
+            <button className="action-btn" onClick={playerStands}>Stand</button>
+          </div>)}
+
+        {gameStarted && (
+          <div className="playerHand-container">
+            {playerHand.map((card, index) => (
+              <Card key={index} suit={card.suit} rank={card.rank}/>))}
+          </div>)}
+        {gameStarted && (
+          <div className="bet-value">
+            {betAmount}
+          </div>)}
+        <div className="message-icon">
+          <div className="icons-btn" onClick={openChat}>
+            <MessageIcon/>
+            {isChatOpen && <ChatBox />}
           </div>
-          );
-        }
+        </div>
+        {gameStarted && (
+          <div className="game-stats-container">
+            <GameInfo/>
+          </div>)}
+
+        <AceModal
+          showModal={showAceModal}
+          onSelectValue={handleAceValueSelect}
+        />
+      </div>
+    </div>
+  );
+}
