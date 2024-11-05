@@ -39,14 +39,7 @@
 }
 
 .join-table-button:disabled {
-    background-color: #1c6e17 !important;
+    background-color: #d1d5db !important;
     cursor: not-allowed !important;
     transform: none !important;
-    pointer-events: none !important;
-}
-
-.join-table-button:disabled:hover {
-    background-color: #1c6e17 !important;
-    transform: none !important;
-    box-shadow: none !important;
 }
