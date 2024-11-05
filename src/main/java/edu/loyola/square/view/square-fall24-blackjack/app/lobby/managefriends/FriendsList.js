@@ -21,20 +21,15 @@ function FriendsList({ userList, setUserList }) {
             const userRef = doc(collection(db, "users"), currentUser.uid);
             const docSnap = await getDoc(userRef);
             setFriends([...docSnap.data().friends]);
-            console.log(docSnap.data().friends);
         }
 
-        getFriends()
-            .then((res) => console.log("res: ", res))
-            .then((data) => console.log("data: ", data))
-            .catch((error) => {console.log(error)});
+        getFriends().catch((error) => {console.log(error)});
     }, [currentUser, userList])
 
     // verifies current friend by uid
     async function updateFriend(uid) {
         const userRef = doc(db, "users", uid);
         const docSnap = await getDoc(userRef);
-
         setFriend(docSnap.data())
         setModalOn(true);
     }
@@ -42,7 +37,6 @@ function FriendsList({ userList, setUserList }) {
     async function getFirstName(uid) {
         const userRef = doc(db, "users", uid);
         const docSnap = await getDoc(userRef);
-        console.log("first: ", docSnap.data().firstName)
         return docSnap.data().firstName.toString();
     }
 
@@ -62,69 +56,74 @@ function FriendsList({ userList, setUserList }) {
     async function removeFriend(user) {
         setModalOn(false);
 
+        console.log(modalOn)
         const userRef = doc(collection(db, "users"), currentUser.uid);
         try {
             const docRef = await updateDoc(userRef, {
                 friends: arrayRemove(user.uid),
             });
-            console.log("removed user: ", user.uid)
+            const docSnap = await getDoc(userRef);
+            setFriends([...docSnap.data().friends])
+            console.log("removed user: ", user)
         } catch (error) {
             console.log("error removing friend: ", error);
         }
+        console.log(modalOn)
     }
 
+    useEffect(() => {
+        setModalOn(false);
+    }, [friends]);
+
     return (
-        <div className="TableList-container mt-4 p-10 h-96 border rounded-lg overflow-y-auto shadow-md">
-            <h1 className="text-center mt-3 mb-0">View Friends</h1>
-            <div className="space-y-2 pt-1 p-4">
-                {friends.map((uid, index) => (
-                    <div>
+        <div>
+            <h1 className="UserList-header p-2 pt-3 rounded-top mt-3 mb-0">View Current Friends</h1>
+            <div className="UserList-container p-10 h-96 rounded-bottom overflow-y-auto shadow-md">
+                <div className="space-y-2 pt-1 p-4">
+                    {friends.map((uid, index) => (
                         <div
                             key={index}
                             className="p-4 mt-2 border rounded-lg shadow-sm hover:shadow-md transition-shadow bg-gray-50"
                         >
                             <div className="flex justify-between items-center row">
-                                <div className="col" id={uid}>
+                                <div className="col text-start" id={uid}>
                                     <h3 className="font-medium">@{getUsername(uid)}</h3>
                                     <p className="text-sm text-gray-600">{getFirstName(uid)} {getLastName(uid)}
                                     </p>
                                 </div>
-                                <div className="col">
-                                    <div className="button-container">
-                                        <button className="btn btn-danger mt-3" onClick={(e) => {
-                                            updateFriend(uid)
-                                                .then(() => console.log("updated"))
-                                                .catch((error) => {
-                                                    console.log(error);
-                                                });
-
-                                            setModalOn(true);
-                                        }}>Remove Friend
-                                        </button>
-                                    </div>
+                                <div className="col text-end">
+                                    <button className="btn btn-danger mt-3" onClick={(e) => {
+                                        updateFriend(uid)
+                                            .then(() => setModalOn(true))
+                                            .catch((error) => {
+                                                console.log(error);
+                                            });
+                                    }}>Remove Friend
+                                    </button>
                                 </div>
                             </div>
+
                         </div>
-                        <Dialog
-                            open={modalOn}
-                            onClose={(e) => setModalOn(false)}>
-                            <DialogContent> {(friend != null) && (
-                                <DialogContentText>
-                                    Remove @{friend.username}?
-                                </DialogContentText>
-                            )}
-                            </DialogContent>
-                            <DialogActions>
-                                <button className="mt-3 btn btn-danger border" onClick={(e) => removeFriend(friend)}>
-                                    Yes
-                                </button>
-                                <button className="mt-3 btn border" onClick={(e) => setModalOn(false)}>
-                                    No
-                                </button>
-                            </DialogActions>
-                        </Dialog>
-                    </div>
-                ))}
+                    ))}
+                    <Dialog
+                        open={modalOn}
+                        onClose={(e) => setModalOn(false)}>
+                        <DialogContent> {(friend != null) && (
+                            <DialogContentText>
+                                Remove @{friend.username}?
+                            </DialogContentText>
+                        )}
+                        </DialogContent>
+                        <DialogActions>
+                            <button className="mt-3 btn btn-danger border" onClick={(e) => removeFriend(friend)}>
+                                Yes
+                            </button>
+                            <button className="mt-3 btn border" onClick={(e) => setModalOn(false)}>
+                                No
+                            </button>
+                        </DialogActions>
+                    </Dialog>
+                </div>
             </div>
         </div>
     );

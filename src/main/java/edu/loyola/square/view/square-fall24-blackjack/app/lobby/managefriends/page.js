@@ -4,9 +4,12 @@ import React, { useEffect, useRef, useState } from "react";
 import "./UserList.css";
 import FriendsList from "./FriendsList";
 import UserList from "@/app/lobby/managefriends/UserList";
+import { useAuth } from "@/app/context/auth";
 
 function ManageFriends() {
     const [userList, setUserList] = useState([]);
+
+    const currentUser = useAuth().currentUser;
 
     // gets all users
     useEffect(() => {
@@ -18,7 +21,12 @@ function ManageFriends() {
                 },
             }).then((response) => response.json()
             ).then((data) => {
-                setUserList(Object.values(data));
+                if (!currentUser) {
+                    return;
+                }
+                // initializes user list to be without currentUser
+                const initUserList = Object.values(data).filter((user) => user.uid !== currentUser.uid);
+                setUserList(initUserList);
             }).catch((error) => {
                 console.log("err in fetch: ", error.message);
             });
@@ -26,7 +34,7 @@ function ManageFriends() {
         } catch (error) {
             console.log(error.message);
         }
-    }, []);
+    }, [currentUser]);
 
     return (
         <div className="row">
