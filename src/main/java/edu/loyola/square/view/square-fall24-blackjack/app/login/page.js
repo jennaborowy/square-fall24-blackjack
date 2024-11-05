@@ -1,7 +1,7 @@
 "use client";
 import "../globals.css";
 import { useRouter } from "next/navigation";
-import { auth } from "@/firebaseConfig";
+import {  auth  } from "@/firebaseConfig";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -15,7 +15,6 @@ import Link from "next/Link";
 import "./login.css";
 
 function Login() {
-
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [loginErr, setLoginErr] = useState(false);

@@ -13,7 +13,6 @@ import DialogContentText from "@mui/material/DialogContentText";
 import DialogActions from "@mui/material/DialogActions";
 import Dialog from "@mui/material/Dialog";
 
-import { auth } from "@/firebaseConfig";
 
 const Page=()=> {
 

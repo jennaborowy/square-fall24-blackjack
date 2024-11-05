@@ -9,6 +9,7 @@ import {Dialog, DialogActions, DialogContent, DialogContentText} from "@mui/mate
 function Lobby() {
     const [tables, setTables] = useState([]);
     const [showPopup, setShowPopup] = useState(false);
+    const[userBalance, setChipBalance] = useState();
 
     //Upon entering lobby, check user's chipBalance. Reset to 2500 if 0 and show popup to notify user of change
     useEffect(() => {
@@ -26,6 +27,7 @@ function Lobby() {
                         setShowPopup(true);
                         await updateDoc(docRef, {chipBalance: 2500});
                     }
+                    setChipBalance(points);
                 }
             }
         });
@@ -47,8 +49,8 @@ function Lobby() {
         <div className="m-3">
             {/*This is the popup to notify user of chipBalance change*/}
             <Dialog
-                    open={showPopup}
-                    onClose={handleClosePopup}>
+                open={showPopup}
+                onClose={handleClosePopup}>
                 <DialogContent>
                     <DialogContentText>
                         <p>
@@ -69,7 +71,10 @@ function Lobby() {
             <h1>Welcome to the Lobby!</h1>
             <TableList tables={tables}/>
             <CreateTableButton onTableCreate={handleTableCreate}/>
+
+            <h1> ${userBalance} </h1>
         </div>
+
     )
 }
 

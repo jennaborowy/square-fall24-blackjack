@@ -9,6 +9,7 @@ function Stats() {
     const [losses, setLosses] = useState("");
     const [wins, setWins] = useState("");
 
+    //get the user's total wins and losses
     useEffect( () => {
         const display = auth.onAuthStateChanged(async ()=>
         {
@@ -27,6 +28,7 @@ function Stats() {
     return (
         <div className="container">
             <div>
+                {/*Display user's number of wins and losses*/}
             <img src={"/stats-transformed.png"}
                  alt=""
                  height={150}
