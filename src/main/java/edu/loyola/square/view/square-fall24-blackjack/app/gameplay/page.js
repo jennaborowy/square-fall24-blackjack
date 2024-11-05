@@ -12,9 +12,6 @@ import Form from "react-bootstrap/Form";
 import {FriendsIcon, MessageIcon } from './icons';
 import PlaceBetAnimation from './BetTypeAnimation'
 import ChatBox from "../messages/chatbox/chatbox";
-import {CometChatConversationsWithMessages} from "@cometchat/chat-uikit-react";
-import CometChat from "@/app/messages/cometChatUiInit";
-
 
 export default function CardDisplay() {
   //going to be list of cards

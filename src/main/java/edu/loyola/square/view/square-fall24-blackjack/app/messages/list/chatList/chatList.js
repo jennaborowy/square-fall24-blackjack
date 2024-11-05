@@ -1,60 +1,70 @@
 'use client'
-import react, {useState, useEffect} from 'react'
+import react, {useState, useEffect, useContext} from 'react'
 import './chatList.css'
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import SearchIcon from '@mui/icons-material/Search';
-import {MinusIcon} from "lucide-react";
 import {doc, onSnapshot, getDoc} from "firebase/firestore";
 import {db, auth} from "@/firebaseConfig";
-import { collection, query, where, getDocs } from 'firebase/firestore';
 import AddUser from "@/app/messages/list/chatList/addUser/addUser";
-import { onAuthStateChanged } from 'firebase/auth';
+import {AuthContext} from "@/app/messages/AuthContext";
+import {ChatContext} from "@/app/messages/ChatContext";
 
 export default function ChatList () {
   const [addMode, setAddMode] = useState(false)
   const [chats, setChats] = useState([]);
-  const [currentUser, setCurrentUser] = useState(auth.currentUser);
-
-  //authenticates current user
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(user => {
-      if (user) {
-        setCurrentUser({
-          uid: user.uid,
-          username: user.displayName,
-        })
-      }
-      else {
-        setCurrentUser(null)
-      }
-    })
-    return () => unsubscribe()
-  }, [])
+  //authenticates user
+  const {currentUser} = useContext(AuthContext);
+  const {dispatch} = useContext(ChatContext)
 
 
   useEffect(() => {
     console.log(auth?.currentUser?.uid)
-
+    if (!currentUser) {
+      console.error("Current user not authenticated");
+      return;
+    }
+    //snapshot of all the users current chats
     const unsubscribe = onSnapshot(doc(db, "userChats", currentUser.uid), async (res) => {
+      //if document hasnt been created
+      if (!res.exists()) {
+        setChats([]);
+        return;
+      }
+      //get the chats
       const items = res.data().chats;
       const promises = items.map(async(item) => {
+        //maps messages to a receiverId
         const userDocRef = doc(db, "users", item.receiverId);
         const userDocSnap = await getDoc(userDocRef);
 
-        const user = userDocSnap.data()
-        return {...item, user};
+        //gets receiver id for
+        if (userDocSnap.exists()) {
+          const userData = userDocSnap.data();
+          return {...item, user: {...userData, uid: item.receiverId}};
+        }
+        return item;
       });
+
       const chatData = await Promise.all(promises)
+      //sort messages based on when they were created
       setChats(chatData.sort((a, b) => b.updatedAt - a.updatedAt));
     }
   );
     return () => {
       unsubscribe();
     };
-  }, [currentUser.uid]);
+  }, [currentUser?.uid]);
 
-  console.log(chats)
+  console.log("Chats here", chats)
+  //opens a specific chat
+  const handleSelectChat = (chat) => {
+    const conversationId = [currentUser.uid, chat.receiverId].sort().join('_');
+    //changes the user (recipient of the chat)
+    dispatch({type: "CHANGE_USER", payload: chat.user });
+    //changes the conversation id
+    dispatch({type: "SET_CONVERSATION_ID", payload: conversationId});
+  };
 
   return(
     <div className="chatlist">
@@ -68,7 +78,7 @@ export default function ChatList () {
         </div>
       </div>
       {chats.map((chat)=> (
-        <div className="item" key={chat.chatId}>
+        <div className="item" key={chat.chatId} onClick={() => handleSelectChat(chat)}>
           <div className="texts">
             <span>{chat.receiverName}</span>
             <p>{chat.lastMessage || "No messages have been sent yet"}</p>
