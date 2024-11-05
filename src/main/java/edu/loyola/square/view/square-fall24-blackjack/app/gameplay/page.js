@@ -29,6 +29,7 @@ export default function CardDisplay() {
 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const openChat = () => setIsChatOpen(true);
+
   const MIN_BET = 0; //will be changed when getting table
   const MAX_BET = 10000;
   const BET_INCREMENT = 5;
@@ -272,7 +273,7 @@ export default function CardDisplay() {
         <div className="message-icon">
           <div className="icons-btn" onClick={openChat}>
             <MessageIcon/>
-            {isChatOpen && <ChatBox />}
+            {isChatOpen && <ChatBox isChatOpen={isChatOpen} setIsChatOpen={setIsChatOpen}/>}
           </div>
         </div>
         {gameStarted && (
