@@ -1,0 +1,42 @@
+/* Style for UserList header */
+.UserList-header {
+    text-align: center;
+    color: lightgrey;
+    width: 45vw;
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+/* Style for UserList container */
+.UserList-container {
+    width: 45vw;
+    height: 600px;
+    background-color: rgba(0, 0, 0, 0.7);
+    margin-bottom: 20px;
+    color: lightgrey;
+    scrollbar-color: rgba(255, 255, 255, 0.2) rgba(30, 30, 30, .4);
+    scrollbar-width: thin;
+}
+
+/* Style for individual tables in the list */
+.UserList-container > div > div {
+    /* Dark maroon for table items */
+    background-color: #290000;
+    border: 1px solid #5B0F0F;
+}
+
+/* Hover effect for tables */
+.UserList-container > div > div:hover {
+    /* Slightly lighter on hover */
+    background-color: #3D0A0A;
+}
+
+/* Button container spacing */
+.button-container {
+    display: flex;
+    gap: 4px;  /* Adds space between buttons */
+}
+
+/* darker name color than other text */
+p {
+    color: grey;
+}

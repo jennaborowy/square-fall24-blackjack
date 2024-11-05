@@ -1,8 +1,8 @@
 //This layout is edited from Material UI's docs: https://mui.com/material-ui/react-app-bar/
-
 "use client"
 
 import * as React from 'react';
+import { useState, useEffect } from "react";
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
@@ -15,21 +15,84 @@ import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
-import {createTheme, ThemeProvider} from "@mui/material";
+import { createTheme, ThemeProvider } from "@mui/material";
 import { useRouter } from "next/navigation";
 import { auth, signOut } from "@/firebaseConfig";
-
+import { onAuthStateChanged } from "firebase/auth";
+import { useAuth } from "../context/auth";
 
 function LobbyLayout({children}) {
-    const [anchorElNav, setAnchorElNav] = React.useState(null);
-    const [anchorElUser, setAnchorElUser] = React.useState(null);
+    const [anchorElNav, setAnchorElNav] = useState(null);
+    const [anchorElUser, setAnchorElUser] = useState(null);
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [isAccountUser, setIsAccountUser] = useState(false);
+    const [userDisp, setUserDisp] = useState(null);
 
+    const currentUser = useAuth().currentUser;
     const router = useRouter();
+
+    // Function to set claims in state
+    const setClaims = (admin, accountUser, userDisp) => {
+        setIsAdmin(admin);
+        setIsAccountUser(accountUser);
+        setUserDisp(userDisp);
+    };
+
+    useEffect(() => {
+        // Listen to auth state changes
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Fetch ID token and check custom claims
+                user.getIdTokenResult()
+                    .then((idTokenResult) => {
+                        const admin = !!idTokenResult.claims.admin;
+                        const accountUser = !!idTokenResult.claims.accountUser;
+                        setClaims(admin, accountUser, user.displayName);
+                    })
+                    .catch((error) => {
+                        console.error("Error fetching claims:", error);
+                    });
+            } else {
+                // Clear claims on sign out
+                setClaims(false, false, null);
+            }
+        });
+
+        return () => unsubscribe(); // Cleanup on unmount
+    }, []);
 
     const handleLogout = async (e) => {
         e.preventDefault();
         try {
             await signOut(auth);
+            if (!isAdmin && !isAccountUser) {
+                // delete the auth AND account
+                const uid = currentUser.uid;
+                try {
+                    const response = await fetch('http://localhost:8080/api/user/delete', {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({"uid": uid}),
+                    });
+
+                    if (response.ok) {
+                        console.log("deleted user");
+                        console.log(currentUser?.uid);
+                    } else {
+                        const errorData = await response.json();
+                        console.log(errorData)
+                        // setErrMsg(errorData.message);
+                        // setErr(true);
+                    }
+                } catch (error) {
+                    console.log('Error submitting form:', error);
+                    // setErrMsg(error.message);
+                    // setErr(true);
+                }
+
+            }
             router.push('/');
         } catch (error) {
             console.error('Logout error:', error);
@@ -39,6 +102,7 @@ function LobbyLayout({children}) {
     const handleOpenNavMenu = (event) => {
         setAnchorElNav(event.currentTarget);
     };
+
     const handleOpenUserMenu = (event) => {
         setAnchorElUser(event.currentTarget);
     };
@@ -84,48 +148,52 @@ function LobbyLayout({children}) {
                             >
                                 <MenuIcon/>
                             </IconButton>
-                            <Menu
-                                id="menu-appbar"
-                                anchorEl={anchorElNav}
-                                anchorOrigin={{
-                                    vertical: 'bottom',
-                                    horizontal: 'left',
-                                }}
-                                keepMounted
-                                transformOrigin={{
-                                    vertical: 'top',
-                                    horizontal: 'left',
-                                }}
-                                open={Boolean(anchorElNav)}
-                                onClose={handleCloseNavMenu}
-                                sx={{display: {xs: 'block', md: 'none'}}}
-                            >
-                                <MenuItem component='a' href='/lobby/stats' onClick={handleCloseUserMenu}>
-                                    <Typography sx={{textAlign: 'center'}}>View Stats</Typography>
-                                </MenuItem>
-                                <MenuItem component='a' href='/lobby/managefriends' onClick={handleCloseUserMenu}>
-                                    <Typography sx={{textAlign: 'center'}}>Manage Friends</Typography>
-                                </MenuItem>
-                            </Menu>
+                            {(isAccountUser || isAdmin) && (
+                                <Menu
+                                    id="menu-appbar"
+                                    anchorEl={anchorElNav}
+                                    anchorOrigin={{
+                                        vertical: 'bottom',
+                                        horizontal: 'left',
+                                    }}
+                                    keepMounted
+                                    transformOrigin={{
+                                        vertical: 'top',
+                                        horizontal: 'left',
+                                    }}
+                                    open={Boolean(anchorElNav)}
+                                    onClose={handleCloseNavMenu}
+                                    sx={{display: {xs: 'block', md: 'none'}}}
+                                >
+                                    <MenuItem component='a' href='/lobby/stats' onClick={handleCloseUserMenu}>
+                                        <Typography sx={{textAlign: 'center'}}>View Stats</Typography>
+                                    </MenuItem>
+                                    <MenuItem component='a' href='/lobby/managefriends' onClick={handleCloseUserMenu}>
+                                        <Typography sx={{textAlign: 'center'}}>Manage Friends</Typography>
+                                    </MenuItem>
+                                </Menu>)}
                         </Box>
 
                         <Box sx={{flexGrow: 1, display: {xs: 'none', md: 'flex'}}}>
-                            <Button
-                                component='a'
-                                href='/lobby/stats'
-                                onClick={handleCloseNavMenu}
-                                sx={{my: 2, color: 'white', display: 'block'}}
-                            >
-                                View Stats
-                            </Button>
-                            <Button
-                                component='a'
-                                href='/lobby/managefriends'
-                                onClick={handleCloseNavMenu}
-                                sx={{my: 2, color: 'white', display: 'block'}}
-                            >
-                                Manage Friends
-                            </Button>
+                            {(isAccountUser || isAdmin) && (
+                                <>
+                                    <Button
+                                        component='a'
+                                        href='/lobby/stats'
+                                        onClick={handleCloseNavMenu}
+                                        sx={{my: 2, color: 'white', display: 'block'}}
+                                    >
+                                        View Stats
+                                    </Button>
+                                    <Button
+                                        component='a'
+                                        href='/lobby/managefriends'
+                                        onClick={handleCloseNavMenu}
+                                        sx={{my: 2, color: 'white', display: 'block'}}
+                                    >
+                                        Manage Friends
+                                    </Button>
+                                </>)}
                         </Box>
                         <Box sx={{flexGrow: 0}}>
                             <Tooltip title="Open settings">
@@ -145,7 +213,7 @@ function LobbyLayout({children}) {
                                             margin: '5px',
                                         }}
                                     >
-                                        Username
+                                        {currentUser ? currentUser.displayName : ""}
                                     </Typography>
                                 </IconButton>
                             </Tooltip>
@@ -164,14 +232,14 @@ function LobbyLayout({children}) {
                                 }}
                                 open={Boolean(anchorElUser)}
                                 onClose={handleCloseUserMenu}
-                            >
+                            > {( isAccountUser || isAdmin ) && (
                                 <MenuItem component='a' href='/lobby/manageaccount' onClick={handleCloseUserMenu}>
                                     <Typography sx={{textAlign: 'center'}}>Manage Account</Typography>
                                 </MenuItem>
+                                )}
                                 <MenuItem component='a' onClick={handleLogout}>
-                                    <Typography sx={{textAlign: 'center'}}>Logout</Typography>
+                                    <Typography sx={{textAlign: 'center'}}>{ (isAccountUser || isAdmin)? "Logout" : "Exit Game"}</Typography>
                                 </MenuItem>
-
                             </Menu>
                         </Box>
                     </Toolbar>

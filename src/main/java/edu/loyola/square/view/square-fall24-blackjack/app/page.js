@@ -27,8 +27,6 @@ export default function Home() {
               </div>
           </div>
           <div className={styles.middle}>
-
-
               <div className={styles.container}>
                   <img src={"/logo-transparent.png"}
                        alt=""
@@ -37,7 +35,7 @@ export default function Home() {
                        style={{alignSelf: "center"}}/>
                   <a href="/signup" className="mt-3 btn btn-success border" role="button">Signup</a>
                   <a href="/login" className="mt-3 btn btn-success border" role="button">Login</a>
-                  <a href="/gameplay" className="mt-3 btn btn-success border" role="button">Play as Guest</a>
+                  <a href="/guest" className="mt-3 btn btn-success border" role="button">Play as Guest</a>
                   <button className="mt-3 btn btn-success border" onClick={handleClickOpen}>
                       Tutorial
                   </button>
