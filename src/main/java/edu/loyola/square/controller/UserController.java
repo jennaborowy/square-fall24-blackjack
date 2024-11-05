@@ -1,5 +1,7 @@
 package edu.loyola.square.controller;
 
+import com.google.api.Http;
+import com.google.auth.oauth2.JwtClaims;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
@@ -9,9 +11,9 @@ import com.google.firebase.cloud.FirestoreClient;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.DocumentReference;
 import edu.loyola.square.controller.service.UserService;
+import edu.loyola.square.model.dto.AuthDTO;
 import edu.loyola.square.model.dto.UserDTO;
 import edu.loyola.square.model.entity.User;
-import jakarta.validation.ValidationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,19 +21,15 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import jakarta.validation.Valid;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
-import java.util.regex.Matcher;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-// use data access layer info from next.js
 
 @RestController
 @RequestMapping("/api/user")
@@ -67,26 +65,61 @@ public class UserController {
     }
   }
 
+  @DeleteMapping("/delete")
+  public ResponseEntity<String> deleteUser(@RequestBody AuthDTO authDTO) throws FirebaseAuthException {
+    try {
+      // deletes auth instance
+      firebaseAuth.deleteUser(authDTO.getUid());
+      DocumentReference docRef = firestore.collection("users").document(authDTO.getUid());
+      // deletes document from users collection
+      docRef.delete();
+      System.out.println("Successfully deleted user.");
+      return ResponseEntity.noContent().build();
+    } catch (FirebaseAuthException e) {
+      return ResponseEntity.status(500).body("Failed to delete user from Authentication: " + e.getMessage());
+    }
+  }
+
+  // fix to avoid anonymous users
   @GetMapping("/")
   public ResponseEntity<List<Map<String, Object>>> all() throws ExecutionException, InterruptedException {
     List<Map<String, Object>> users = new ArrayList<>();
     firestore.collection("users").get().get().getDocuments().forEach(document ->
             users.add(document.getData())
     );
-    return ResponseEntity.ok(users);
+    System.out.println(users);
+    ResponseEntity<List<Map<String, Object>>> response = ResponseEntity.status(HttpStatus.ACCEPTED).body(users);
+    System.out.println(response);
+    System.out.println(response.getBody());
+    return ResponseEntity.status(HttpStatus.ACCEPTED).body(users);
+  }
+
+  @PostMapping("/guest")
+  public ResponseEntity<Object> createGuest(@Valid @RequestBody UserDTO userDTO) throws ExecutionException, InterruptedException {
+    User user = userService.getUserByUsername(userDTO.getUsername());
+    if (user != null) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Username is already in our records");
+    }
+    Map<String, Object> userData = new HashMap<>();
+    userData.put("username", userDTO.getUsername());
+    userData.put("chipBalance", 2500);
+    userData.put("totalWins", 0);
+    userData.put("totalLosses", 0);
+
+    return ResponseEntity.status(HttpStatus.CREATED).body(userData);
   }
 
   @PostMapping("/signup")
   public ResponseEntity<?> create(@Valid @RequestBody UserDTO userDTO) throws ExecutionException, InterruptedException, FirebaseAuthException {
     try {
-      logger.info(userDTO.getEmail());
-      logger.info(userDTO.getPassword());
-
-      // Create the user in Firebase Authentication
+      // create account user
       CreateRequest request = new CreateRequest()
               .setEmail(userDTO.getEmail())
               .setPassword(userDTO.getPassword())
-              .setDisplayName(userDTO.getFirstName() + " " + userDTO.getLastName());
+              .setDisplayName(userDTO.getUsername());
+
+      logger.info(userDTO.getEmail());
+      logger.info(userDTO.getPassword());
 
       User user = userService.getUserByUsername(userDTO.getUsername());
       if (user != null) {
@@ -102,17 +135,24 @@ public class UserController {
 
       // Store additional user data in Firestore
       Map<String, Object> userData = new HashMap<>();
+
       userData.put("username", userDTO.getUsername());
-      userData.put("email", userDTO.getEmail());
-      userData.put("firstName", userDTO.getFirstName());
-      userData.put("lastName", userDTO.getLastName());
       userData.put("chipBalance", 2500);
       userData.put("totalWins", 0);
       userData.put("totalLosses", 0);
+      userData.put("email", userDTO.getEmail());
+      userData.put("firstName", userDTO.getFirstName());
+      userData.put("lastName", userDTO.getLastName());
+      userData.put("friends", new ArrayList<>());
       userData.put("uid", userRecord.getUid());
 
       DocumentReference docRef = firestore.collection("users").document(userRecord.getUid());
       docRef.set(userData).get();
+
+      Map<String, Object> claims = new HashMap<>();
+      claims.put("accountUser", true);
+      FirebaseAuth.getInstance().setCustomUserClaims(userRecord.getUid(), claims);
+
 
       System.out.println("Response: " + ResponseEntity.status(HttpStatus.CREATED).body(userData));
       return ResponseEntity.status(HttpStatus.CREATED).body(userData);

@@ -7,7 +7,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "emulators": "firebase emulators:start"
   },
   "dependencies": {
     "@cometchat-pro/chat": "^3.0.13",
@@ -22,7 +23,6 @@
     "@mui/icons-material": "^6.1.6",
     "@mui/material": "^6.1.4",
     "@testing-library/react": "^16.0.1",
-    "axios": "^1.7.7",
     "bootstrap": "^5.3.3",
     "firebase": "^11.0.1",
     "lucide-react": "^0.454.0",

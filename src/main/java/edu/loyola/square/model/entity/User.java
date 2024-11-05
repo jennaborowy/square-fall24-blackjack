@@ -3,7 +3,6 @@ package edu.loyola.square.model.entity;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.annotation.DocumentId;
 import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 import java.util.HashMap;
 import java.util.Map;
 

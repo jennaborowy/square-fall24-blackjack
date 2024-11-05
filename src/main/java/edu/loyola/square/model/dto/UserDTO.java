@@ -22,6 +22,10 @@ public class UserDTO {
 
   protected UserDTO() {} // needed internally
 
+  public UserDTO(String username) {
+    this.username = username;
+  }
+
   public UserDTO(String username, String password) {
     this.username = username;
     this.password = password;
