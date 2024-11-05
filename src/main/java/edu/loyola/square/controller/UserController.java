@@ -1,5 +1,6 @@
 package edu.loyola.square.controller;
 
+import com.google.api.Http;
 import com.google.auth.oauth2.JwtClaims;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
@@ -79,13 +80,18 @@ public class UserController {
     }
   }
 
+  // fix to avoid anonymous users
   @GetMapping("/")
   public ResponseEntity<List<Map<String, Object>>> all() throws ExecutionException, InterruptedException {
     List<Map<String, Object>> users = new ArrayList<>();
     firestore.collection("users").get().get().getDocuments().forEach(document ->
             users.add(document.getData())
     );
-    return ResponseEntity.ok(users);
+    System.out.println(users);
+    ResponseEntity<List<Map<String, Object>>> response = ResponseEntity.status(HttpStatus.ACCEPTED).body(users);
+    System.out.println(response);
+    System.out.println(response.getBody());
+    return ResponseEntity.status(HttpStatus.ACCEPTED).body(users);
   }
 
   @PostMapping("/guest")
@@ -129,6 +135,7 @@ public class UserController {
 
       // Store additional user data in Firestore
       Map<String, Object> userData = new HashMap<>();
+
       userData.put("username", userDTO.getUsername());
       userData.put("chipBalance", 2500);
       userData.put("totalWins", 0);
@@ -136,6 +143,7 @@ public class UserController {
       userData.put("email", userDTO.getEmail());
       userData.put("firstName", userDTO.getFirstName());
       userData.put("lastName", userDTO.getLastName());
+      userData.put("friends", new ArrayList<>());
       userData.put("uid", userRecord.getUid());
 
       DocumentReference docRef = firestore.collection("users").document(userRecord.getUid());
