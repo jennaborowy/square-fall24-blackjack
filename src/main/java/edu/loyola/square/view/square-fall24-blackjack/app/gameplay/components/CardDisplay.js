@@ -78,7 +78,6 @@ export default function CardDisplay({ tableId }) {
 
           if (tableData.players && Array.isArray(tableData.players) && tableData.players.length > 0) {
             // Set players first
-            //setPlayers(tableData.players);
             setPlayers([...tableData.players]);
 
             // Then initialize hands
