@@ -11,10 +11,10 @@ import {Dialog, DialogActions, DialogContent, DialogContentText} from "@mui/mate
 function Lobby() {
     const [tables, setTables] = useState([]);
     const [users, setUsers] = useState([]);
-    const router = useRouter();
     const [showPopup, setShowPopup] = useState(false);
 
     //Upon entering lobby, check user's chipBalance. Reset to 2500 if 0 and show popup to notify user of change
+    //check this out -emma
     useEffect(() => {
         const checkUserPoints = auth.onAuthStateChanged( async () => {
             const curUser = auth.currentUser;
@@ -127,30 +127,25 @@ function Lobby() {
                     });
                 }
                 // Navigate immediately for the creator
-                router.push(`/gameplay/${tableId}`);  // Changed from /game to /gameplay
+                useRouter().push(`/gameplay/${tableId}`);  // Changed from /game to /gameplay
                 return true;
             }
-
             if (currentPlayers.length >= tableData.max_players) {
                 throw new Error("Table is full");
             }
-
             if (currentPlayers.includes(userId)) {
                 console.log("Player already in table, navigating to game...");
-                router.push(`/gameplay/${tableId}`);
+                useRouter().push(`/gameplay/${tableId}`);
                 return true;
             }
-
             // Add player to table
             await updateDoc(tableRef, {
                 players: arrayUnion(userId)
             });
-
             // Navigate to game page
             console.log("Successfully joined table, navigating to game...");
-            router.push(`/gameplay/${tableId}`);
+            useRouter().push(`/gameplay/${tableId}`);
             return true;
-
         } catch (error) {
             console.error("Error joining table:", error);
             throw error;
@@ -158,7 +153,7 @@ function Lobby() {
     };
 
     return (
-        <div className="m-3">
+        <div className="m-3" title="lobby">
             <h1 className="text-2xl font-bold mb-4">Welcome to the Lobby!</h1>
 
             {/*This is the popup to notify user of chipBalance change*/}
