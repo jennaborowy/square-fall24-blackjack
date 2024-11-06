@@ -46,12 +46,12 @@
     "jest-environment-jsdom": "^29.7.0"
   },
   "transform": {
-    "\\.js$": "<rootDir>/node_modules/babel-jest"
+    "\\.js$": "<rootDir>/nodemodules/babel-jest"
   },
   "jest": {
     "moduleNameMapper": {
-      "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/__mock__/fileMock.js",
-      "\\.(css|less)$": "<rootDir>/__mock__/styleMock.js"
+      "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/mock/fileMock.js",
+      "\\.(css|less)$": "<rootDir>/_mock/styleMock.js"
     },
     "transformIgnorePatterns": [
       "node_modules/(?!(testing-library)/)"
