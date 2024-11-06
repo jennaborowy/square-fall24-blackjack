@@ -27,6 +27,7 @@ export default function CardDisplay({ tableId }) {
   const [betError, setBetError] = useState("");
   const [players, setPlayers] = useState([]);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
+  const [isValidBet, setIsValidBet] = useState(false);
 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const openChat = () => setIsChatOpen(true);
@@ -120,25 +121,50 @@ export default function CardDisplay({ tableId }) {
   }, [players]);
 
   const validateBet = async (betAmount) => {
-    const bet = parseFloat(betAmount);
-    if (isNaN(bet)) {
-      setBetError("Your bet should be a valid number!");
+    try {
+      // Get table document reference
+      const tableRef = doc(db, 'Table', tableId);
+      const tableSnap = await getDoc(tableRef);
+
+      if (!tableSnap.exists()) {
+        setBetError("Could not validate bet: table not found");
+        setIsValidBet(false);
+        return false;
+      }
+
+      const tableData = tableSnap.data();
+      const minimumBet = tableData.minimum_bet;
+
+      const bet = parseFloat(betAmount);
+      if (isNaN(bet)) {
+        setBetError("Your bet should be a valid number!");
+        setIsValidBet(false);
+        return false;
+      }
+      if (bet < minimumBet) {
+        setBetError(`You cannot bet less than $${minimumBet} at this table!`);
+        setIsValidBet(false);
+        return false;
+      }
+      if (bet > MAX_BET) {
+        setBetError(`You cannot bet more than $${MAX_BET} at this table!`);
+        setIsValidBet(false);
+        return false;
+      }
+      if (bet % BET_INCREMENT !== 0) {
+        setBetError(`Your bet must satisfy increments of $${BET_INCREMENT}`);
+        setIsValidBet(false);
+        return false;
+      }
+      setBetError("");
+      setIsValidBet(true);
+      return true;
+    } catch (error) {
+      console.error("Error validating bet:", error);
+      setBetError("Error validating bet. Please try again.");
+      setIsValidBet(false);
       return false;
     }
-    if(bet < MIN_BET) {
-      setBetError(`You cannot bet less than $${MIN_BET} at this table!`);
-      return false;
-    }
-    if(bet > MAX_BET) {
-      setBetError(`You cannot bet more than $${MAX_BET} at this table!`);
-      return false;
-    }
-    if (bet % BET_INCREMENT !== 0) {
-      setBetError(`Your bet must satisfy increments of $${BET_INCREMENT}`);
-      return false;
-    }
-    setBetError("");
-    return true;
   };
 
   function endGame(gameState) {
@@ -402,7 +428,11 @@ export default function CardDisplay({ tableId }) {
                 </InputGroup>
               </div>
               <div className="start-container">
-                <button className="btn btn-lg btn-success" onClick={startGame}>
+                <button
+                    className="btn btn-lg btn-success"
+                    onClick={startGame}
+                    disabled={!isValidBet}
+                >
                   Start Game
                 </button>
               </div>
