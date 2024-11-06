@@ -236,7 +236,7 @@ function LobbyLayout({children}) {
                                 <MenuItem component='a' href='/lobby/manageaccount' onClick={handleCloseUserMenu}>
                                     <Typography sx={{textAlign: 'center'}}>Manage Account</Typography>
                                 </MenuItem>
-                                )}
+                            )}
                                 <MenuItem component='a' onClick={handleLogout}>
                                     <Typography sx={{textAlign: 'center'}}>{ (isAccountUser || isAdmin)? "Logout" : "Exit Game"}</Typography>
                                 </MenuItem>
