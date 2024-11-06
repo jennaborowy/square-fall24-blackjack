@@ -1,7 +1,7 @@
 import {fireEvent, render, screen} from "@testing-library/react";
 import '@testing-library/jest-dom/jest-globals';
 import Main from "../app/page"
-import {describe, expect, test} from "@jest/globals";
+import {describe, expect, test, jest} from "@jest/globals";
 import React from "react";
 
 
