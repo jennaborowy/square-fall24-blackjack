@@ -13,14 +13,15 @@ function Lobby() {
     const [users, setUsers] = useState([]);
     const router = useRouter();
     const [showPopup, setShowPopup] = useState(false);
-    const user = auth.currentUser.uid;
 
     //Upon entering lobby, check user's chipBalance. Reset to 2500 if 0 and show popup to notify user of change
     useEffect(() => {
         const checkUserPoints = auth.onAuthStateChanged( async () => {
-            if(!user)
+            const curUser = auth.currentUser;
+            if(!curUser)
                 return
-            if (user) {
+            if (curUser) {
+                const user = curUser.uid;
                 const docRef = doc(db, 'users', user);
                 const docSnap = await getDoc(docRef);
 
