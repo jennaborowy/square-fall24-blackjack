@@ -396,95 +396,95 @@ export default function CardDisplay({ tableId }) {
           </div>
 
           {gameStarted && (
-            <div className="leave-btn">
-              <button className="mt-3 btn btn-danger" onClick={handleLeaveTable}>
-                Leave Game
-              </button>
-            </div>
+              <div className="leave-btn">
+                <button className="mt-3 btn btn-danger" onClick={handleLeaveTable}>
+                  Leave Game
+                </button>
+              </div>
           )}
 
           {!gameStarted && (
-            <div className="bet-container">
-              <div className="place-bet-title">
-                <div className="place-bet-content">
-                  <PlaceBetAnimation>
-                    Place Your Bet!
-                  </PlaceBetAnimation>
+              <div className="bet-container">
+                <div className="place-bet-title">
+                  <div className="place-bet-content">
+                    <PlaceBetAnimation>
+                      Place Your Bet!
+                    </PlaceBetAnimation>
+                  </div>
+                </div>
+                <div className="bet-value">
+                  <InputGroup className="mb-3">
+                    <InputGroup.Text>$</InputGroup.Text>
+                    <Form.Control
+                        type="number"
+                        min={MIN_BET}
+                        max={MAX_BET}
+                        step={BET_INCREMENT}
+                        onChange={handleBetPlaced}
+                        isInvalid={!!betError}
+                        aria-label="Amount (to the nearest dollar)"
+                    />
+                    <InputGroup.Text>.00</InputGroup.Text>
+                  </InputGroup>
+                </div>
+                <div className="start-container">
+                  <button
+                      className="btn btn-lg btn-success"
+                      onClick={startGame}
+                      disabled={!isValidBet}
+                  >
+                    Start Game
+                  </button>
                 </div>
               </div>
-              <div className="bet-value">
-                <InputGroup className="mb-3">
-                  <InputGroup.Text>$</InputGroup.Text>
-                  <Form.Control
-                    type="number"
-                    min={MIN_BET}
-                    max={MAX_BET}
-                    step={BET_INCREMENT}
-                    onChange={handleBetPlaced}
-                    isInvalid={!!betError}
-                    aria-label="Amount (to the nearest dollar)"
-                  />
-                  <InputGroup.Text>.00</InputGroup.Text>
-                </InputGroup>
-              </div>
-              <div className="start-container">
-                <button
-                    className="btn btn-lg btn-success"
-                    onClick={startGame}
-                    disabled={!isValidBet}
-                >
-                  Start Game
-                </button>
-              </div>
-            </div>
           )}
 
           {gameStarted && (
-            <div className="dealerHand-container">
-              {dealerHand.map((card, index) => (
-                <Card key={index} suit={card.suit} rank={card.rank}/>
-              ))}
-            </div>
+              <div className="dealerHand-container">
+                {dealerHand.map((card, index) => (
+                    <Card key={index} suit={card.suit} rank={card.rank}/>
+                ))}
+              </div>
           )}
 
           {gameOver && (
-            <div className="end-container">
-              {gameStatusMessage}
-            </div>
+              <div className="end-container">
+                {gameStatusMessage}
+              </div>
           )}
 
           {gameStarted && isCurrentPlayer && !playerStand && !gameOver && (
-            <div className="btn-container">
-              <button className="action-btn" onClick={playerHits}>Hit</button>
-              <button className="action-btn" onClick={playerStands}>Stand</button>
-            </div>
+              <div className="btn-container">
+                <button className="action-btn" onClick={playerHits}>Hit</button>
+                <button className="action-btn" onClick={playerStands}>Stand</button>
+              </div>
           )}
 
           {gameStarted && (
-            <div className="all-players-container">
-              {Array.isArray(players) && players.length > 0 ? (
-                players.map((playerId, index) => (
-                  <div key={playerId}
-                       className={`playerHand-container ${index === currentPlayerIndex ? 'active-player' : ''}`}>
-                    {playerHands && playerHands[playerId] && Array.isArray(playerHands[playerId]) ? (
-                      playerHands[playerId].map((card, cardIndex) => (
-                        <Card key={cardIndex} suit={card.suit} rank={card.rank}/>
-                      ))
-                    ) : (
-                      <div>Waiting for cards...</div>
-                    )}
-                  </div>
-                ))
-              ) : (
-                <div>Loading players...</div>
-              )}
-            </div>
+              <div className="all-players-container">
+                {Array.isArray(players) && players.length > 0 ? (
+                    players.map((playerId, index) => (
+                        <div key={playerId}
+                             className={`playerHand-container ${index === currentPlayerIndex ? 'active-player' : ''}`}>
+                          {playerHands && playerHands[playerId] && Array.isArray(playerHands[playerId]) ? (
+                              playerHands[playerId].map((card, cardIndex) => (
+                                  <Card key={cardIndex} suit={card.suit} rank={card.rank}/>
+                              ))
+                          ) : (
+                              <div>Waiting for cards...</div>
+                          )}
+                        </div>
+                    ))
+                ) : (
+                    <div>Loading players...</div>
+                )}
+              </div>
           )}
 
           {gameStarted && (
-            <div className="bet-value">
-              {betAmount}
-            </div>
+              <div className="bet-value">
+                {betAmount}
+              </div>
           )}
           <div className="message-icon">
             <div className="icons-btn" onClick={openChat}>
@@ -493,14 +493,14 @@ export default function CardDisplay({ tableId }) {
             </div>
           </div>
           {gameStarted && (
-            <div className="game-stats-container">
-              <GameInfo/>
-            </div>
+              <div className="game-stats-container">
+                <GameInfo/>
+              </div>
           )}
 
           <AceModal
-            showModal={showAceModal}
-            onSelectValue={handleAceValueSelect}
+              showModal={showAceModal}
+              onSelectValue={handleAceValueSelect}
           />
         </div>
       </div>

@@ -6,11 +6,41 @@ import { collection, addDoc, onSnapshot, query, doc, updateDoc, getDoc, arrayUni
 import { useRouter } from 'next/navigation';
 import TableList from "@/app/lobby/TableList";
 import CreateTableButton from "@/app/lobby/CreateTableButton";
+import {Dialog, DialogActions, DialogContent, DialogContentText} from "@mui/material";
 
 function Lobby() {
     const [tables, setTables] = useState([]);
     const [users, setUsers] = useState([]);
     const router = useRouter();
+    const [showPopup, setShowPopup] = useState(false);
+    const user = auth.currentUser.uid;
+
+    //Upon entering lobby, check user's chipBalance. Reset to 2500 if 0 and show popup to notify user of change
+    useEffect(() => {
+        const checkUserPoints = auth.onAuthStateChanged( async () => {
+            if(!user)
+                return
+            if (user) {
+                const docRef = doc(db, 'users', user);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const points = docSnap.data()['chipBalance'];
+
+                    if (points === 0) {
+                        setShowPopup(true);
+                        await updateDoc(docRef, {chipBalance: 2500});
+                    }
+                }
+            }
+        });
+        return ()=> checkUserPoints();
+    });
+
+    //close chipBalance popup
+    const handleClosePopup = () => {
+        setShowPopup(false);
+    };
 
     useEffect(() => {
         const q = query(collection(db, "users"));
@@ -129,6 +159,28 @@ function Lobby() {
     return (
         <div className="m-3">
             <h1 className="text-2xl font-bold mb-4">Welcome to the Lobby!</h1>
+
+            {/*This is the popup to notify user of chipBalance change*/}
+            <Dialog
+                open={showPopup}
+                onClose={handleClosePopup}>
+                <DialogContent>
+                    <DialogContentText>
+                        <p>
+                            It seems that you've ran out of chips... Have some more
+                        </p>
+                        <p>
+                            New chip balance: 2500
+                        </p>
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <button className="mt-3 btn btn-success border" onClick={handleClosePopup}>
+                        Ok
+                    </button>
+                </DialogActions>
+            </Dialog>
+
             <TableList
                 tables={tables}
                 onJoinTable={handleJoinTable}

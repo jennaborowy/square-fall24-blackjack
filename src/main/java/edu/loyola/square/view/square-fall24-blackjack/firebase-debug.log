@@ -1,0 +1,87 @@
+[debug] [2024-11-05T21:16:18.157Z] ----------------------------------------------------------------------
+[debug] [2024-11-05T21:16:18.160Z] Command:       /Users/Emma/.nvm/versions/node/v20.17.0/bin/node /Users/Emma/.nvm/versions/node/v20.17.0/bin/firebase init
+[debug] [2024-11-05T21:16:18.160Z] CLI Version:   13.23.1
+[debug] [2024-11-05T21:16:18.160Z] Platform:      darwin
+[debug] [2024-11-05T21:16:18.160Z] Node Version:  v20.17.0
+[debug] [2024-11-05T21:16:18.160Z] Time:          Tue Nov 05 2024 16:16:18 GMT-0500 (Eastern Standard Time)
+[debug] [2024-11-05T21:16:18.160Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2024-11-05T21:16:18.167Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2024-11-05T21:16:18.167Z] > authorizing via signed-in user (emma_h1@icloud.com)
+[info] 
+     ######## #### ########  ######## ########     ###     ######  ########
+     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
+     ######    ##  ########  ######   ########  #########  ######  ######
+     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
+     ##       #### ##     ## ######## ########  ##     ##  ######  ########
+
+You're about to initialize a Firebase project in this directory:
+
+  /Users/Emma/IdeaProjects/square-fall24-blackjack/src/main/java/edu/loyola/square/view/square-fall24-blackjack
+
+[info] 
+=== Project Setup
+[info] 
+[info] First, let's associate this project directory with a Firebase project.
+[info] You can create multiple project aliases by running firebase use --add, 
+[info] but for now we'll just set up a default project.
+[info] 
+[info] i  If you want to create a project in a Google Cloud organization or folder, please use "firebase projects:create" instead, and return to this command when you've created the project. 
+[debug] [2024-11-05T21:16:42.169Z] Checked if tokens are valid: false, expires at: 1730665780464
+[debug] [2024-11-05T21:16:42.169Z] Checked if tokens are valid: false, expires at: 1730665780464
+[debug] [2024-11-05T21:16:42.170Z] > refreshing access token with scopes: []
+[debug] [2024-11-05T21:16:42.172Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2024-11-05T21:16:42.172Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2024-11-05T21:16:42.327Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2024-11-05T21:16:42.327Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2024-11-05T21:16:42.369Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects [none]
+[debug] [2024-11-05T21:16:42.369Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects {"projectId":"testing","name":"test"}
+[debug] [2024-11-05T21:16:42.543Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects 409
+[debug] [2024-11-05T21:16:42.543Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects {"error":{"code":409,"message":"Requested entity already exists","status":"ALREADY_EXISTS"}}
+[debug] [2024-11-05T21:16:42.604Z] FirebaseError: Request to https://cloudresourcemanager.googleapis.com/v1/projects had HTTP Error: 409, Requested entity already exists
+    at responseToError (/Users/Emma/.nvm/versions/node/v20.17.0/lib/node_modules/firebase-tools/lib/responseToError.js:52:12)
+    at RetryOperation._fn (/Users/Emma/.nvm/versions/node/v20.17.0/lib/node_modules/firebase-tools/lib/apiv2.js:312:77)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+[error] 
+[error] Error: Failed to create project because there is already a project with ID testing. Please try again with a unique project ID.
+[debug] [2024-11-05T21:16:57.090Z] ----------------------------------------------------------------------
+[debug] [2024-11-05T21:16:57.093Z] Command:       /Users/Emma/.nvm/versions/node/v20.17.0/bin/node /Users/Emma/.nvm/versions/node/v20.17.0/bin/firebase init
+[debug] [2024-11-05T21:16:57.093Z] CLI Version:   13.23.1
+[debug] [2024-11-05T21:16:57.093Z] Platform:      darwin
+[debug] [2024-11-05T21:16:57.093Z] Node Version:  v20.17.0
+[debug] [2024-11-05T21:16:57.093Z] Time:          Tue Nov 05 2024 16:16:57 GMT-0500 (Eastern Standard Time)
+[debug] [2024-11-05T21:16:57.094Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2024-11-05T21:16:57.100Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2024-11-05T21:16:57.101Z] > authorizing via signed-in user (emma_h1@icloud.com)
+[info] 
+     ######## #### ########  ######## ########     ###     ######  ########
+     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
+     ######    ##  ########  ######   ########  #########  ######  ######
+     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
+     ##       #### ##     ## ######## ########  ##     ##  ######  ########
+
+You're about to initialize a Firebase project in this directory:
+
+  /Users/Emma/IdeaProjects/square-fall24-blackjack/src/main/java/edu/loyola/square/view/square-fall24-blackjack
+
+[info] 
+=== Project Setup
+[info] 
+[info] First, let's associate this project directory with a Firebase project.
+[info] You can create multiple project aliases by running firebase use --add, 
+[info] but for now we'll just set up a default project.
+[info] 
+[info] i  If you want to create a project in a Google Cloud organization or folder, please use "firebase projects:create" instead, and return to this command when you've created the project. 
+[debug] [2024-11-05T21:17:11.153Z] Checked if tokens are valid: true, expires at: 1730845001328
+[debug] [2024-11-05T21:17:11.154Z] Checked if tokens are valid: true, expires at: 1730845001328
+[debug] [2024-11-05T21:17:11.155Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects [none]
+[debug] [2024-11-05T21:17:11.155Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects {"projectId":"test","name":"test"}
+[debug] [2024-11-05T21:17:11.334Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects 400
+[debug] [2024-11-05T21:17:11.334Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects {"error":{"code":400,"message":"field [project_id] has issue [project_id must be at least 6 characters long]","status":"INVALID_ARGUMENT","details":[{"@type":"type.googleapis.com/google.rpc.BadRequest","fieldViolations":[{"field":"project_id","description":"project_id must be at least 6 characters long"}]},{"@type":"type.googleapis.com/google.rpc.Help","links":[{"url":"https://cloud.google.com/resource-manager/reference/rest/v1/projects"}]}]}}
+[debug] [2024-11-05T21:17:11.389Z] FirebaseError: Request to https://cloudresourcemanager.googleapis.com/v1/projects had HTTP Error: 400, field [project_id] has issue [project_id must be at least 6 characters long]
+    at responseToError (/Users/Emma/.nvm/versions/node/v20.17.0/lib/node_modules/firebase-tools/lib/responseToError.js:52:12)
+    at RetryOperation._fn (/Users/Emma/.nvm/versions/node/v20.17.0/lib/node_modules/firebase-tools/lib/apiv2.js:312:77)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+[error] 
+[error] Error: Failed to create project. See firebase-debug.log for more info.
