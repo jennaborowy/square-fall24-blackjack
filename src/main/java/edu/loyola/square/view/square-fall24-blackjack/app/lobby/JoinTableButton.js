@@ -49,6 +49,7 @@ const JoinTableButton = ({ tableId, table, onJoinTable }) => {
         <div>
             <button
                 className="join-table-button"
+                title="join"
                 onClick={handleClickOpen}
                 disabled={isTableFull}
                 style={{

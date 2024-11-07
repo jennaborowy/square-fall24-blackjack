@@ -27,7 +27,7 @@ function Stats() {
 
     return (
         <div className="container">
-            <div>
+            <div title={"display"}>
                 {/*Display user's number of wins and losses*/}
             <img src={"/stats-transformed.png"}
                  alt=""

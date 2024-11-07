@@ -1,60 +1,41 @@
-import {fireEvent, render, screen} from '@testing-library/react';
+import {fireEvent, getByText, render, screen, waitFor} from '@testing-library/react';
 import '@testing-library/jest-dom/jest-globals'
-import {describe, expect, test, jest, beforeEach} from '@jest/globals'
+import {describe, expect, test, jest, beforeEach, it} from '@jest/globals'
 import Signup from "../app/signup/page"
+import handleSubmit from "../app/signup/page"
+import userEvent from "firebase-mock/browser/firebasemock";
+import {useRouter} from "next/navigation";
 
 jest.mock("next/navigation", () => ({
-    useRouter() {
-        return {
-            prefetch: () => null
-        };
-    }
+    useRouter: jest.fn()
 }));
 
 global.fetch = jest.fn();
 
-const mockSetSuccess = jest.fn();
-const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (password !== confirm) {
-        setErrMsg("Password fields do not match.");
-        setErr(true);
-        return;
-    }
-
-    const body = {
-        "username": username,
-        "password": password,
-        "email": email,
-        "firstName": first,
-        "lastName": last,
-    };
-
-    setErr(null);
-    try {
-        const response = await fetch('http://localhost:8080/api/user/signup', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(body),
-        });
-
-        if (response.ok) {
-            setSuccess(true);
-        } else {
-            const errorData = await response.json();
-            setErrMsg(errorData.message);
-            setErr(true);
-        }
-    } catch (error) {
-        setErrMsg(error.message);
-        setErr(true);
-    }
-};
 
 describe('Signup', () => {
+    const mockSetErrMsg = jest.fn();
+    const mockSetErr = jest.fn();
+    const mockSetSuccess = jest.fn();
+    const fillForm = async (user = {}) => {
+        const defaultUser = {
+            username: 'testuser',
+            password: 'Password123!',
+            confirm: 'Password123!',
+            email: 'test@example.com',
+            first: 'John',
+            last: 'Doe',
+            ...user
+        };
+
+        await userEvent.type(screen.getByPlaceholderText(/Username/i), defaultUser.username);
+        await userEvent.type(screen.getByPlaceholderText(/Password/i), defaultUser.password);
+        await userEvent.type(screen.getByPlaceholderText(/Confirm Password/i), defaultUser.confirm);
+        await userEvent.type(screen.getByPlaceholderText(/Email/i), defaultUser.email);
+        await userEvent.type(screen.getByPlaceholderText(/First Name/i), defaultUser.first);
+        await userEvent.type(screen.getByPlaceholderText(/Last Name/i), defaultUser.last);
+    };
+
     beforeEach(() => {
         jest.clearAllMocks();
     });
@@ -65,14 +46,71 @@ describe('Signup', () => {
         expect(placeElement).toBeInTheDocument();
     });
 
-    test('should update username state when username input changes', async () => {
+    it('handle a submit', async () => {
+        render(<Signup />);
 
-        const e = {preventDefault: jest.fn()};
-        const password = "password123";
-        const confirm = "password123";
-        await handleSubmit(e);
+        // Simulate user input for password fields
+        const firstInput = screen.getByPlaceholderText('First Name');
+        const lastInput = screen.getByPlaceholderText('Last Name');
+        const usernameInput = screen.getByPlaceholderText('Username');
+        const passwordInput = screen.getByPlaceholderText('Password');
+        const emailInput = screen.getByPlaceholderText('Email');
+        const confirmPasswordInput = screen.getByPlaceholderText('Confirm Password');
 
-        expect(mockSetSuccess).toHaveBeenCalledWith(true);
+        fireEvent.input(firstInput, { target: { value: 'test123' } });
+        fireEvent.input(lastInput, { target: { value: 'test123' } });
+        fireEvent.input(usernameInput, { target: { value: 'test123' } });
+        fireEvent.input(passwordInput, { target: { value: 'test1234' } });
+        fireEvent.input(emailInput, { target: { value: 'test123@' } });
+        fireEvent.input(confirmPasswordInput, { target: { value: 'test1234' } });
+
+        const createAccountButton = screen.getByTitle('submit');
+        // Simulate form submission
+        fireEvent.click(createAccountButton)
+
+        expect(mockSetErr()).toBe(true);
+    });
+
+    it('passwords do not match', async () => {
+        render(<Signup />);
+
+        // Simulate user input for password fields
+        const firstInput = screen.getByPlaceholderText('First Name');
+        const lastInput = screen.getByPlaceholderText('Last Name');
+        const usernameInput = screen.getByPlaceholderText('Username');
+        const passwordInput = screen.getByPlaceholderText('Password');
+        const emailInput = screen.getByPlaceholderText('Email');
+        const confirmPasswordInput = screen.getByPlaceholderText('Confirm Password');
+
+        fireEvent.input(firstInput, { target: { value: 'test123' } });
+        fireEvent.input(lastInput, { target: { value: 'test123' } });
+        fireEvent.input(usernameInput, { target: { value: 'test123' } });
+        fireEvent.input(passwordInput, { target: { value: 'test1234' } });
+        fireEvent.input(emailInput, { target: { value: 'test123@' } });
+        fireEvent.input(confirmPasswordInput, { target: { value: 'test12345' } });
+
+        const createAccountButton = screen.getByTitle('submit');
+        // Simulate form submission
+        fireEvent.click(createAccountButton)
+
+        expect(mockSetErr()).toBe(true);
+    });
+
+    test('should update state when input changes', async () => {
+        render(<Signup />);
+        const firstInput = screen.getByPlaceholderText('First Name');
+        const lastInput = screen.getByPlaceholderText('Last Name');
+        const usernameInput = screen.getByPlaceholderText('Username');
+        const passwordInput = screen.getByPlaceholderText('Password');
+        const emailInput = screen.getByPlaceholderText('Email');
+        const confirmPasswordInput = screen.getByPlaceholderText('Confirm Password');
+
+        fireEvent.input(firstInput, { target: { value: 'test123' } });
+        fireEvent.input(lastInput, { target: { value: 'test123' } });
+        fireEvent.input(usernameInput, { target: { value: 'test123' } });
+        fireEvent.input(passwordInput, { target: { value: 'test123' } });
+        fireEvent.input(emailInput, { target: { value: 'test123' } });
+        fireEvent.input(confirmPasswordInput, { target: { value: 'test123' } });
     });
 
 });
