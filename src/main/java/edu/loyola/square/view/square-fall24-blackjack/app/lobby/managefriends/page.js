@@ -3,7 +3,7 @@ import "../../globals.css"
 import React, { useEffect, useRef, useState } from "react";
 import "./UserList.css";
 import FriendsList from "./FriendsList";
-import UserList from "@/app/lobby/managefriends/UserList";
+import UserList from "./UserList";
 import { useAuth } from "@/app/context/auth";
 import { arrayRemove, arrayUnion, doc, updateDoc } from "firebase/firestore";
 import { db } from "@/firebaseConfig";

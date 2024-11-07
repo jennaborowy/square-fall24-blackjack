@@ -19,6 +19,12 @@ function FriendsList({ userList, setUserList }) {
 
             const userRef = doc(collection(db, "users"), currentUser.uid);
             const docSnap = await getDoc(userRef);
+
+            if (!docSnap.exists()) {
+                console.log("doc doesn't exist for current user");
+                setDetailedFriends([]);
+                return;
+            }
             const friendUids = docSnap.data().friends || [];
 
             const friendsData = await Promise.all(
@@ -67,7 +73,6 @@ function FriendsList({ userList, setUserList }) {
         if (JSON.stringify(updatedList) !== JSON.stringify(userList)) {
             setUserList(updatedList);
         }
-        console.log("ya heard")
     }, [detailedFriends])
 
 
