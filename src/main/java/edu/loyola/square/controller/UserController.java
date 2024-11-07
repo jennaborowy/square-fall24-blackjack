@@ -145,12 +145,22 @@ public class UserController {
       userData.put("lastName", userDTO.getLastName());
       userData.put("friends", new ArrayList<>());
       userData.put("uid", userRecord.getUid());
+      try {
+        userData.put("role", userDTO.getEmail().endsWith("@admin.wh.com") ? "admin" : "accountUser");
+      }catch (Exception e){
+        System.out.println("error setting role" + e.getMessage());
+      }
 
       DocumentReference docRef = firestore.collection("users").document(userRecord.getUid());
       docRef.set(userData).get();
 
       Map<String, Object> claims = new HashMap<>();
-      claims.put("accountUser", true);
+      if(userDTO.getEmail().endsWith("@admin.wh.com")) {
+        claims.put("admin", true);
+      }
+      else {
+        claims.put("accountUser", true);
+      }
       FirebaseAuth.getInstance().setCustomUserClaims(userRecord.getUid(), claims);
 
 
