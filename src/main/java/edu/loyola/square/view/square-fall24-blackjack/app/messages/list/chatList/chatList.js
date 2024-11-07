@@ -37,7 +37,6 @@ export default function ChatList () {
         //maps messages to a receiverId
         const userDocRef = doc(db, "users", item.receiverId);
         const userDocSnap = await getDoc(userDocRef);
-
         //gets receiver id for
         if (userDocSnap.exists()) {
           const userData = userDocSnap.data();
@@ -45,25 +44,21 @@ export default function ChatList () {
         }
         return item;
       });
-
       const chatData = await Promise.all(promises)
       //sort messages based on when they were created
       setChats(chatData.sort((a, b) => b.updatedAt - a.updatedAt));
-    }
-  );
+    });
     return () => {
       unsubscribe();
     };
   }, [currentUser?.uid]);
-
   console.log("Chats here", chats)
+
   //opens a specific chat
   const handleSelectChat = (chat) => {
     const conversationId = [currentUser.uid, chat.receiverId].sort().join('_');
     //changes the user (recipient of the chat)
-    dispatch({type: "CHANGE_USER", payload: chat.user });
-    //changes the conversation id
-    dispatch({type: "SET_CONVERSATION_ID", payload: conversationId});
+    dispatch({type: "CHANGE_USER", payload: {user: chats.user, chatId: conversationId, conversationId: conversationId}})
   };
 
   return(

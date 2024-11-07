@@ -17,4 +17,4 @@ export const MessageIcon = ({icon}) => {
       <MessageSquareText></MessageSquareText>
     </Avatar>
   );
-}
+};
