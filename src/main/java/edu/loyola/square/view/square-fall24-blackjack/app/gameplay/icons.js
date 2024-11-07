@@ -3,6 +3,8 @@ import Avatar from '@mui/material/Avatar';
 import {MessageSquareText} from 'lucide-react'
 import  './icons.css'
 import {ContactRound} from 'lucide-react'
+import {MessageCircleQuestion} from "lucide-react";
+
 export const FriendsIcon = ({ icon }) => {
   return (
     <Avatar sx={{bgcolor: '#B8860BFF', boxShadow: 1, border: 3, borderColor: 'black'}}>
@@ -17,4 +19,12 @@ export const MessageIcon = ({icon}) => {
       <MessageSquareText></MessageSquareText>
     </Avatar>
   );
+};
+
+export const ContactAdminIcon = ({icon}) => {
+  return(
+    <Avatar sx={{bgcolor: '#B8860BFF', boxShadow: 1, border: 3, borderColor: 'black'}}>
+      <MessageCircleQuestion />
+    </Avatar>
+  )
 }
