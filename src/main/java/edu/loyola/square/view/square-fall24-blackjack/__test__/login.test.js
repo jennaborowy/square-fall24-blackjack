@@ -1,6 +1,6 @@
 import {fireEvent, render, screen} from '@testing-library/react';
 import '@testing-library/jest-dom/jest-globals'
-import {describe, expect, test, jest, beforeEach} from '@jest/globals'
+import {describe, expect, test, jest, beforeEach, it} from '@jest/globals'
 import Login from "../app/login/page"
 
 jest.mock('firebase/app', () => ({
@@ -31,7 +31,14 @@ jest.mock("next/navigation", () => ({
     }
 }));
 
+jest.mock('next/router', () => ({
+    useRouter: jest.fn(),
+}));
+
 describe('Login', () => {
+
+    const mockHandleSubmit = jest.fn(e => e.preventDefault());
+    const mockHandleChange = jest.fn();
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -42,6 +49,22 @@ describe('Login', () => {
         const placeElement = await screen.findByPlaceholderText('Username');
         expect(placeElement).toBeInTheDocument();
     });
+
+    it('handles input changes', () => {
+        render(<Login/>);
+        // Get input elements
+        const usernameInput = screen.getByPlaceholderText('Username');
+        const passwordInput = screen.getByPlaceholderText('Password');
+
+        // Simulate user typing
+        fireEvent.input(usernameInput, { target: { value: 'testuser' } });
+        fireEvent.input(passwordInput, { target: { value: 'password123' } });
+
+        const submit = screen.getByTitle('login');
+        fireEvent.click(submit);
+
+    });
+
 });
 /*
     test("submits username and password", async () => {

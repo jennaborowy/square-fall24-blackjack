@@ -29,7 +29,6 @@ function LobbyLayout({children}) {
     const [userDisp, setUserDisp] = useState(null);
 
     const currentUser = useAuth().currentUser;
-    const router = useRouter();
 
     // Function to set claims in state
     const setClaims = (admin, accountUser, userDisp) => {
@@ -93,7 +92,7 @@ function LobbyLayout({children}) {
                 }
 
             }
-            router.push('/');
+            useRouter().push('/');
         } catch (error) {
             console.error('Logout error:', error);
         }
@@ -145,12 +144,14 @@ function LobbyLayout({children}) {
                                 aria-haspopup="true"
                                 onClick={handleOpenNavMenu}
                                 color="inherit"
+                                title="menu"
                             >
                                 <MenuIcon/>
                             </IconButton>
                             {(isAccountUser || isAdmin) && (
                                 <Menu
                                     id="menu-appbar"
+                                    title="appbar"
                                     anchorEl={anchorElNav}
                                     anchorOrigin={{
                                         vertical: 'bottom',
@@ -197,7 +198,7 @@ function LobbyLayout({children}) {
                         </Box>
                         <Box sx={{flexGrow: 0}}>
                             <Tooltip title="Open settings">
-                                <IconButton onClick={handleOpenUserMenu} sx={{p: 0}}>
+                                <IconButton title="settings" onClick={handleOpenUserMenu} sx={{p: 0}}>
                                     <Avatar alt="icon" src="/icon.png"/>
                                     <Typography
                                         variant="h6"
@@ -220,6 +221,7 @@ function LobbyLayout({children}) {
                             <Menu
                                 sx={{mt: '45px'}}
                                 id="menu-appbar"
+                                title="close menu"
                                 anchorEl={anchorElUser}
                                 anchorOrigin={{
                                     vertical: 'top',
@@ -237,7 +239,7 @@ function LobbyLayout({children}) {
                                     <Typography sx={{textAlign: 'center'}}>Manage Account</Typography>
                                 </MenuItem>
                             )}
-                                <MenuItem component='a' onClick={handleLogout}>
+                                <MenuItem title="exit" component='a' onClick={handleLogout}>
                                     <Typography sx={{textAlign: 'center'}}>{ (isAccountUser || isAdmin)? "Logout" : "Exit Game"}</Typography>
                                 </MenuItem>
                             </Menu>
