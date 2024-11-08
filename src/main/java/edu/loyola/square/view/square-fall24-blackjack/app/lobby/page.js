@@ -13,6 +13,7 @@ function Lobby() {
     const [users, setUsers] = useState([]);
     const [showPopup, setShowPopup] = useState(false);
 
+    const router = useRouter()
     //Upon entering lobby, check user's chipBalance. Reset to 2500 if 0 and show popup to notify user of change
     //check this out -emma
     useEffect(() => {
@@ -127,7 +128,7 @@ function Lobby() {
                     });
                 }
                 // Navigate immediately for the creator
-                useRouter().push(`/gameplay/${tableId}`);  // Changed from /game to /gameplay
+                router.push(`/gameplay/${tableId}`);  // Changed from /game to /gameplay
                 return true;
             }
             if (currentPlayers.length >= tableData.max_players) {
@@ -135,7 +136,7 @@ function Lobby() {
             }
             if (currentPlayers.includes(userId)) {
                 console.log("Player already in table, navigating to game...");
-                useRouter().push(`/gameplay/${tableId}`);
+                router.push(`/gameplay/${tableId}`);
                 return true;
             }
             // Add player to table
@@ -144,7 +145,7 @@ function Lobby() {
             });
             // Navigate to game page
             console.log("Successfully joined table, navigating to game...");
-            useRouter().push(`/gameplay/${tableId}`);
+            router.push(`/gameplay/${tableId}`);
             return true;
         } catch (error) {
             console.error("Error joining table:", error);
@@ -163,7 +164,7 @@ function Lobby() {
                 <DialogContent>
                     <DialogContentText>
                         <p>
-                            It seems that you've ran out of chips... Have some more
+                            It seems that youve ran out of chips... Have some more
                         </p>
                         <p>
                             New chip balance: 2500
