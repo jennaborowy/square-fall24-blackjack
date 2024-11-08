@@ -12,6 +12,7 @@ export const AddUser = () => {
   const [user, setUser] = useState(null);
   const [username, setUsername] = useState("");
   const [selectedAdminId, setSelectedAdminId] = useState(null);
+  const [isSelected, setIsSelected] = useState(false);
 
   const [admins, setAdmins] = useState([])
   //search for friends available to chat with
@@ -146,6 +147,7 @@ export const AddUser = () => {
 
   const handleSelectAdmin = (admin) => {
     setSelectedAdminId(admin.id); // Set the selected admin ID
+    setIsSelected(true);
   };
 
   return (
@@ -167,12 +169,14 @@ export const AddUser = () => {
             {user.map((admin) => (
               <li key={admin.id}>
                 <span>{admin.username}</span>
-                <button type="button" onClick={() => handleSelectAdmin(admin)}>
+                <div className="divide">
+                <button type="button" onClick={() => handleSelectAdmin(admin)} style={{backgroundColor: isSelected ? 'green' : '', color: isSelected ? 'white' : ''}}>
                   Select Admin
                 </button>
                 <button type="submit" onClick={()=> handleAddChat(admin)} disabled={!selectedAdminId}>
                 Add User
                 </button>
+                </div>
               </li>
             ))}
           </ul>

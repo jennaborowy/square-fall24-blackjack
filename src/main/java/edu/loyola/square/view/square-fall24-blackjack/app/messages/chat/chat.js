@@ -37,7 +37,8 @@ export default function Chat() {
             const receiverRef = doc(db, "users", receiverId);
             const receiverDoc = await getDoc(receiverRef);
             if (receiverDoc.exists()) {
-              setUser({ ...receiverData, id: receiverDoc.id }); // Set the user state to the receiver data
+              console.log("Receiver Document Data:", receiverDoc.data());
+              setUser({ ...receiverDoc.data(), id: receiverDoc.id }); // Set the user state to the receiver data
             }
           }
         }
@@ -89,8 +90,7 @@ export default function Chat() {
 
       //updates the latest message sent
       const participants = conversationDoc.data().participants;
-      const receiver = participants.find((participant) => participant !== currentUser.uid);
-      setUser(receiver)
+     // const receiver = participants.find((participant) => participant !== currentUser.uid);
 
       for (const userId of participants) {
         const userChatsRef = doc(db, "userChats", userId);
@@ -137,7 +137,7 @@ export default function Chat() {
         <div className="user">
           <div className="texts">
 
-            <p> {user?.username}Online</p>
+            <p>{console.log("user is", user.username)}Online</p>
           </div>
         </div>
       </div>

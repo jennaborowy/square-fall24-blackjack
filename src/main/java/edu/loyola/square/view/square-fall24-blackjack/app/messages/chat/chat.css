@@ -1,9 +1,8 @@
-
 .chat{
-    flex:2;
+    flex:1;
     padding-left: 10px;
-    border-left: 1px solid #3f3f3f;
-    border-right: 1px solid #3f3f3f;
+    border-left: 1px solid #5B5F62;
+    border-right: 1px solid #5B5F62;
     display: flex;
     flex-direction: column;
 
@@ -12,7 +11,7 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        border-bottom: 1px solid #3f3f3f;
+        border-bottom: 1px solid #5B5F62;
 
         .user{
             display: flex;
@@ -59,8 +58,8 @@
 
                 .texts{
                     p{
-                        background-color: #468cff;
-                        border-radius: 10px;
+                        background-color: #176BAC;
+                        border-radius: 8px;
                     }
                 }
             }
@@ -78,8 +77,11 @@
 
                 p{
                     padding: 20px;
-                    background-color: #959BA4;
+                    background-color: #D5D3D3;
                     border-radius: 10px;
+                }
+                span{
+                    color: #468cff;
                 }
             }
         }
@@ -90,17 +92,18 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        border-top: 1px solid #3f3f3f;
+        border-top: 1px solid #5B5F62;
         gap: 20px;
 
         input{
             flex: 1;
-            background-color: #959BA4;
+            background-color: #E4E6DC;
             border: none;
             outline: none;
-            color: white;
+            color: black;
             gap: 10px;
             border-radius: 10px;
+            padding-left:10px;
             font-size: 16px;
         }
         .sendButton{
@@ -118,5 +121,4 @@
     }
 
 }
-
 

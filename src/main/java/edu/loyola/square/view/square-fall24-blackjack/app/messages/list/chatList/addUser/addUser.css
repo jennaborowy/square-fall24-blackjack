@@ -2,7 +2,7 @@
     width: max-content;
     height: max-content;
     padding: 20px;
-    background-color: #4D7A97;
+    background-color: #9B1818;
     border-radius: 10px;
     position: absolute;
     top:0;
@@ -21,17 +21,23 @@
             border: none;
             outline: none;
         }
+        .divide{
+            display: flex;
+            gap: 10px;
+        }
         button{
             padding: 5px;
+            margin-right: 10px;
             border-radius: 10px;
-            background-color: #468cff;
-            color: white;
+            background-color: #dee3e9;
+            color: black;
             border: none;
             cursor: pointer;
         }
     }
     .user{
         margin-top: 50px;
+        margin-bottom: 10px;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -41,11 +47,15 @@
             align-items: center;
 
         }
+        span{
+            color: white;
+        }
         button {
             padding: 5px;
+            margin-right: 10px;
             border-radius: 10px;
-            background-color: #468cff;
-            color: white;
+            background-color: #dee3e9;
+            color: black;
             border: none;
             cursor: pointer;
         }
