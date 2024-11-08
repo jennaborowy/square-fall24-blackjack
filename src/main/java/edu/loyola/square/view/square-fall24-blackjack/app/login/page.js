@@ -19,6 +19,7 @@ function Login() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [loginErr, setLoginErr] = useState(false);
+    const router = useRouter();
 
     const errMsg = "User credentials invalid";
 
@@ -55,7 +56,7 @@ function Login() {
                     await signInWithEmailAndPassword(auth, email, password);
 
                     console.log("user signed in!");
-                    useRouter().push('/lobby');
+                    router.push('/lobby');
                 }
 
             } catch (error) {

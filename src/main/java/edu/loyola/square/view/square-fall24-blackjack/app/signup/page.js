@@ -27,6 +27,7 @@ const Page=()=> {
     const [errMsg, setErrMsg] = useState("");
     const [err, setErr] = useState(null);
     const [success, setSuccess] = useState(false);
+    const router = useRouter();
 
     // action performed upon submission
     const handleSubmit = async (e) => {
@@ -80,7 +81,7 @@ const Page=()=> {
     useEffect(() => {
         if (success) {
             console.log('Form submitted successfully!');
-            useRouter().push('/login');
+            router.push('/login');
         }
     }, [success]);
 
