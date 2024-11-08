@@ -9,6 +9,7 @@ import { ChatContext } from "@/app/messages/ChatContext";
 export default function Chat() {
   const [text, setText] = useState("");
   const [messages, setMessages] = useState([]);
+  const [user, setUser] = useState("");
   const endRef = useRef(null);
   const { currentUser } = useContext(AuthContext);
   const { data, dispatch } = useContext(ChatContext);
@@ -22,6 +23,28 @@ export default function Chat() {
   useEffect(() => {
     if (!data.conversationId) return;
 
+    const fetchConversation = async () => {
+      try {
+        const conversationRef = doc(db, "conversations", data.conversationId);
+        const conversationDoc = await getDoc(conversationRef);
+        if (conversationDoc.exists()) {
+          const conversationData = conversationDoc.data();
+          setMessages(conversationData.messages || []);
+
+          const participants = data.conversationId.participants;
+          const receiverId = participants.find(id => id !== currentUser.uid);
+          if (receiverId) {
+            const receiverRef = doc(db, "users", receiverId);
+            const receiverDoc = await getDoc(receiverRef);
+            if (receiverDoc.exists()) {
+              setUser({ ...receiverData, id: receiverDoc.id }); // Set the user state to the receiver data
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching conversation or receiver:", error);
+      }
+    };
     const unsubscribe = onSnapshot(
       doc(db, "conversations", data.conversationId),
       (doc) => {
@@ -33,8 +56,10 @@ export default function Chat() {
         console.error("Error listening to messages:", error);
       }
     );
+    fetchConversation();
     return () => unsubscribe();
-  }, [data.conversationId]);
+  }, [data.conversationId], currentUser);
+
 
   const handleSend = async () => {
     if (!text.trim() || !data.conversationId) return;
@@ -64,6 +89,9 @@ export default function Chat() {
 
       //updates the latest message sent
       const participants = conversationDoc.data().participants;
+      const receiver = participants.find((participant) => participant !== currentUser.uid);
+      setUser(receiver)
+
       for (const userId of participants) {
         const userChatsRef = doc(db, "userChats", userId);
         const userChatsDoc = await getDoc(userChatsRef);
@@ -108,8 +136,8 @@ export default function Chat() {
       <div className="top">
         <div className="user">
           <div className="texts">
-            <span>{data.user?.username}</span>
-            <p>Online</p>
+
+            <p> {user?.username}Online</p>
           </div>
         </div>
       </div>
@@ -129,7 +157,7 @@ export default function Chat() {
 
       <div className="bottom">
         <div className="icons">
-          <input type="text" placeholder="Type a message..." onChange={e => setText(e.target.value)}/>
+          <input type="text" placeholder="Type a message..." value={text} onChange={e => setText(e.target.value)}/>
           <button type="submit" className="sendButton" onClick={handleSend} disabled={!text.trim()}>
             Send
           </button>
