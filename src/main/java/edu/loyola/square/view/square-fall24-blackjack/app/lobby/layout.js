@@ -27,6 +27,7 @@ function LobbyLayout({children}) {
     const [isAdmin, setIsAdmin] = useState(false);
     const [isAccountUser, setIsAccountUser] = useState(false);
     const [userDisp, setUserDisp] = useState(null);
+    const router = useRouter();
 
     const currentUser = useAuth().currentUser;
 
@@ -63,7 +64,9 @@ function LobbyLayout({children}) {
     const handleLogout = async (e) => {
         e.preventDefault();
         try {
+
             await signOut(auth);
+
             if (!isAdmin && !isAccountUser) {
                 // delete the auth AND account
                 const uid = currentUser.uid;
@@ -92,7 +95,7 @@ function LobbyLayout({children}) {
                 }
 
             }
-            useRouter().push('/');
+            router.push('/');
         } catch (error) {
             console.error('Logout error:', error);
         }
@@ -198,7 +201,7 @@ function LobbyLayout({children}) {
                         </Box>
                         <Box sx={{flexGrow: 0}}>
                             <Tooltip title="Open settings">
-                                <IconButton title="settings" onClick={handleOpenUserMenu} sx={{p: 0}}>
+                                <IconButton onClick={handleOpenUserMenu} sx={{p: 0}}>
                                     <Avatar alt="icon" src="/icon.png"/>
                                     <Typography
                                         variant="h6"
