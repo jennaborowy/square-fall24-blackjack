@@ -8,6 +8,7 @@ import {doc, getDoc} from "firebase/firestore";
 function Stats() {
     const [losses, setLosses] = useState("");
     const [wins, setWins] = useState("");
+    const[chips, setChips] = useState("");
 
     //get the user's total wins and losses
     useEffect( () => {
@@ -20,6 +21,7 @@ function Stats() {
             if (docSnap.exists()) {
                 setLosses(docSnap.data()['totalLosses']);
                 setWins(docSnap.data()['totalWins']);
+                setChips(docSnap.data()['chipBalance']);
             }
         });
         return ()=> display;
@@ -41,6 +43,9 @@ function Stats() {
             </h1>
             <h1>
                 Total losses: {losses}
+            </h1>
+            <h1>
+                Current Chip Total: ${chips}
             </h1>
         </div>
     );

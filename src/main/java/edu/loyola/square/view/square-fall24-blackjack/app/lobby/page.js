@@ -12,6 +12,7 @@ function Lobby() {
     const [tables, setTables] = useState([]);
     const [users, setUsers] = useState([]);
     const [showPopup, setShowPopup] = useState(false);
+    const[userBalance, setChipBalance] = useState();
 
     const router = useRouter()
     //Upon entering lobby, check user's chipBalance. Reset to 2500 if 0 and show popup to notify user of change
@@ -33,6 +34,7 @@ function Lobby() {
                         setShowPopup(true);
                         await updateDoc(docRef, {chipBalance: 2500});
                     }
+                    setChipBalance(points);
                 }
             }
         });
@@ -186,6 +188,7 @@ function Lobby() {
             <div className="mb-4">
                 <CreateTableButton onTableCreate={handleTableCreate}/>
             </div>
+            <h1> ${userBalance} </h1>
         </div>
     );
 }

@@ -172,12 +172,40 @@ export default function CardDisplay({ tableId }) {
     }
   };
 
-  function endGame(gameState) {
+  async function endGame(gameState) {
     if (!gameState || !gameState.gameStatus) return;
 
     const status = gameState.gameStatus.endStatus;
     if (status !== "IN_PROGRESS") {
       isGameOver(true);
+
+      const user = auth?.currentUser?.uid;
+      const docRef = doc(db, 'users', user);
+      const docSnap = await getDoc(docRef);
+
+      if (status == "PLAYER_WIN" ||
+          status == "PLAYER_BLACKJACK" || status == "DEALER_BUST") {
+
+        if (docSnap.exists()) {
+          const currentWins = docSnap.data()['totalWins'];
+          const currentChips = docSnap.data()['chipBalance'];
+          await updateDoc(docRef, {totalWins: currentWins + 1});
+
+          if (status == "PLAYER_BLACKJACK") {
+            const payout = Math.trunc(Number(betAmount) * 1.5);
+            await updateDoc(docRef, {chipBalance: currentChips + payout});
+          } else
+            await updateDoc(docRef, {chipBalance: currentChips + Number(betAmount)});
+        }
+      } else if (status == "DEALER_WIN" ||
+          status == "DEALER_BLACKJACK" || status == "PLAYER_BUST") {
+        if (docSnap.exists()) {
+          const currentLosses = docSnap.data()['totalLosses'];
+          const currentChips = docSnap.data()['chipBalance'];
+          await updateDoc(docRef, {totalLosses: currentLosses + 1});
+          await updateDoc(docRef, {chipBalance: currentChips - Number(betAmount)});
+        }
+      }
       setGameStatusMessage(gameState.gameStatus.endMessage);
     }
   }
