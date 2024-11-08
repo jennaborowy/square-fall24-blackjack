@@ -8,13 +8,11 @@ import AceModal from '../AceModal'
 import GameInfo from '../GameInfo'
 import InputGroup from "react-bootstrap/InputGroup";
 import Form from "react-bootstrap/Form";
-import {FriendsIcon, MessageIcon, ContactAdminIcon} from '../icons';
+import {FriendsIcon, MessageIcon} from '../icons';
 import PlaceBetAnimation from '../BetTypeAnimation'
 import { auth, db } from "@/firebaseConfig";
 import { doc, getDoc, deleteDoc, updateDoc, arrayRemove } from 'firebase/firestore';
 import ChatBox from "@/app/messages/chatbox/chatbox";
-import {Dialog} from "@mui/material";
-
 
 export default function CardDisplay({ tableId }) {
   const [playerHands, setPlayerHands] = useState({});
@@ -32,10 +30,6 @@ export default function CardDisplay({ tableId }) {
   const [isValidBet, setIsValidBet] = useState(false);
 
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const openChat = () => setIsChatOpen(true);
-
-  const [isAdminChatOpen, setIsAdminChatOpen] = useState(false);
-  const openAdminChat = () => setIsAdminChatOpen(true);
 
   const MIN_BET = 0;
   const MAX_BET = 10000;
@@ -393,13 +387,15 @@ export default function CardDisplay({ tableId }) {
 
   const isCurrentPlayer = auth?.currentUser?.uid === players[currentPlayerIndex];
 
-  const handleClickOpen = () => {
-    setIsChatOpen(true);
-  };
-
   const handleClose = () => {
+    console.log("Closing chat...");
     setIsChatOpen(false);
+    console.log("Chat is now closed:", isChatOpen);
   };
+  useEffect(() => {
+    console.log("isChatOpen changed:", isChatOpen);
+  }, [isChatOpen]);
+
   return (
       <div>
         <div className="cardDisplay">
@@ -499,9 +495,9 @@ export default function CardDisplay({ tableId }) {
             </div>
           )}
           <div className="message-icon">
-            <div className="icons-btn" onClick={handleClickOpen}>
+            <div className="icons-btn" onClick={() => setIsChatOpen((prev) => !prev)}>
               <MessageIcon/>
-                {isChatOpen && <ChatBox onClose={handleClose}/>}
+              {isChatOpen && <ChatBox onClose={handleClose}/>}
             </div>
           </div>
             {gameStarted && (
@@ -509,7 +505,6 @@ export default function CardDisplay({ tableId }) {
                 <GameInfo/>
               </div>
             )}
-
             <AceModal
               showModal={showAceModal}
               onSelectValue={handleAceValueSelect}

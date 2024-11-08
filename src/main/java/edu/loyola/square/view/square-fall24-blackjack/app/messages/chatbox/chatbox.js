@@ -9,22 +9,14 @@ import {db} from "@/firebaseConfig";
 import {ChatContextProvider} from "@/app/messages/ChatContext";
 import {AuthContextProvider} from "@/app/messages/AuthContext";
 
-export default function ChatBox () {
-  const [isChatOpen, setIsChatOpen] = useState(true); // Control visibility
-
-  const handleCloseChat = () => {
-    setIsChatOpen(false);
-  };
-
+export default function ChatBox ({onClose}) {
   return (
-    isChatOpen && (
     <AuthContextProvider>
       <ChatContextProvider>
-
-        <div className="chat-box">
+        <div className="chat-box" onClick={(e) => e.stopPropagation()}>
           <div className="chat-header">
             Conversations
-            <button className="close-btn" onClick={handleCloseChat}>
+            <button className="close-btn" onClick={ onClose}>
               &times;
             </button>
           </div>
@@ -35,7 +27,6 @@ export default function ChatBox () {
           </div>
       </ChatContextProvider>
     </AuthContextProvider>
-    )
   )
 
 }
