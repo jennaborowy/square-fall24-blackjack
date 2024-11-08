@@ -15,6 +15,7 @@ import { doc, getDoc, deleteDoc, updateDoc, arrayRemove } from 'firebase/firesto
 import ChatBox from "@/app/messages/chatbox/chatbox";
 import {Dialog} from "@mui/material";
 
+
 export default function CardDisplay({ tableId }) {
   const [playerHands, setPlayerHands] = useState({});
   const [dealerHand, setDealerHand] = useState([]);
