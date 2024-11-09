@@ -16,7 +16,7 @@ function Lobby() {
 
     const router = useRouter()
     //Upon entering lobby, check user's chipBalance. Reset to 2500 if 0 and show popup to notify user of change
-    //check this out -emma
+    //CHECK THIS OUT -emma
     useEffect(() => {
         const checkUserPoints = auth.onAuthStateChanged( async () => {
             const curUser = auth.currentUser;
