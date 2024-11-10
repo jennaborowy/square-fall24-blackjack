@@ -64,7 +64,6 @@ function LobbyLayout({children}) {
     const handleLogout = async (e) => {
         e.preventDefault();
         try {
-
             await signOut(auth);
 
             if (!isAdmin && !isAccountUser) {
