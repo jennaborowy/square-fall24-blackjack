@@ -7,7 +7,7 @@ import React from "react";
 describe('loading page', () => {
     test("opens right loading page", async () => {
         render(<Load/>);
-        const linkElement = screen.getByText("/logo-gif-transparent.gif");
+        const linkElement = screen.getByTitle("gif");
         expect(linkElement).toBeInTheDocument();
     });
 });

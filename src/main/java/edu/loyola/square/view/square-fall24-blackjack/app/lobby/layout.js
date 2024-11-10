@@ -27,9 +27,9 @@ function LobbyLayout({children}) {
     const [isAdmin, setIsAdmin] = useState(false);
     const [isAccountUser, setIsAccountUser] = useState(false);
     const [userDisp, setUserDisp] = useState(null);
+    const router = useRouter();
 
     const currentUser = useAuth().currentUser;
-    const router = useRouter();
 
     // Function to set claims in state
     const setClaims = (admin, accountUser, userDisp) => {
@@ -65,6 +65,7 @@ function LobbyLayout({children}) {
         e.preventDefault();
         try {
             await signOut(auth);
+
             if (!isAdmin && !isAccountUser) {
                 // delete the auth AND account
                 const uid = currentUser.uid;
@@ -145,12 +146,14 @@ function LobbyLayout({children}) {
                                 aria-haspopup="true"
                                 onClick={handleOpenNavMenu}
                                 color="inherit"
+                                title="menu"
                             >
                                 <MenuIcon/>
                             </IconButton>
                             {(isAccountUser || isAdmin) && (
                                 <Menu
                                     id="menu-appbar"
+                                    title="appbar"
                                     anchorEl={anchorElNav}
                                     anchorOrigin={{
                                         vertical: 'bottom',
@@ -220,6 +223,7 @@ function LobbyLayout({children}) {
                             <Menu
                                 sx={{mt: '45px'}}
                                 id="menu-appbar"
+                                title="close menu"
                                 anchorEl={anchorElUser}
                                 anchorOrigin={{
                                     vertical: 'top',
@@ -237,7 +241,7 @@ function LobbyLayout({children}) {
                                     <Typography sx={{textAlign: 'center'}}>Manage Account</Typography>
                                 </MenuItem>
                             )}
-                                <MenuItem component='a' onClick={handleLogout}>
+                                <MenuItem title="exit" component='a' onClick={handleLogout}>
                                     <Typography sx={{textAlign: 'center'}}>{ (isAccountUser || isAdmin)? "Logout" : "Exit Game"}</Typography>
                                 </MenuItem>
                             </Menu>

@@ -17,8 +17,6 @@ import { auth, onAuthStateChanged } from "@/firebaseConfig";
 
 const Page=()=> {
 
-    const router = useRouter();
-
     // might put user data in one useState()?
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
@@ -29,6 +27,7 @@ const Page=()=> {
     const [errMsg, setErrMsg] = useState("");
     const [err, setErr] = useState(null);
     const [success, setSuccess] = useState(false);
+    const router = useRouter();
 
     // action performed upon submission
     const handleSubmit = async (e) => {
@@ -49,6 +48,7 @@ const Page=()=> {
         };
 
         setErr(null);
+
         try {
             const response = await fetch('http://localhost:8080/api/user/signup', {
                 method: 'POST',
@@ -61,12 +61,14 @@ const Page=()=> {
             if (response.ok) {
                 setSuccess(true);
             }
+
             else {
                 const errorData = await response.json();
                 console.log(errorData)
                 setErrMsg(errorData.message);
                 setErr(true);
             }
+
         } catch (error) {
             console.log('Error submitting form:', error);
             setErrMsg(error.message);
@@ -157,7 +159,7 @@ const Page=()=> {
                         <input type="password" placeholder="Confirm Password" name="confirm" onInput={handleChange} required/>
                     </div>
 
-                    <button className="btn btn-success" >
+                    <button className="btn btn-success" type="submit" title="submit">
                         Create Account
                     </button>
 

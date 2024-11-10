@@ -11,16 +11,21 @@ import {Dialog, DialogActions, DialogContent, DialogContentText} from "@mui/mate
 function Lobby() {
     const [tables, setTables] = useState([]);
     const [users, setUsers] = useState([]);
-    const router = useRouter();
     const [showPopup, setShowPopup] = useState(false);
-    const user = auth.currentUser.uid;
+    const[userBalance, setChipBalance] = useState();
 
+    const router = useRouter()
     //Upon entering lobby, check user's chipBalance. Reset to 2500 if 0 and show popup to notify user of change
+    //CHECK THIS OUT -emma, here's why: The gameplay can recognize whether the user wins or loses and the appropriate payout
+    //and here we can accurately display the user's chip amount then trigger a popup if the user runs out of chips.
+    //Using onAuthStateChanged allows th popup to show up immediately after returning to lobby
     useEffect(() => {
         const checkUserPoints = auth.onAuthStateChanged( async () => {
-            if(!user)
+            const curUser = auth.currentUser;
+            if(!curUser)
                 return
-            if (user) {
+            if (curUser) {
+                const user = curUser.uid;
                 const docRef = doc(db, 'users', user);
                 const docSnap = await getDoc(docRef);
 
@@ -31,6 +36,7 @@ function Lobby() {
                         setShowPopup(true);
                         await updateDoc(docRef, {chipBalance: 2500});
                     }
+                    setChipBalance(points);
                 }
             }
         });
@@ -129,27 +135,22 @@ function Lobby() {
                 router.push(`/gameplay/${tableId}`);  // Changed from /game to /gameplay
                 return true;
             }
-
             if (currentPlayers.length >= tableData.max_players) {
                 throw new Error("Table is full");
             }
-
             if (currentPlayers.includes(userId)) {
                 console.log("Player already in table, navigating to game...");
                 router.push(`/gameplay/${tableId}`);
                 return true;
             }
-
             // Add player to table
             await updateDoc(tableRef, {
                 players: arrayUnion(userId)
             });
-
             // Navigate to game page
             console.log("Successfully joined table, navigating to game...");
             router.push(`/gameplay/${tableId}`);
             return true;
-
         } catch (error) {
             console.error("Error joining table:", error);
             throw error;
@@ -157,7 +158,7 @@ function Lobby() {
     };
 
     return (
-        <div className="m-3">
+        <div className="m-3" title="lobby">
             <h1 className="text-2xl font-bold mb-4">Welcome to the Lobby!</h1>
 
             {/*This is the popup to notify user of chipBalance change*/}
@@ -167,7 +168,7 @@ function Lobby() {
                 <DialogContent>
                     <DialogContentText>
                         <p>
-                            It seems that you've ran out of chips... Have some more
+                            It seems that youve ran out of chips... Have some more
                         </p>
                         <p>
                             New chip balance: 2500
@@ -189,6 +190,7 @@ function Lobby() {
             <div className="mb-4">
                 <CreateTableButton onTableCreate={handleTableCreate}/>
             </div>
+            <h1> ${userBalance} </h1>
         </div>
     );
 }

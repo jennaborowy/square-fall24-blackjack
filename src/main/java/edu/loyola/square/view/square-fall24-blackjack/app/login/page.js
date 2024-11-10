@@ -19,9 +19,9 @@ function Login() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [loginErr, setLoginErr] = useState(false);
+    const router = useRouter();
 
     const errMsg = "User credentials invalid";
-    const router = useRouter();
 
     console.log(auth?.currentUser?.uid)
 
@@ -58,6 +58,7 @@ function Login() {
                     console.log("user signed in!");
                     router.push('/lobby');
                 }
+
             } catch (error) {
                 setLoginErr(true);
                 console.log("Sign in Error: ", error);
@@ -120,7 +121,7 @@ function Login() {
                         onInput={handleChange}
                     />
                 </div>
-                <button className="mt-3 btn btn-success border" type="submit" name="login">Submit</button>
+                <button className="mt-3 btn btn-success border" type="submit" title="login">Submit</button>
             </form>
             {/*Redirect to signup page by clicking button*/}
             <footer className="footer">
