@@ -29,7 +29,6 @@ const Page=()=> {
     const [success, setSuccess] = useState(false);
     const router = useRouter();
 
-    const router = useRouter()
     // action performed upon submission
     const handleSubmit = async (e) => {
         e.preventDefault();
