@@ -20,6 +20,10 @@ export default function Chat() {
   }, [messages]);
 
   // Listen for messages
+  //CHECK THIS OUT - Callie
+  //This code successfully sends messages back and forth between two people by getting the participants's uid to designate a sender and receiver.
+  //The fetchConversation function gets a snapshot of entire conversation stored in the database to show it in the chat box.
+  //The CSS below creates a the 'chat' portion of the chatbox where the user can view the messages being sent.
   useEffect(() => {
     if (!data.conversationId) return;
 
