@@ -16,7 +16,9 @@ function Lobby() {
 
     const router = useRouter()
     //Upon entering lobby, check user's chipBalance. Reset to 2500 if 0 and show popup to notify user of change
-    //check this out -emma
+    //CHECK THIS OUT -emma, here's why: The gameplay can recognize whether the user wins or loses and the appropriate payout
+    //and here we can accurately display the user's chip amount then trigger a popup if the user runs out of chips.
+    //Using onAuthStateChanged allows th popup to show up immediately after returning to lobby
     useEffect(() => {
         const checkUserPoints = auth.onAuthStateChanged( async () => {
             const curUser = auth.currentUser;

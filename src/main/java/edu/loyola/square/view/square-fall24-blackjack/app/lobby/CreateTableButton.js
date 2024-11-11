@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogContentText, DialogTitle, DialogActions } from "@mui/material";
 
+//CHECK THIS OUT
+// this is the code for creating a table and having it show up
+// in all players list of tables in real time using firebase functionality.
 const CreateTableButton = ({ onTableCreate }) => {
     const [open, setOpen] = useState(false);
     const [formData, setFormData] = useState({

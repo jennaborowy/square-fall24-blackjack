@@ -12,6 +12,13 @@ function FriendsList({ userList, setUserList }) {
 
     const currentUser = useAuth().currentUser;
 
+    // CHECK THIS OUT
+    // My commit ca114d9 was what I considered a good commit because it got a lot of the social functionalities
+    //     in my user stories working. It was nice to see the removing friends working in both the backend
+    //     and frontend. Right now, the code is a little off due to being in the middle of refactoring,
+    //     but soon it should be much more organized.
+
+
     // grabs friends to display when currentUser loads and when the userList updates
     useEffect(() => {
         async function getFriends() {
