@@ -11,7 +11,7 @@
 
         .searchBar {
             flex: 1;
-            background-color: #959BA4;
+            background-color: #E4E6DC;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -22,7 +22,7 @@
                 background-color: transparent;
                 border: none;
                 outline: none;
-                color: white;
+                color: black;
                 flex: 1;
             }
 
@@ -37,7 +37,7 @@
             height: 36px;
             justify-content: center;
             align-items: center;
-            background-color: dimgrey;
+            background-color: #E4E6DC;
             padding: 5px;
             border-radius: 10px;
             cursor: pointer;
@@ -49,8 +49,9 @@
         gap: 20px;
         padding:20px;
         cursor: pointer;
-        border-bottom: 1px solid #3f3f3f;
+        border-bottom: 1px solid #5B5F62;
         flex-shrink: 0;
+
 
         img {
             width: 50px;
@@ -58,7 +59,7 @@
             border-radius: 50%;
             object-fit: cover;
         }
-        .text{
+        .texts{
             display:flex;
             flex-direction: column;
             gap: 10px;
@@ -69,6 +70,8 @@
             p{
                 font-size: 14px;
                 font-weight: 300;
+                color: white !important;
+
             }
         }
 
