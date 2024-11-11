@@ -4,7 +4,7 @@ function ManageAccount() {
     return (
         <div>
             <h1>
-                manage account
+                manage users. admin only
             </h1>
         </div>
     );
