@@ -1,6 +1,6 @@
 "use client";
 import "../../globals.css"
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./UserList.css";
 import FriendsList from "./FriendsList";
 import UserList from "./UserList";
@@ -28,9 +28,6 @@ function ManageFriends() {
             }).then((response) => response.json()
             ).then((data) => {
                 if (!currentUser) return;
-
-                const friendIds = data.friends || [];
-
                 // initializes user list to be without currentUser
                 const initUserList = Object.values(data).filter((user) => user.uid !== currentUser.uid);
                 setUserList(initUserList);
@@ -43,8 +40,8 @@ function ManageFriends() {
         }
     }
 
-    // dependent on currentUser loading -- initializes the lists
-    const initializeFriendsAndRemainingUsers = async () => {
+    // dependent on currentUser loading -- initializes the lists after fetching from db
+    const initFriends = async () => {
         if (!currentUser) return;
 
         const userRef = doc(db, "users", currentUser.uid);
@@ -59,33 +56,24 @@ function ManageFriends() {
             })
         );
 
-        console.log(friendsData)
-
-        setFriends(friendsData);
-
+        setFriends([...friendsData]);
     }
 
     useEffect(() => {
-        console.log("before: ", userList)
-        initUserList();
-        console.log("after: ", userList)
-        initializeFriendsAndRemainingUsers();
-        console.log(friends)
-
-        // console.log("friends: ", friends)
-        // console.log("remaining users: ", userList)
+        if (currentUser) {
+            initUserList().catch((error) => console.log(error));
+            initFriends().catch((error) => console.log(error));
+        }
     }, [currentUser])
 
     useEffect(() => {
-        console.log(friends)
-        setUserList(userList.filter((user) => !friends.includes(user.uid)));
+        if (userList.length && friends.length) {
+            console.log(friends)
+            const friendUids = friends.map(friend => friend.uid);
+            // update userList based on friends
+            setUserList(userList.filter((user) => !friendUids.includes(user.uid)));
+        }
     }, [friends]);
-
-    // useEffect(() => {
-    //     initializeFriendsAndRemainingUsers();
-    //     console.log("friends: ", friends)
-    //     console.log("remaining users: ", userList)
-    // }, [userList]);
 
 
     async function addFriend(user) {
@@ -96,9 +84,11 @@ function ManageFriends() {
             await updateDoc(userRef, {
                 friends: arrayUnion(user.uid),
             });
-            const docSnap = await getDoc(userRef);
             // update the friends list in here
-            setFriends([...docSnap.data().friends]);
+            setFriends(prevFriends => [...prevFriends, user]);
+            setUserList(prevUserList => prevUserList.filter(u => u.uid !== user.uid));
+            setFriendToAdd(null);
+            setFriendToAdd(null);
         } catch(error) {
             console.log("error adding friend: ", error);
         }
@@ -114,11 +104,9 @@ function ManageFriends() {
             await updateDoc(userRef, {
                 friends: arrayRemove(user.uid),
             });
-            //const docSnap = await getDoc(userRef);
-            setDetailedFriends((prevFriends) => prevFriends.filter((f) => f.uid !== user.uid));
+            setFriends((prevFriends) => prevFriends.filter((f) => f.uid !== user.uid));
             setUserList([...userList, user]);
-            // onFriendUpdate();
-            console.log("removed user: ", user)
+            setFriendToRemove(null);
         } catch (error) {
             console.log("error removing friend: ", error);
         }
@@ -145,37 +133,14 @@ function ManageFriends() {
             <div className="col">
                 <UserList
                     userList={userList}
-                    //setUserList={setUserList}
-
-                    //addFriend={addFriend()}
-                    //friend={friendToAdd}
                     updateFriend={updateFriendToAdd}
-                    setModalOn={setModalOn}
-
-
-                    //onFriendUpdate={onFriendUpdate}
-
-                    // userList={userList}
-                    // onAddFriend={handleAddFriend()}
                 >
                 </UserList>
             </div>
             <div className="col">
                 <FriendsList
-                    deteailedFriends={friends}
-                    setModalOn={setModalOn}
+                    detailedFriends={friends}
                     updateFriend={updateFriendToRemove}
-
-                    //setUserList={setUserList}
-
-                    // updateFriend={updateFriendToRemove()}
-                    // removeFriend={removeFriend()}
-                    //friend={friendToRemove}
-
-                    //onFriendUpdate={onFriendUpdate}
-
-                    // friends={friends}
-                    // onRemoveFriend={handleRemoveFriend}
                 ></FriendsList>
             </div>
             <Dialog
@@ -191,8 +156,7 @@ function ManageFriends() {
                     <button
                         className="mt-3 btn btn-danger border"
                         onClick={(e) => {
-                            friendToRemove ?
-                            removeFriend(friendToRemove) : addFriend(friendToAdd)
+                            friendToRemove ? removeFriend(friendToRemove) : addFriend(friendToAdd)
                         }}>
                         Yes
                     </button>
