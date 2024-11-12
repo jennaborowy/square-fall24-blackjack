@@ -4,68 +4,68 @@ import { collection, doc, getDoc, arrayUnion, updateDoc } from "firebase/firesto
 import { db } from "@/firebaseConfig";
 import { useAuth } from "@/app/context/auth";
 
-function UserList({ userList, setUserList }) {
-    const [friend, setFriend] = useState(null);
-    const [modalOn, setModalOn] = useState(false);
-    const [friends, setFriends] = useState([]);
+function UserList({ userList, updateFriend, setModalOn }) {
+    //const [friend, setFriend] = useState(null);
+    //const [modalOn, setModalOn] = useState(false);
+    //const [friends, setFriends] = useState([]);
 
-    const currentUser = useAuth().currentUser;
+    //const currentUser = useAuth().currentUser;
 
     // adds friend to currentUser's friend list
-    async function addFriend(user) {
-        setModalOn(false);
-
-        const userRef = doc(collection(db, "users"), currentUser.uid);
-        try {
-            await updateDoc(userRef, {
-                friends: arrayUnion(user.uid),
-            });
-            const docSnap = await getDoc(userRef);
-            // update the friends list in here
-            setFriends([...docSnap.data().friends]);
-        } catch(error) {
-            console.log("error adding friend: ", error);
-        }
-        console.log("friends update: ", friends)
-    }
+    // async function addFriend(user) {
+    //     setModalOn(false);
+    //
+    //     const userRef = doc(collection(db, "users"), currentUser.uid);
+    //     try {
+    //         await updateDoc(userRef, {
+    //             friends: arrayUnion(user.uid),
+    //         });
+    //         const docSnap = await getDoc(userRef);
+    //         // update the friends list in here
+    //         setFriends([...docSnap.data().friends]);
+    //     } catch(error) {
+    //         console.log("error adding friend: ", error);
+    //     }
+    //     console.log("friends update: ", friends)
+    // }
 
     // verifies potential friend by uid
-    async function updateFriend(user) {
-        const userRef = doc(db, "users", user.uid);
-        const docSnap = await getDoc(userRef);
-        setFriend(docSnap.data())
-        setModalOn(true);
-    }
+    // async function updateFriend(user) {
+    //     const userRef = doc(db, "users", user.uid);
+    //     const docSnap = await getDoc(userRef);
+    //     setFriend(docSnap.data())
+    //     setModalOn(true);
+    // }
 
     // dependent on currentUser loading
-        const initializeFriends = async () => {
-            if (!currentUser) return;
-
-            const userRef = doc(db, "users", currentUser.uid);
-            const docSnap = await getDoc(userRef);
-            const updatedFriends = docSnap.data().friends || [];
-
-            setFriends(updatedFriends);
-            setUserList(userList.filter((user) => !updatedFriends.includes(user.uid)));
-        }
-
-       //
-
-    useEffect(() => {
-        initializeFriends();
-    }, [currentUser])
+    //     const initializeFriends = async () => {
+    //         if (!currentUser) return;
+    //
+    //         const userRef = doc(db, "users", currentUser.uid);
+    //         const docSnap = await getDoc(userRef);
+    //         const updatedFriends = docSnap.data().friends || [];
+    //
+    //         setFriends(updatedFriends);
+    //         setUserList(userList.filter((user) => !updatedFriends.includes(user.uid)));
+    //     }
+    //
+    //    //
+    //
+    // useEffect(() => {
+    //     initializeFriends();
+    // }, [currentUser])
 
     // updates the userList of those who aren't added whenever friends are added
-    useEffect(() => {
-        function updateRemainingUsers() {
-            const updatedList = userList.filter((user) => !friends.includes(user.uid));
-            if (JSON.stringify(updatedList) !== JSON.stringify(userList)) {
-                setUserList(updatedList);
-            }
-        }
-        updateRemainingUsers();
-
-    }, [friends, userList]);
+    // useEffect(() => {
+    //     function updateRemainingUsers() {
+    //         const updatedList = userList.filter((user) => !friends.includes(user.uid));
+    //         if (JSON.stringify(updatedList) !== JSON.stringify(userList)) {
+    //             setUserList(updatedList);
+    //         }
+    //     }
+    //     updateRemainingUsers();
+    //
+    // }, [friends, userList]);
 
     return (
         <div className="row">
@@ -98,24 +98,24 @@ function UserList({ userList, setUserList }) {
                             </div>
                         </div>
                     ))}
-                    <Dialog
-                        open={modalOn}
-                        onClose={(e) => setModalOn(false)}>
-                        <DialogContent> {(friend != null) && (
-                            <DialogContentText>
-                                Add @{friend.username}?
-                            </DialogContentText>
-                        )}
-                        </DialogContent>
-                        <DialogActions>
-                            <button className="mt-3 btn btn-success border" onClick={(e) => addFriend(friend)}>
-                                Yes
-                            </button>
-                            <button className="mt-3 btn btn-danger border" onClick={(e) => setModalOn(false)}>
-                                No
-                            </button>
-                        </DialogActions>
-                    </Dialog>
+                    {/*<Dialog*/}
+                    {/*    open={modalOn}*/}
+                    {/*    onClose={(e) => setModalOn(false)}>*/}
+                    {/*    <DialogContent> {(friend != null) && (*/}
+                    {/*        <DialogContentText>*/}
+                    {/*            Add @{friend.username}?*/}
+                    {/*        </DialogContentText>*/}
+                    {/*    )}*/}
+                    {/*    </DialogContent>*/}
+                    {/*    <DialogActions>*/}
+                    {/*        <button className="mt-3 btn btn-success border" onClick={(e) => addFriend(friend)}>*/}
+                    {/*            Yes*/}
+                    {/*        </button>*/}
+                    {/*        <button className="mt-3 btn btn-danger border" onClick={(e) => setModalOn(false)}>*/}
+                    {/*            No*/}
+                    {/*        </button>*/}
+                    {/*    </DialogActions>*/}
+                    {/*</Dialog>*/}
                 </div>
             </div>
         </div>
