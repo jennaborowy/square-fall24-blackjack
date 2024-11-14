@@ -174,6 +174,11 @@ function LobbyLayout({children}) {
                                     <MenuItem component='a' href='/lobby/managefriends' onClick={handleCloseUserMenu}>
                                         <Typography sx={{textAlign: 'center'}}>Manage Friends</Typography>
                                     </MenuItem>
+                                    {(isAdmin) && (
+                                        <MenuItem component='a' href='/lobby/manageusers' onClick={handleCloseUserMenu}>
+                                            <Typography sx={{textAlign: 'center'}}>Manage Users</Typography>
+                                        </MenuItem>
+                                    )}
                                 </Menu>)}
                         </Box>
 
@@ -196,6 +201,16 @@ function LobbyLayout({children}) {
                                     >
                                         Manage Friends
                                     </Button>
+                                    {(isAdmin) && (
+                                        <Button
+                                            component='a'
+                                            href='/lobby/manageusers'
+                                            onClick={handleCloseNavMenu}
+                                            sx={{my: 2, color: 'white', display: 'block'}}
+                                        >
+                                            Manage Users
+                                        </Button>
+                                    )}
                                 </>)}
                         </Box>
                         <Box sx={{flexGrow: 0}}>
@@ -236,11 +251,7 @@ function LobbyLayout({children}) {
                                 }}
                                 open={Boolean(anchorElUser)}
                                 onClose={handleCloseUserMenu}
-                            > {( isAccountUser || isAdmin ) && (
-                                <MenuItem component='a' href='/lobby/manageaccount' onClick={handleCloseUserMenu}>
-                                    <Typography sx={{textAlign: 'center'}}>Manage Account</Typography>
-                                </MenuItem>
-                            )}
+                            >
                                 <MenuItem title="exit" component='a' onClick={handleLogout}>
                                     <Typography sx={{textAlign: 'center'}}>{ (isAccountUser || isAdmin)? "Logout" : "Exit Game"}</Typography>
                                 </MenuItem>
