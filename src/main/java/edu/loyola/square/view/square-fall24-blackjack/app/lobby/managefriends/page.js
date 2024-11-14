@@ -1,24 +1,24 @@
 "use client";
 import "../../globals.css"
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./UserList.css";
 import FriendsList from "./FriendsList";
-import UserList from "@/app/lobby/managefriends/UserList";
+import UserList from "./UserList";
 import { useAuth } from "@/app/context/auth";
-import { arrayRemove, arrayUnion, doc, updateDoc } from "firebase/firestore";
+import {arrayRemove, arrayUnion, collection, doc, getDoc, updateDoc} from "firebase/firestore";
 import { db } from "@/firebaseConfig";
+import {Dialog, DialogActions, DialogContent, DialogContentText} from "@mui/material";
 
 function ManageFriends() {
     const [userList, setUserList] = useState([]);
     const [friends, setFriends] = useState([]);
+    const [friendToAdd, setFriendToAdd] = useState(null);
+    const [friendToRemove, setFriendToRemove] = useState(null);
+    const [modalOn, setModalOn] = useState(false);
 
     const currentUser = useAuth().currentUser;
 
-    // check for the username info stuff
-
-
-    // gets all users
-    useEffect(() => {
+    const initUserList = async () => {
         try {
             fetch('http://localhost:8080/api/user/', {
                 method: 'GET',
@@ -28,9 +28,6 @@ function ManageFriends() {
             }).then((response) => response.json()
             ).then((data) => {
                 if (!currentUser) return;
-
-                const friendIds = data.friends || [];
-
                 // initializes user list to be without currentUser
                 const initUserList = Object.values(data).filter((user) => user.uid !== currentUser.uid);
                 setUserList(initUserList);
@@ -41,65 +38,133 @@ function ManageFriends() {
         } catch (error) {
             console.log(error.message);
         }
-    }, [currentUser]);
+    }
 
-    // Function to add a friend
-    const handleAddFriend = async (userId) => {
+    // dependent on currentUser loading -- initializes the lists after fetching from db
+    const initFriends = async () => {
         if (!currentUser) return;
 
-        try {
-            const userRef = doc(db, "users", currentUser.uid);
-            await updateDoc(userRef, {
-                friends: arrayUnion(userId),
-            });
+        const userRef = doc(db, "users", currentUser.uid);
+        const docSnap = await getDoc(userRef);
+        const friendUids = docSnap.data().friends || [];
 
-            setFriends((prevFriends) => [...prevFriends, userId]);
-            setUserList((prevUserList) => prevUserList.filter((user) => user.uid !== userId));
-        } catch (error) {
-            console.log("Error adding friend:", error);
+        const friendsData = await Promise.all(
+            friendUids.map(async (uid) => {
+                const friendRef = doc(db, "users", uid);
+                const friendSnap = await getDoc(friendRef);
+                return {uid, ...friendSnap.data()}
+            })
+        );
+
+        setFriends([...friendsData]);
+    }
+
+    useEffect(() => {
+        if (currentUser) {
+            initUserList().catch((error) => console.log(error));
+            initFriends().catch((error) => console.log(error));
         }
-    };
+    }, [currentUser])
 
-    // Function to remove a friend
-    const handleRemoveFriend = async (friendId) => {
-        if (!currentUser) return;
-
-        try {
-            const userRef = doc(db, "users", currentUser.uid);
-            await updateDoc(userRef, {
-                friends: arrayRemove(friendId),
-            });
-
-            setFriends((prevFriends) => prevFriends.filter((id) => id !== friendId));
-            fetchUserData();  // Refresh both lists after removal
-        } catch (error) {
-            console.log("Error removing friend:", error);
+    useEffect(() => {
+        if (userList.length && friends.length) {
+            console.log(friends)
+            const friendUids = friends.map(friend => friend.uid);
+            // update userList based on friends
+            setUserList(userList.filter((user) => !friendUids.includes(user.uid)));
         }
-    };
+    }, [friends]);
+
+
+    async function addFriend(user) {
+        setModalOn(false);
+
+        const userRef = doc(collection(db, "users"), currentUser.uid);
+        try {
+            await updateDoc(userRef, {
+                friends: arrayUnion(user.uid),
+            });
+            // update the friends list in here
+            setFriends(prevFriends => [...prevFriends, user]);
+            setUserList(prevUserList => prevUserList.filter(u => u.uid !== user.uid));
+            setFriendToAdd(null);
+            setFriendToAdd(null);
+        } catch(error) {
+            console.log("error adding friend: ", error);
+        }
+        console.log("friends update: ", friends)
+    }
+
+    // removes friend from currentUser's friend list
+    async function removeFriend(user) {
+        setModalOn(false);
+
+        const userRef = doc(collection(db, "users"), currentUser.uid);
+        try {
+            await updateDoc(userRef, {
+                friends: arrayRemove(user.uid),
+            });
+            setFriends((prevFriends) => prevFriends.filter((f) => f.uid !== user.uid));
+            setUserList([...userList, user]);
+            setFriendToRemove(null);
+        } catch (error) {
+            console.log("error removing friend: ", error);
+        }
+    }
+
+    // verifies potential friend by uid
+    async function updateFriendToAdd(user) {
+        const userRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(userRef);
+        setFriendToAdd(docSnap.data())
+        setModalOn(true);
+    }
+
+    // verfies friend to remove by uid
+    async function updateFriendToRemove(user) {
+        const userRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(userRef);
+        setFriendToRemove(docSnap.data())
+        setModalOn(true);
+    }
 
     return (
         <div className="row">
             <div className="col">
                 <UserList
                     userList={userList}
-                    setUserList={setUserList}
-                    //onFriendUpdate={onFriendUpdate}
-
-                    // userList={userList}
-                    // onAddFriend={handleAddFriend()}
+                    updateFriend={updateFriendToAdd}
                 >
                 </UserList>
             </div>
             <div className="col">
                 <FriendsList
-                    userList={userList}
-                    setUserList={setUserList}
-                    //onFriendUpdate={onFriendUpdate}
-
-                    // friends={friends}
-                    // onRemoveFriend={handleRemoveFriend}
+                    detailedFriends={friends}
+                    updateFriend={updateFriendToRemove}
                 ></FriendsList>
             </div>
+            <Dialog
+                open={modalOn}
+                onClose={(e) => setModalOn(false)}>
+                <DialogContent> {(friendToRemove != null || friendToAdd != null) && (
+                    <DialogContentText>
+                        {friendToRemove ? `Remove @${friendToRemove.username}?` : `Add @${friendToAdd.username}?`}
+                    </DialogContentText>
+                )}
+                </DialogContent>
+                <DialogActions>
+                    <button
+                        className="mt-3 btn btn-danger border"
+                        onClick={(e) => {
+                            friendToRemove ? removeFriend(friendToRemove) : addFriend(friendToAdd)
+                        }}>
+                        Yes
+                    </button>
+                    <button className="mt-3 btn border" onClick={(e) => setModalOn(false)}>
+                        No
+                    </button>
+                </DialogActions>
+            </Dialog>
         </div>
     );
 }
