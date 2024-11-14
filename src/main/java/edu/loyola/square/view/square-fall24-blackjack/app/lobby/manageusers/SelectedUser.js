@@ -100,7 +100,7 @@ function SelectedUser({ userInfo }) {
 
     return (
         <div>
-            <h1 className="UserList-header p-2 pt-3 rounded-top mt-3 mb-0">{userInfo.username}'s Account</h1>
+            <h1 className="UserList-header p-2 pt-3 rounded-top mt-3 mb-0">{userInfo ? `${userInfo.username}'s Info` : "Selected User Info"}</h1>
             <div className="UserList-container p-10 h-96 rounded-bottom overflow-y-auto shadow-md">
                 <div className="space-y-2 pt-1 p-4">
 
