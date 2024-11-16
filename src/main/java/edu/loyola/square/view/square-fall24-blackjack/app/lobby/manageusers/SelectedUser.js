@@ -1,7 +1,5 @@
 import "../managefriends/UserList.css";
-import Link from "next/link";
-import React, {useEffect, useState} from "react";
-import { updatePassword } from "firebase/auth";
+import React, { useEffect, useState } from "react";
 
 function SelectedUser({ userInfo, setErr, setErrMsg, setSuccess, setSuccessMsg }) {
     const [username, setUsername] = useState("");
@@ -23,30 +21,25 @@ function SelectedUser({ userInfo, setErr, setErrMsg, setSuccess, setSuccessMsg }
             "password": password,
         };
 
-        if (password.trim().length !== 0) {
-            const response = await fetch("http://localhost:8080/api/user/reset-password", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(body),
-            });
+        const response = await fetch("http://localhost:8080/api/user/reset-password", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body),
+        });
 
-            if (!response.ok) {
-                setErrMsg("Check that the new password is at least 8 characters long.");
-                setErr(true);
-                return;
-            }
-
-            else {
-                setSuccessMsg("Successfully reset password.")
-                setSuccess(true);
-            }
-            console.log("Password successfully reset");
-        } else {
-            setErrMsg("Password field must be populated to update");
+        // new password isn't valid, so doesn't reset
+        if (!response.ok) {
+            setErrMsg("Check that the new password is at least 8 characters long.");
             setErr(true);
         }
+
+        else {
+            setSuccessMsg("Successfully reset password.")
+            setSuccess(true);
+        }
+
     }
 
     // handle form input changes

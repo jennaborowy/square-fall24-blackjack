@@ -1,12 +1,10 @@
 "use client";
 import "../../globals.css"
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import "../managefriends/UserList.css";
 import AllUsers from "@/app/lobby/manageusers/AllUsers";
 import SelectedUser from "@/app/lobby/manageusers/SelectedUser";
 import { useAuth } from "@/app/context/auth";
-import { arrayRemove, arrayUnion, doc, updateDoc } from "firebase/firestore";
-import { db } from "@/firebaseConfig";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
