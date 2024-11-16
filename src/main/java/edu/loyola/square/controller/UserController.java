@@ -7,6 +7,7 @@ import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
 import com.google.firebase.auth.UserRecord;
 import com.google.firebase.auth.UserRecord.CreateRequest;
+import com.google.firebase.auth.UserRecord.UpdateRequest;
 import com.google.firebase.cloud.FirestoreClient;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.DocumentReference;
@@ -64,6 +65,28 @@ public class UserController {
       return ResponseEntity.internalServerError().build();
     }
   }
+
+  @PostMapping("/reset-password")
+  public ResponseEntity<Object> resetPassword(@Valid @RequestBody AuthDTO authDTO) {
+    try {
+      //User user = userService.getUserByUsername(userDTO.getUsername());
+      System.out.println("hellooooo");
+//      System.out.println(userDTO.getPassword());
+//      System.out.println(userDTO.getId());
+      UpdateRequest request = new UserRecord.UpdateRequest(authDTO.getUid())
+              .setPassword(authDTO.getPassword());
+
+      UserRecord userRecord = FirebaseAuth.getInstance().updateUser(request);
+      return ResponseEntity.ok(userRecord);
+
+    } catch (Exception e) {
+      System.out.println(authDTO);
+      System.out.println(authDTO.getPassword());
+      System.out.println(authDTO.getUid());
+      return ResponseEntity.internalServerError().build();
+    }
+  }
+
 
   @DeleteMapping("/delete")
   public ResponseEntity<String> deleteUser(@RequestBody AuthDTO authDTO) throws FirebaseAuthException {

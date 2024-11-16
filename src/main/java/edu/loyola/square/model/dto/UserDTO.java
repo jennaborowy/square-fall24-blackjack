@@ -2,7 +2,7 @@ package edu.loyola.square.model.dto;
 
 public class UserDTO {
 
-  private Long userID;
+  private String userID;
 
   private String username;
 
@@ -31,7 +31,8 @@ public class UserDTO {
     this.password = password;
   }
 
-  public UserDTO(String username, String password, String firstName, String lastName, String email) {
+  public UserDTO(String userID, String username, String password, String firstName, String lastName, String email) {
+    this.userID = userID;
     this.username = username;
     this.password = password;
     this.firstName = firstName;
@@ -43,7 +44,7 @@ public class UserDTO {
     return "User " + username;
   }
 
-  public Long getId() { return userID;}
+  public String getId() { return userID;}
 
   public String getUsername() { return username;}
 
