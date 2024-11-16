@@ -7,11 +7,20 @@ import SelectedUser from "@/app/lobby/manageusers/SelectedUser";
 import { useAuth } from "@/app/context/auth";
 import { arrayRemove, arrayUnion, doc, updateDoc } from "firebase/firestore";
 import { db } from "@/firebaseConfig";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogActions from "@mui/material/DialogActions";
+import Dialog from "@mui/material/Dialog";
 
 
 function ManageUsers() {
     const [userList, setUserList] = useState([]);
     const [selectedUser, setSelectedUser] = useState(null);
+    const [err, setErr] = useState(false);
+    const [errMsg, setErrMsg] = useState("");
+    const [success, setSuccess] = useState(false);
+    const [successMsg, setSuccessMsg] = useState("");
 
     const currentUser = useAuth().currentUser;
 
@@ -50,10 +59,38 @@ function ManageUsers() {
             <div className="col">
                 <SelectedUser
                     userInfo={selectedUser}
+                    setErr={setErr}
+                    setErrMsg={setErrMsg}
+                    setSuccess={setSuccess}
+                    setSuccessMsg={setSuccessMsg}
                 >
                 </SelectedUser>
 
             </div>
+            <Dialog
+                onClose={(e) => {
+                    err ? setErr(false) : setSuccess(true)
+                }}
+                open={err || success}
+            >
+                <DialogTitle id="alert-dialog-title">
+                    {err ? "Error" : "Success"}
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="alert-dialog-description">
+                        {err ? errMsg : successMsg}
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <button
+                        className="btn btn-light border"
+                        onClick={(e) => {
+                            setErr(false);
+                            setSuccess(false);
+                        }}
+                    >Exit</button>
+                </DialogActions>
+            </Dialog>
         </div>
     );
 }
