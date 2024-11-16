@@ -1,184 +1,314 @@
 package edu.loyola.square.controller;
 
-import edu.loyola.square.model.Player;
-import edu.loyola.square.model.Game;
-
-import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.Serializable;
+import java.util.*;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
-public class GameController {
-  private final Object lock = new Object();
-  private int endGameLocation;
-
-  @ModelAttribute("game")
-  public Game newGame() {
-    List<Player> players = new ArrayList<>();
-    players.add(new Player("Player 1", 100));
-    players.add(new Player("Player 2", 100));
-    return new Game(players);
+public class GameController implements Serializable {
+  public enum GameStatus {
+    PLAYER_WIN,
+    DEALER_WIN,
+    PUSH,
+    PLAYER_BLACKJACK,
+    DEALER_BLACKJACK,
+    PLAYER_BUST,
+    DEALER_BUST,
+    IN_PROGRESS,
+    NEXT_PLAYER
   }
 
-  @GetMapping("/hello")
-  public String hello() {
-    return "Hello World";
+  private final Object lock = new Object();
+  private Deck deck;
+  private List<Card> dealerHand;
+  private Map<String, List<Card>> playerHands;
+  private List<String> players;
+  private int currentPlayerIndex;
+  private boolean gameStarted;
+  private GameStatus status;
+  private Map<String, Boolean> playerTurnComplete;
+
+  private static class Card {
+    private final String suit;
+    private final String rank;
+
+    public Card(String suit, String rank) {
+      this.suit = suit;
+      this.rank = rank;
+    }
+
+    public String getSuit() { return suit; }
+    public String getRank() { return rank; }
+    public int getValue() {
+      return switch (rank) {
+        case "A" -> 11;
+        case "K", "Q", "J" -> 10;
+        default -> Integer.parseInt(rank);
+      };
+    }
+  }
+
+  private static class Deck {
+    private final List<Card> cards = new ArrayList<>();
+    private static final String[] SUITS = {"H", "D", "C", "S"};
+    private static final String[] RANKS = {"A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"};
+
+    public Deck() {
+      for (String suit : SUITS) {
+        for (String rank : RANKS) {
+          cards.add(new Card(suit, rank));
+        }
+      }
+      Collections.shuffle(cards);
+    }
+
+    public Card dealCard() {
+      return !cards.isEmpty() ? cards.remove(0) : null;
+    }
   }
 
   @PostMapping("/gamestart")
-  public ResponseEntity<Map<String, Object>> startGame(HttpSession session) {
-    session.removeAttribute("game");
-    List<Player> players = new ArrayList<>();
-    players.add(new Player("Player 1", 100));
-    players.add(new Player("Player 2", 100));
-    Game newGame = new Game(players);
-
-    if (newGame != null) {
-      System.out.println("Game is found");
-      newGame.initializeGame();
-      session.setAttribute("game", newGame);
-      Map<String, Object> gameState = getGameState(newGame);
-
-      Player currentPlayer = newGame.getCurrentPlayer();
-      if(currentPlayer.getPlayerHand().blackjack()) {
-        endGameLocation = 1;
-        Map<String, Object> status = newGame.endGameStatus(1);
-        gameState.put("gameStatus", status);
-        gameState.put("hasAce", false);
-        return ResponseEntity.ok(gameState);
-      } else if (currentPlayer.getPlayerHand().getAceCount() > 0) {
-        gameState.put("hasAce", true);
-        return ResponseEntity.ok(gameState);
-      } else {
-        gameState.put("hasAce", false);
-      }
-
-      System.out.println(gameState);
-      return ResponseEntity.ok(gameState);
-    }
-    return ResponseEntity.badRequest().body(Map.of("Error:", "Game failed to start"));
-  }
-
-  @PostMapping("/stand")
-  public ResponseEntity<Map<String, Object>> playerStand(HttpSession session) {
+  public ResponseEntity<Map<String, Object>> startGame(@RequestBody Map<String, Object> request) {
     synchronized (lock) {
-      Game game = (Game) session.getAttribute("game");
-      if (game != null) {
-        game.takeDealerTurn();
-        endGameLocation = 3;
-        Map<String, Object> gameState = getGameState(game);
-        Map<String, Object> status = game.endGameStatus(3);
-        gameState.put("gameStatus", status);
-        game.nextPlayer();
-        session.setAttribute("game", game);
-        System.out.println("Standing gameState is: " + gameState);
-        return ResponseEntity.ok(gameState);
+      this.deck = new Deck();
+      this.players = (List<String>) request.get("players");
+      this.currentPlayerIndex = 0;
+      this.gameStarted = true;
+      this.playerHands = new HashMap<>();
+      this.playerTurnComplete = new HashMap<>();
+      this.dealerHand = new ArrayList<>();
+      this.status = GameStatus.IN_PROGRESS;
+
+      // Deal initial cards
+      dealerHand.add(deck.dealCard());
+      dealerHand.add(deck.dealCard());
+
+      for (String playerId : players) {
+        List<Card> hand = new ArrayList<>();
+        hand.add(deck.dealCard());
+        hand.add(deck.dealCard());
+        playerHands.put(playerId, hand);
+        playerTurnComplete.put(playerId, false);
       }
-      return ResponseEntity.badRequest().body(Map.of("Error:", "Game failed to start"));
+
+      Map<String, Object> gameState = getGameState();
+
+      // Check for initial blackjack
+      String currentPlayer = players.get(currentPlayerIndex);
+      if (calculateHandValue(playerHands.get(currentPlayer)) == 21) {
+        playerTurnComplete.put(currentPlayer, true);
+        if (shouldDealerPlay()) {
+          gameState.put("gameStatus", createGameStatus(GameStatus.PLAYER_BLACKJACK));
+        } else {
+          nextPlayer();
+          gameState.put("gameStatus", createGameStatus(GameStatus.NEXT_PLAYER));
+        }
+      }
+
+      gameState.put("hasAce", hasAce(playerHands.get(currentPlayer)));
+      return ResponseEntity.ok(gameState);
     }
   }
 
   @PostMapping("/hit")
-  public ResponseEntity<Map<String, Object>> playerHit(HttpSession session) {
+  public ResponseEntity<Map<String, Object>> playerHit() {
     synchronized (lock) {
-      Game game = (Game) session.getAttribute("game");
-      boolean gameNull = game != null;
-      System.out.println(gameNull);
+      String currentPlayer = players.get(currentPlayerIndex);
+      List<Card> currentHand = playerHands.get(currentPlayer);
+      currentHand.add(deck.dealCard());
 
-      if (game != null) {
-        System.out.println("game not null");
-        Map<String, Object> gameState = getGameState(game);
-        Player currentPlayer = game.getCurrentPlayer();
-        game.hit(currentPlayer.getPlayerHand());
-        gameState = getGameState(game);
+      Map<String, Object> gameState = getGameState();
+      int handValue = calculateHandValue(currentHand);
 
-        if (gameState.get("hasAce").equals(true)) {
-          return ResponseEntity.ok(gameState);
+      if (handValue > 21) {
+        playerTurnComplete.put(currentPlayer, true);
+        if (shouldDealerPlay()) {
+          gameState.put("gameStatus", createGameStatus(GameStatus.PLAYER_BUST));
+        } else {
+          nextPlayer();
+          gameState.put("gameStatus", createGameStatus(GameStatus.NEXT_PLAYER));
         }
-
-        if(currentPlayer.getPlayerHand().getValue() >= 21) {
-          endGameLocation = 2;
-          Map<String, Object> status = game.endGameStatus(2);
-          gameState.put("gameStatus", status);
-          game.nextPlayer();
+      } else if (handValue == 21) {
+        playerTurnComplete.put(currentPlayer, true);
+        if (shouldDealerPlay()) {
+          gameState.put("gameStatus", createGameStatus(GameStatus.PLAYER_WIN));
+        } else {
+          nextPlayer();
+          gameState.put("gameStatus", createGameStatus(GameStatus.NEXT_PLAYER));
         }
-
-        session.setAttribute("game", game);
-        System.out.println("Hit Gamestate" + gameState);
-        return ResponseEntity.ok(gameState);
       }
-      return ResponseEntity.badRequest().body(Map.of("Error:", "Game failed to start"));
+
+      gameState.put("hasAce", hasAce(currentHand));
+      return ResponseEntity.ok(gameState);
+    }
+  }
+
+  @PostMapping("/stand")
+  public ResponseEntity<Map<String, Object>> playerStand() {
+    synchronized (lock) {
+      String currentPlayer = players.get(currentPlayerIndex);
+      playerTurnComplete.put(currentPlayer, true);
+
+      Map<String, Object> gameState = getGameState();
+
+      if (shouldDealerPlay()) {
+        // Complete dealer's turn
+        while (calculateHandValue(dealerHand) < 17) {
+          dealerHand.add(deck.dealCard());
+        }
+
+        determineFinalOutcomes();
+        gameState = getGameState(); // Get updated state after determining outcomes
+        gameState.put("gameStatus", createFinalGameStatus());
+      } else {
+        nextPlayer();
+        gameState.put("gameStatus", createGameStatus(GameStatus.NEXT_PLAYER));
+      }
+
+      return ResponseEntity.ok(gameState);
     }
   }
 
   @PostMapping("/promptAce")
-  public ResponseEntity<Map<String, Object>> promptAce(HttpSession session, @RequestBody Map<String, Object> requestAce) {
+  public ResponseEntity<Map<String, Object>> promptAce(@RequestBody Map<String, Object> request) {
     synchronized (lock) {
-      Game game = (Game) session.getAttribute("game");
-      if(game != null) {
-        Integer aceValue = (Integer) requestAce.get("aceValue");
-        Player currentPlayer = game.getCurrentPlayer();
+      Integer aceValue = (Integer) request.get("aceValue");
+      String currentPlayer = players.get(currentPlayerIndex);
+      List<Card> currentHand = playerHands.get(currentPlayer);
 
-        if (aceValue != null && (aceValue == 1 || aceValue == 11)) {
-          currentPlayer.getPlayerHand().setAceValue(aceValue);
+      Map<String, Object> gameState = getGameState();
+      gameState.put("aceValue", aceValue);
+
+      int handValue = calculateHandValue(currentHand);
+      if (handValue > 21) {
+        playerTurnComplete.put(currentPlayer, true);
+        if (shouldDealerPlay()) {
+          gameState.put("gameStatus", createGameStatus(GameStatus.PLAYER_BUST));
+        } else {
+          nextPlayer();
+          gameState.put("gameStatus", createGameStatus(GameStatus.NEXT_PLAYER));
         }
-
-        Map<String, Object> gameState = getGameState(game);
-        gameState.put("aceValue", aceValue);
-
-        int handValue = currentPlayer.getPlayerHand().getValue();
-        if (handValue > 21) {
-          Map<String, Object> status = game.endGameStatus(2);
-          gameState.put("gameStatus", status);
-          game.nextPlayer();
-        } else if (handValue == 21) {
-          Map<String, Object> status = game.endGameStatus(1);
-          gameState.put("gameStatus", status);
-          game.nextPlayer();
+      } else if (handValue == 21) {
+        playerTurnComplete.put(currentPlayer, true);
+        if (shouldDealerPlay()) {
+          gameState.put("gameStatus", createGameStatus(GameStatus.PLAYER_WIN));
+        } else {
+          nextPlayer();
+          gameState.put("gameStatus", createGameStatus(GameStatus.NEXT_PLAYER));
         }
-
-        session.setAttribute("game", game);
-        return ResponseEntity.ok(gameState);
       }
-      return ResponseEntity.badRequest().body(Map.of("Error:", "Failed to store ace"));
+
+      return ResponseEntity.ok(gameState);
     }
   }
 
-  public Map<String, Object> getGameState(Game game) {
-    Map<String, Object> gameState = new HashMap<>();
-    if (game != null) {
-      List<Map<String, Object>> playerStates = new ArrayList<>();
+  private boolean shouldDealerPlay() {
+    return playerTurnComplete.values().stream().allMatch(complete -> complete);
+  }
 
-      // Add state for each player
-      for (Player player : game.getPlayers()) {
-        Map<String, Object> playerState = new HashMap<>();
-        playerState.put("name", player.getName());
-        playerState.put("hand", player.getPlayerHand().getHand());
-        playerState.put("value", player.getPlayerHand().getValue());
-        playerState.put("hasAce", player.getHasAce());
-        playerStates.add(playerState);
+  private void determineFinalOutcomes() {
+    int dealerValue = calculateHandValue(dealerHand);
+    boolean dealerBust = dealerValue > 21;
+
+    for (String playerId : players) {
+      int playerValue = calculateHandValue(playerHands.get(playerId));
+
+      if (playerValue > 21) {
+        status = GameStatus.PLAYER_BUST;
+      } else if (dealerBust) {
+        status = GameStatus.DEALER_BUST;
+      } else if (playerValue > dealerValue) {
+        status = GameStatus.PLAYER_WIN;
+      } else if (dealerValue > playerValue) {
+        status = GameStatus.DEALER_WIN;
+      } else {
+        status = GameStatus.PUSH;
       }
-
-      gameState.put("players", playerStates);
-      gameState.put("currentPlayerIndex", game.getPlayers().indexOf(game.getCurrentPlayer()));
-
-      // Add dealer information
-      if (game.getDealerHand() != null) {
-        gameState.put("dealerHand", game.getDealerHand().getHand());
-        gameState.put("dealerValue", game.getDealerHand().getValue());
-      }
-
-      // Set hasAce for current player
-      Player currentPlayer = game.getCurrentPlayer();
-      gameState.put("hasAce", currentPlayer.getHasAce());
-
-      System.out.println("Game state is: " + gameState);
     }
+  }
+
+  private Map<String, Object> createFinalGameStatus() {
+    Map<String, Object> gameStatus = new HashMap<>();
+    gameStatus.put("endStatus", status.toString());
+    gameStatus.put("endMessage", getResultMessage(status));
+    gameStatus.put("finalDealerHand", dealerHand);
+    gameStatus.put("dealerValue", calculateHandValue(dealerHand));
+    return gameStatus;
+  }
+
+  private Map<String, Object> getGameState() {
+    Map<String, Object> gameState = new HashMap<>();
+    List<Map<String, Object>> playerStates = new ArrayList<>();
+
+    for (String playerId : players) {
+      Map<String, Object> playerState = new HashMap<>();
+      List<Card> hand = playerHands.get(playerId);
+      playerState.put("hand", hand);
+      playerState.put("value", calculateHandValue(hand));
+      playerState.put("hasAce", hasAce(hand));
+      playerState.put("isActive", !playerTurnComplete.get(playerId));
+      playerStates.add(playerState);
+    }
+
+    gameState.put("players", playerStates);
+    gameState.put("currentPlayerIndex", currentPlayerIndex);
+    gameState.put("dealerHand", dealerHand);
+    gameState.put("dealerValue", calculateHandValue(dealerHand));
+
+    String currentPlayer = players.get(currentPlayerIndex);
+    gameState.put("hasAce", hasAce(playerHands.get(currentPlayer)));
+    gameState.put("isCurrentPlayerActive", !playerTurnComplete.get(currentPlayer));
+
     return gameState;
+  }
+
+  private Map<String, Object> createGameStatus(GameStatus status) {
+    Map<String, Object> gameStatus = new HashMap<>();
+    gameStatus.put("endStatus", status.toString());
+    gameStatus.put("endMessage", getResultMessage(status));
+    return gameStatus;
+  }
+
+  private String getResultMessage(GameStatus status) {
+    return switch (status) {
+      case PLAYER_WIN -> "Player Wins!";
+      case DEALER_WIN -> "Dealer Wins!";
+      case PUSH -> "Push!";
+      case PLAYER_BLACKJACK -> "Blackjack!";
+      case DEALER_BLACKJACK -> "Dealer Blackjack!";
+      case PLAYER_BUST -> "Player Bust!";
+      case DEALER_BUST -> "Dealer Bust!";
+      case NEXT_PLAYER -> "Next Player's Turn";
+      case IN_PROGRESS -> "IN_PLAY";
+    };
+  }
+
+  private int calculateHandValue(List<Card> hand) {
+    int value = 0;
+    int aceCount = 0;
+
+    for (Card card : hand) {
+      if (card.getRank().equals("A")) {
+        aceCount++;
+      }
+      value += card.getValue();
+    }
+
+    while (value > 21 && aceCount > 0) {
+      value -= 10;
+      aceCount--;
+    }
+
+    return value;
+  }
+
+  private boolean hasAce(List<Card> hand) {
+    return hand.stream().anyMatch(card -> card.getRank().equals("A"));
+  }
+
+  private void nextPlayer() {
+    currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
   }
 }
