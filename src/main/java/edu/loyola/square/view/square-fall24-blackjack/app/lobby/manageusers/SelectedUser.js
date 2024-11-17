@@ -1,4 +1,4 @@
-import "../managefriends/UserList.css";
+import "./SelectedUser.css";
 import React, { useEffect, useState } from "react";
 
 function SelectedUser({ userInfo, setErr, setErrMsg, setSuccess, setSuccessMsg }) {
@@ -60,48 +60,79 @@ function SelectedUser({ userInfo, setErr, setErrMsg, setSuccess, setSuccessMsg }
 
     return (
         <div>
-            <h1 className="UserList-header p-2 pt-3 rounded-top mt-3 mb-0">{userInfo ? `${userInfo.username}'s Info` : "Selected User Info"}</h1>
-            <div className="UserList-container p-10 h-96 rounded-bottom overflow-y-auto shadow-md">
-                <div className="space-y-2 pt-1 p-4">
+            <h1 className="SelectedUser-header p-2 pt-3 rounded-top mt-3 mb-0">{userInfo ? `${userInfo.username}'s Info` : "Selected User Info"}</h1>
+            <div className="SelectedUser-container p-10 rounded-bottom overflow-y-auto shadow-md">
+                <div className="space-y-2 pt-1 p-4 d-flex flex-column">
                     {userInfo && (
-                    <div className="form">
-                        <form onSubmit={(e) => handleSubmit(e)}>
+                    <div>
+                        <div className="form-style flex-grow-1 pb-3">
+                            <form className="flex-shrink-0" onSubmit={(e) => handleSubmit(e)}>
 
-                            <label htmlFor={userInfo.firstName}>{userInfo.firstName}</label>
-                            <div className="input">
-                                <input type="text" placeholder="Enter New First Name" name="first" onInput={handleChange}/>
-                            </div>
+                                <div className="m-3">
+                                    <label htmlFor={userInfo.firstName}>{userInfo.firstName}</label>
+                                    <input
+                                        className="form-control"
+                                        type="text"
+                                        placeholder="Enter New First Name"
+                                        name="first"
+                                        onInput={handleChange}
+                                    />
 
-                            <label htmlFor={userInfo.lastName}>{userInfo.lastName}</label>
-                            <div className="input">
-                                <input type="text" placeholder="Enter New Last Name" name="last" onInput={handleChange}/>
-                            </div>
+                                </div>
 
-                            <label htmlFor={userInfo.username}>{userInfo.username}</label>
-                            <div className="input">
-                                <input type="text" placeholder="Enter New Username" name="username" onInput={handleChange}
-                                       required/>
-                            </div>
+                                <div className="m-3">
+                                    <label htmlFor={userInfo.lastName}>{userInfo.lastName}</label>
+                                    <input
+                                        className="form-control"
+                                        type="text"
+                                        placeholder="Enter New Last Name"
+                                        name="last"
+                                        onInput={handleChange}
+                                    />
+                                </div>
 
-                            <label htmlFor={userInfo.email}>{userInfo.email}</label>
-                            <div className="input">
-                                <input type="text" placeholder="Enter New Email" name="email" onInput={handleChange}/>
-                            </div>
+                                <div className="m-3">
+                                    <label htmlFor={userInfo.username}>{userInfo.username}</label>
+                                    <input
+                                        className="form-control"
+                                        type="text"
+                                        placeholder="Enter New Username"
+                                        name="username"
+                                        onInput={handleChange}
+                                    />
+                                </div>
 
-                            <button className="btn btn-success" type="submit" title="submit">
-                                Edit Account
-                            </button>
-                        </form>
+                                <div className="m-3">
+                                    <label htmlFor={userInfo.email}>{userInfo.email}</label>
+                                    <input
+                                        className="form-control"
+                                        type="text"
+                                        placeholder="Enter New Email"
+                                        name="email"
+                                        onInput={handleChange}
+                                    />
+                                </div>
 
-                        <form onSubmit={(e) => handlePasswordReset(e)}>
-                            <div className="input">
-                                <input type="password" placeholder="Enter New Password" name="password" onInput={handleChange}/>
-                            </div>
+                                <button className="btn btn-success m-3" type="submit" title="submit">
+                                    Edit Account
+                                </button>
 
-                            <button className="btn btn-danger" type="submit" title="change password">
-                                Change Password
-                            </button>
-                        </form>
+                            </form>
+                        </div>
+                        <div>
+                            <form className="password-change d-flex align-items-center" onSubmit={(e) => handlePasswordReset(e)}>
+                                <div className="input-group m-3 w-100">
+                                    <input
+                                        className="form-control"
+                                        type="password"
+                                        placeholder="Enter New Password"
+                                        name="password"
+                                        onInput={handleChange}
+                                    />
+                                    <button className="btn btn-danger" type="submit">Reset Password</button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                     )}
                 </div>
