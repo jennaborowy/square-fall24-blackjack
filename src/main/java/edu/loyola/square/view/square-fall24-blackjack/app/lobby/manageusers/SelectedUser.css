@@ -9,7 +9,7 @@
 /* Style for UserList container */
 .SelectedUser-container {
     width: 45vw;
-    height: 85vh;
+    height: 600px;
     background-color: rgba(0, 0, 0, 0.7);
     margin-bottom: 20px;
     color: lightgrey;
@@ -28,7 +28,7 @@
 }
 
 .password-change {
-    height: 22vh;
+    height: 155px;
     background-color: #5B0F0F;
     border: 1px solid #5B0F0F;
 }
