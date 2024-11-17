@@ -25,7 +25,7 @@ public class GameController implements Serializable {
   private List<Card> dealerHand;
   private Map<String, List<Card>> playerHands;
   private List<String> players;
-  private int currentPlayerIndex;
+  private int playerIndex;
   private boolean gameStarted;
   private GameStatus status;
   private Map<String, Boolean> playerTurnComplete;
@@ -74,7 +74,7 @@ public class GameController implements Serializable {
     synchronized (lock) {
       this.deck = new Deck();
       this.players = (List<String>) request.get("players");
-      this.currentPlayerIndex = 0;
+      this.playerIndex = 0;
       this.gameStarted = true;
       this.playerHands = new HashMap<>();
       this.playerTurnComplete = new HashMap<>();
@@ -96,7 +96,7 @@ public class GameController implements Serializable {
       Map<String, Object> gameState = getGameState();
 
       // Check for initial blackjack
-      String currentPlayer = players.get(currentPlayerIndex);
+      String currentPlayer = players.get(playerIndex);
       if (calculateHandValue(playerHands.get(currentPlayer)) == 21) {
         playerTurnComplete.put(currentPlayer, true);
         if (shouldDealerPlay()) {
@@ -115,7 +115,7 @@ public class GameController implements Serializable {
   @PostMapping("/hit")
   public ResponseEntity<Map<String, Object>> playerHit() {
     synchronized (lock) {
-      String currentPlayer = players.get(currentPlayerIndex);
+      String currentPlayer = players.get(playerIndex);
       List<Card> currentHand = playerHands.get(currentPlayer);
       currentHand.add(deck.dealCard());
 
@@ -148,7 +148,7 @@ public class GameController implements Serializable {
   @PostMapping("/stand")
   public ResponseEntity<Map<String, Object>> playerStand() {
     synchronized (lock) {
-      String currentPlayer = players.get(currentPlayerIndex);
+      String currentPlayer = players.get(playerIndex);
       playerTurnComplete.put(currentPlayer, true);
 
       Map<String, Object> gameState = getGameState();
@@ -175,7 +175,7 @@ public class GameController implements Serializable {
   public ResponseEntity<Map<String, Object>> promptAce(@RequestBody Map<String, Object> request) {
     synchronized (lock) {
       Integer aceValue = (Integer) request.get("aceValue");
-      String currentPlayer = players.get(currentPlayerIndex);
+      String currentPlayer = players.get(playerIndex);
       List<Card> currentHand = playerHands.get(currentPlayer);
 
       Map<String, Object> gameState = getGameState();
@@ -253,11 +253,11 @@ public class GameController implements Serializable {
     }
 
     gameState.put("players", playerStates);
-    gameState.put("currentPlayerIndex", currentPlayerIndex);
+    gameState.put("currentPlayerIndex", playerIndex);
     gameState.put("dealerHand", dealerHand);
     gameState.put("dealerValue", calculateHandValue(dealerHand));
 
-    String currentPlayer = players.get(currentPlayerIndex);
+    String currentPlayer = players.get(playerIndex);
     gameState.put("hasAce", hasAce(playerHands.get(currentPlayer)));
     gameState.put("isCurrentPlayerActive", !playerTurnComplete.get(currentPlayer));
 
@@ -309,6 +309,6 @@ public class GameController implements Serializable {
   }
 
   private void nextPlayer() {
-    currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
+    playerIndex = (playerIndex + 1);
   }
 }
