@@ -27,8 +27,8 @@ public class GameController implements Serializable {
   private List<String> players;
   private int playerIndex;
   private boolean gameStarted;
-  private GameStatus status;
   private Map<String, Boolean> playerTurnComplete;
+  private Map<String, GameStatus> playerStatuses;
 
   private static class Card {
     private final String suit;
@@ -79,35 +79,35 @@ public class GameController implements Serializable {
       this.playerHands = new HashMap<>();
       this.playerTurnComplete = new HashMap<>();
       this.dealerHand = new ArrayList<>();
-      this.status = GameStatus.IN_PROGRESS;
+      this.playerStatuses = new HashMap<>();
+
+      // Set all players to in progress status at start of game
+      for (String playerId : players) {
+        playerStatuses.put(playerId, GameStatus.IN_PROGRESS);
+        playerTurnComplete.put(playerId, false);
+
+        List<Card> hand = new ArrayList<>();
+        hand.add(deck.dealCard());
+        hand.add(deck.dealCard());
+        playerHands.put(playerId, hand);
+
+        // Check for initial blackjack
+        if (calculateHandValue(hand) == 21) {
+          playerTurnComplete.put(playerId, true);
+          playerStatuses.put(playerId, GameStatus.PLAYER_BLACKJACK);
+        }
+      }
 
       // Deal initial cards
       dealerHand.add(deck.dealCard());
       dealerHand.add(deck.dealCard());
 
-      for (String playerId : players) {
-        List<Card> hand = new ArrayList<>();
-        hand.add(deck.dealCard());
-        hand.add(deck.dealCard());
-        playerHands.put(playerId, hand);
-        playerTurnComplete.put(playerId, false);
-      }
-
       Map<String, Object> gameState = getGameState();
 
-      // Check for initial blackjack
       String currentPlayer = players.get(playerIndex);
-      if (calculateHandValue(playerHands.get(currentPlayer)) == 21) {
-        playerTurnComplete.put(currentPlayer, true);
-        if (shouldDealerPlay()) {
-          gameState.put("gameStatus", createGameStatus(GameStatus.PLAYER_BLACKJACK));
-        } else {
-          nextPlayer();
-          gameState.put("gameStatus", createGameStatus(GameStatus.NEXT_PLAYER));
-        }
+      if (playerTurnComplete.get(currentPlayer)) {
+        nextPlayer();
       }
-
-      gameState.put("hasAce", hasAce(playerHands.get(currentPlayer)));
       return ResponseEntity.ok(gameState);
     }
   }
@@ -119,28 +119,28 @@ public class GameController implements Serializable {
       List<Card> currentHand = playerHands.get(currentPlayer);
       currentHand.add(deck.dealCard());
 
-      Map<String, Object> gameState = getGameState();
       int handValue = calculateHandValue(currentHand);
+      Map<String, Object> gameState = getGameState();
 
       if (handValue > 21) {
         playerTurnComplete.put(currentPlayer, true);
+        playerStatuses.put(currentPlayer, GameStatus.PLAYER_BUST);
+
         if (shouldDealerPlay()) {
-          gameState.put("gameStatus", createGameStatus(GameStatus.PLAYER_BUST));
+          playDealer();
         } else {
           nextPlayer();
-          gameState.put("gameStatus", createGameStatus(GameStatus.NEXT_PLAYER));
         }
       } else if (handValue == 21) {
         playerTurnComplete.put(currentPlayer, true);
+        playerStatuses.put(currentPlayer, GameStatus.PLAYER_WIN);
+
         if (shouldDealerPlay()) {
-          gameState.put("gameStatus", createGameStatus(GameStatus.PLAYER_WIN));
+          playDealer();
         } else {
           nextPlayer();
-          gameState.put("gameStatus", createGameStatus(GameStatus.NEXT_PLAYER));
         }
       }
-
-      gameState.put("hasAce", hasAce(currentHand));
       return ResponseEntity.ok(gameState);
     }
   }
@@ -151,23 +151,12 @@ public class GameController implements Serializable {
       String currentPlayer = players.get(playerIndex);
       playerTurnComplete.put(currentPlayer, true);
 
-      Map<String, Object> gameState = getGameState();
-
       if (shouldDealerPlay()) {
-        // Complete dealer's turn
-        while (calculateHandValue(dealerHand) < 17) {
-          dealerHand.add(deck.dealCard());
-        }
-
-        determineFinalOutcomes();
-        gameState = getGameState(); // Get updated state after determining outcomes
-        gameState.put("gameStatus", createFinalGameStatus());
+        playDealer();
       } else {
         nextPlayer();
-        gameState.put("gameStatus", createGameStatus(GameStatus.NEXT_PLAYER));
       }
-
-      return ResponseEntity.ok(gameState);
+      return ResponseEntity.ok(getGameState());
     }
   }
 
@@ -177,65 +166,57 @@ public class GameController implements Serializable {
       Integer aceValue = (Integer) request.get("aceValue");
       String currentPlayer = players.get(playerIndex);
       List<Card> currentHand = playerHands.get(currentPlayer);
-
-      Map<String, Object> gameState = getGameState();
-      gameState.put("aceValue", aceValue);
-
       int handValue = calculateHandValue(currentHand);
+
       if (handValue > 21) {
         playerTurnComplete.put(currentPlayer, true);
+        playerStatuses.put(currentPlayer, GameStatus.PLAYER_BUST);
+
         if (shouldDealerPlay()) {
-          gameState.put("gameStatus", createGameStatus(GameStatus.PLAYER_BUST));
+          playDealer();
         } else {
           nextPlayer();
-          gameState.put("gameStatus", createGameStatus(GameStatus.NEXT_PLAYER));
         }
       } else if (handValue == 21) {
         playerTurnComplete.put(currentPlayer, true);
+        playerStatuses.put(currentPlayer, GameStatus.PLAYER_WIN);
+
         if (shouldDealerPlay()) {
-          gameState.put("gameStatus", createGameStatus(GameStatus.PLAYER_WIN));
+          playDealer();
         } else {
           nextPlayer();
-          gameState.put("gameStatus", createGameStatus(GameStatus.NEXT_PLAYER));
         }
       }
 
-      return ResponseEntity.ok(gameState);
+      return ResponseEntity.ok(getGameState());
     }
   }
 
-  private boolean shouldDealerPlay() {
-    return playerTurnComplete.values().stream().allMatch(complete -> complete);
-  }
+  private void playDealer() {
+    while (calculateHandValue(dealerHand) < 17) {
+      dealerHand.add(deck.dealCard());
+    }
 
-  private void determineFinalOutcomes() {
     int dealerValue = calculateHandValue(dealerHand);
     boolean dealerBust = dealerValue > 21;
 
     for (String playerId : players) {
+      if (playerStatuses.get(playerId) == GameStatus.PLAYER_BUST) {
+        continue;
+      }
+
       int playerValue = calculateHandValue(playerHands.get(playerId));
 
-      if (playerValue > 21) {
-        status = GameStatus.PLAYER_BUST;
-      } else if (dealerBust) {
-        status = GameStatus.DEALER_BUST;
-      } else if (playerValue > dealerValue) {
-        status = GameStatus.PLAYER_WIN;
+      if (dealerBust) {
+        playerStatuses.put(playerId, GameStatus.DEALER_BUST);
       } else if (dealerValue > playerValue) {
-        status = GameStatus.DEALER_WIN;
+        playerStatuses.put(playerId, GameStatus.DEALER_WIN);
+      } else if (playerValue > dealerValue) {
+        playerStatuses.put(playerId, GameStatus.PLAYER_WIN);
       } else {
-        status = GameStatus.PUSH;
+        playerStatuses.put(playerId, GameStatus.PUSH);
       }
     }
-  }
-
-  private Map<String, Object> createFinalGameStatus() {
-    Map<String, Object> gameStatus = new HashMap<>();
-    gameStatus.put("endStatus", status.toString());
-    gameStatus.put("endMessage", getResultMessage(status));
-    gameStatus.put("finalDealerHand", dealerHand);
-    gameStatus.put("dealerValue", calculateHandValue(dealerHand));
-    return gameStatus;
   }
 
   private Map<String, Object> getGameState() {
@@ -249,6 +230,7 @@ public class GameController implements Serializable {
       playerState.put("value", calculateHandValue(hand));
       playerState.put("hasAce", hasAce(hand));
       playerState.put("isActive", !playerTurnComplete.get(playerId));
+      playerState.put("status", playerStatuses.get(playerId));
       playerStates.add(playerState);
     }
 
@@ -258,31 +240,14 @@ public class GameController implements Serializable {
     gameState.put("dealerValue", calculateHandValue(dealerHand));
 
     String currentPlayer = players.get(playerIndex);
-    gameState.put("hasAce", hasAce(playerHands.get(currentPlayer)));
+    //gameState.put("hasAce", hasAce(playerHands.get(currentPlayer)));
     gameState.put("isCurrentPlayerActive", !playerTurnComplete.get(currentPlayer));
 
     return gameState;
   }
 
-  private Map<String, Object> createGameStatus(GameStatus status) {
-    Map<String, Object> gameStatus = new HashMap<>();
-    gameStatus.put("endStatus", status.toString());
-    gameStatus.put("endMessage", getResultMessage(status));
-    return gameStatus;
-  }
-
-  private String getResultMessage(GameStatus status) {
-    return switch (status) {
-      case PLAYER_WIN -> "Player Wins!";
-      case DEALER_WIN -> "Dealer Wins!";
-      case PUSH -> "Push!";
-      case PLAYER_BLACKJACK -> "Blackjack!";
-      case DEALER_BLACKJACK -> "Dealer Blackjack!";
-      case PLAYER_BUST -> "Player Bust!";
-      case DEALER_BUST -> "Dealer Bust!";
-      case NEXT_PLAYER -> "Next Player's Turn";
-      case IN_PROGRESS -> "IN_PLAY";
-    };
+  private boolean shouldDealerPlay() {
+    return playerTurnComplete.values().stream().allMatch(complete -> complete);
   }
 
   private int calculateHandValue(List<Card> hand) {

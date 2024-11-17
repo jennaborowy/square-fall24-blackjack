@@ -92,18 +92,22 @@ export default function CardDisplay({ tableId }) {
     }
   };
 
-  const updateGameState = async (newPlayerHands, newDealerHand, newPlayerIndex) => {
-    if (!tableId) return;
-
+  const updateTableStatus = async (playerId, status) => {
     try {
       const tableRef = doc(db, 'Table', tableId);
-      await updateDoc(tableRef, {
-        playerHands: newPlayerHands,
-        dealerHand: newDealerHand,
-        playerIndex: newPlayerIndex
-      });
+      const tableDoc = await getDoc(tableRef);
+
+      if (tableDoc.exists()) {
+        const currentStatuses = tableDoc.data().playerStatuses || {};
+        await updateDoc(tableRef, {
+          playerStatuses: {
+            ...currentStatuses,
+            [playerId]: status
+          }
+        });
+      }
     } catch (error) {
-      console.error("Error updating hands in Firestore:", error);
+      console.error("Error updating table status:", error);
     }
   };
 
@@ -203,62 +207,6 @@ export default function CardDisplay({ tableId }) {
       return false;
     }
   };
-
-  async function endGame(gameState) {
-    if (!gameState || !gameState.gameStatus) return;
-
-    const status = gameState.gameStatus.endStatus;
-    if (status !== "IN_PROGRESS" && status !== "NEXT_PLAYER") {
-      isGameOver(true);
-
-      // Process each player in the game
-      for (let i = 0; i < players.length; i++) {
-        const playerId = players[i];
-        const playerBet = playerBets[playerId]?.amount || 0;
-        const docRef = doc(db, 'users', playerId);
-        const docSnap = await getDoc(docRef);
-
-        if (!docSnap.exists()) continue;
-
-        const userData = docSnap.data();
-        const currentChips = userData['chipBalance'];
-        const currentWins = userData['totalWins'];
-        const currentLosses = userData['totalLosses'];
-
-        switch(status) {
-          case "PLAYER_WIN":
-          case "DEALER_BUST":
-            await updateDoc(docRef, {
-              totalWins: currentWins + 1,
-              chipBalance: currentChips + playerBet
-            });
-            break;
-
-          case "PLAYER_BLACKJACK":
-            const blackjackPayout = Math.trunc(playerBet * 1.5);
-            await updateDoc(docRef, {
-              totalWins: currentWins + 1,
-              chipBalance: currentChips + blackjackPayout
-            });
-            break;
-
-          case "DEALER_WIN":
-          case "DEALER_BLACKJACK":
-          case "PLAYER_BUST":
-            await updateDoc(docRef, {
-              totalLosses: currentLosses + 1,
-              chipBalance: currentChips - playerBet
-            });
-            break;
-
-          case "PUSH":
-            break;
-        }
-      }
-
-      setGameStatusMessage(gameState.gameStatus.endMessage);
-    }
-  }
 
   const handleLeaveTable = async () => {
     if (!tableId || !auth?.currentUser?.uid) {
@@ -379,6 +327,94 @@ export default function CardDisplay({ tableId }) {
         }
       });
 
+      // Debug logs for current player
+      const currentPlayerId = players[playerIndex];
+      console.log('Current player index:', playerIndex);
+      console.log('Current player ID:', currentPlayerId);
+      console.log('Game status:', result.gameStatus?.endStatus);
+
+      // Handle player bust status and update stats immediately
+      if (result.gameStatus?.endStatus === "PLAYER_BUST") {
+        const docRef = doc(db, 'users', currentPlayerId);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          const userData = docSnap.data();
+          const currentBet = playerBets[currentPlayerId]?.amount || 0;
+          console.log('Player bust - updating stats:', {
+            playerId: currentPlayerId,
+            currentChips: userData.chipBalance,
+            bet: currentBet
+          });
+
+          await updateDoc(docRef, {
+            totalLosses: userData.totalLosses + 1,
+            chipBalance: userData.chipBalance - currentBet
+          });
+
+          await updateTableStatus(currentPlayerId, "PLAYER_BUST");
+        }
+      }
+
+      // If this is the last player and their hand is complete, handle dealer play
+      if (playerIndex === players.length - 1 &&
+          (result.gameStatus?.endStatus === "PLAYER_BUST" ||
+              result.gameStatus?.endStatus === "NEXT_PLAYER")) {
+
+        // Check if any players haven't busted
+        const hasActivePlayers = result.players.some((player, idx) => {
+          return player.value <= 21 && idx < players.length;
+        });
+
+        if (hasActivePlayers) {
+          // Handle dealer outcomes for all players
+          for (let i = 0; i < players.length; i++) {
+            const playerId = players[i];
+            const playerBet = playerBets[playerId]?.amount || 0;
+            const docRef = doc(db, 'users', playerId);
+            const docSnap = await getDoc(docRef);
+
+            if (!docSnap.exists()) continue;
+
+            const userData = docSnap.data();
+            const playerState = result.players[i];
+            const status = result.gameStatus?.endStatus;
+            const playerValue = playerState.value;
+            const dealerValue = result.dealerHand?.reduce((total, card) => total + card.value, 0) || 0;
+
+            // If player busted, they've already been handled above
+            if (playerValue > 21) continue;
+
+            // Determine outcome based on player and dealer values
+            if (dealerValue > 21) {
+              // Player wins only if they haven't busted
+              await updateDoc(docRef, {
+                totalWins: userData.totalWins + 1,
+                chipBalance: userData.chipBalance + playerBet
+              });
+              await updateTableStatus(playerId, "PLAYER_WIN");
+            } else if (dealerValue > playerValue) {
+              // Dealer wins if they haven't busted and beat the player
+              await updateDoc(docRef, {
+                totalLosses: userData.totalLosses + 1,
+                chipBalance: userData.chipBalance - playerBet
+              });
+              await updateTableStatus(playerId, "DEALER_WIN");
+            } else if (dealerValue < playerValue) {
+              // Player wins if they beat the dealer
+              await updateDoc(docRef, {
+                totalWins: userData.totalWins + 1,
+                chipBalance: userData.chipBalance + playerBet
+              });
+              await updateTableStatus(playerId, "PLAYER_WIN");
+            } else {
+              // Push - no changes to balance needed
+              await updateTableStatus(playerId, "PUSH");
+            }
+          }
+        }
+      }
+
       setPlayerHands(newPlayerHands);
 
       if (!result.players[playerIndex].isActive ||
@@ -388,20 +424,13 @@ export default function CardDisplay({ tableId }) {
         await updatePlayerIndex();
       }
 
-      console.log("AFTER PLAYER HITS AND IS INACTIVE", playerIndex)
-
-
       await updateDoc(doc(db, 'Table', tableId), {
         playerHands: newPlayerHands,
         dealerHand: result.dealerHand || []
       });
 
-      console.log("AFTER UPDATE GAME STATE", playerIndex)
-
-
-      endGame(result);
     } catch (error) {
-      console.log("Hit failed", error);
+      console.error("Hit failed:", error);
     }
   };
 
@@ -428,21 +457,77 @@ export default function CardDisplay({ tableId }) {
         }
       });
 
+      // If this is the last player, handle dealer play
+      if (playerIndex === players.length - 1) {
+        // Check if any players haven't busted
+        const hasActivePlayers = result.players.some((player, idx) => {
+          return player.value <= 21 && idx < players.length;
+        });
+
+        if (hasActivePlayers) {
+          // Handle dealer outcomes for all players
+          for (let i = 0; i < players.length; i++) {
+            const playerId = players[i];
+            const playerBet = playerBets[playerId]?.amount || 0;
+            const docRef = doc(db, 'users', playerId);
+            const docSnap = await getDoc(docRef);
+
+            if (!docSnap.exists()) continue;
+
+            const userData = docSnap.data();
+            const playerState = result.players[i];
+            const playerValue = playerState.value;
+            const dealerValue = result.dealerHand?.reduce((total, card) => total + card.value, 0) || 0;
+
+            // If player busted, they've already lost
+            if (playerValue > 21) {
+              await updateDoc(docRef, {
+                totalLosses: userData.totalLosses + 1,
+                chipBalance: userData.chipBalance - playerBet
+              });
+              await updateTableStatus(playerId, "PLAYER_BUST");
+              continue;
+            }
+
+            // Determine outcome based on player and dealer values
+            if (dealerValue > 21) {
+              // Player wins only if they haven't busted
+              await updateDoc(docRef, {
+                totalWins: userData.totalWins + 1,
+                chipBalance: userData.chipBalance + playerBet
+              });
+              await updateTableStatus(playerId, "PLAYER_WIN");
+            } else if (dealerValue > playerValue) {
+              // Dealer wins if they haven't busted and beat the player
+              await updateDoc(docRef, {
+                totalLosses: userData.totalLosses + 1,
+                chipBalance: userData.chipBalance - playerBet
+              });
+              await updateTableStatus(playerId, "DEALER_WIN");
+            } else if (dealerValue < playerValue) {
+              // Player wins if they beat the dealer
+              await updateDoc(docRef, {
+                totalWins: userData.totalWins + 1,
+                chipBalance: userData.chipBalance + playerBet
+              });
+              await updateTableStatus(playerId, "PLAYER_WIN");
+            } else {
+              // Push - no changes to balance needed
+              await updateTableStatus(playerId, "PUSH");
+            }
+          }
+        }
+      }
+
       setPlayerHands(newPlayerHands);
       setPlayerStand(true);
       await updatePlayerIndex();
-
-      console.log("AFTER STAND FUNCTION", playerIndex)
 
       await updateDoc(doc(db, 'Table', tableId), {
         playerHands: newPlayerHands,
         dealerHand: result.dealerHand || []
       });
 
-      console.log("AFTER UPDATE GAME STATE", playerIndex)
-
-
-      endGame(result);
     } catch (error) {
       console.log("Stand failed", error);
     }
