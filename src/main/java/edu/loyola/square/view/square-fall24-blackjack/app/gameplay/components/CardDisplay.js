@@ -11,7 +11,7 @@ import Form from "react-bootstrap/Form";
 import {FriendsIcon, MessageIcon} from '../icons';
 import PlaceBetAnimation from '../BetTypeAnimation'
 import { auth, db } from "@/firebaseConfig";
-import { doc, getDoc, deleteDoc, updateDoc, arrayRemove } from 'firebase/firestore';
+import {doc, getDoc, deleteDoc, updateDoc, arrayRemove, onSnapshot} from 'firebase/firestore';
 import ChatBox from "@/app/messages/chatbox/chatbox";
 
 export default function CardDisplay({ tableId }) {
@@ -26,43 +26,89 @@ export default function CardDisplay({ tableId }) {
   const [betAmount, setBetAmount] = useState("");
   const [betError, setBetError] = useState("");
   const [players, setPlayers] = useState([]);
-  const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
+  const [playerIndex, setPlayerIndex] = useState(0);
   const [isValidBet, setIsValidBet] = useState(false);
-
+  const [playerBets, setPlayerBets] = useState({});
+  const isFirstPlayer = auth?.currentUser?.uid === players[0];
+  const allPlayersHaveBet = players.length > 0 && players.every(playerId => playerBets[playerId]?.isValid);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const isCurrentPlayer = auth?.currentUser?.uid === players[playerIndex];
 
   const MIN_BET = 0;
   const MAX_BET = 10000;
-  const BET_INCREMENT = 5;
+  const BET_INCREMENT = 10;
 
   useEffect(() => {
-    console.log("Initial tableId:", tableId);
-    if (!tableId) {
-      console.log("No tableId on mount");
-      const storedTableId = sessionStorage.getItem('gameTableId');
-      if (storedTableId) {
-        console.log("Found stored tableId:", storedTableId);
-        // You might want to handle this case
+    if (!tableId) return;
+
+    const unsubscribe = onSnapshot(doc(db, 'Table', tableId), (snapshot) => {
+      if (snapshot.exists()) {
+        const tableData = snapshot.data();
+
+        if (tableData.playerHands) {
+          setPlayerHands(tableData.playerHands);
+        }
+
+        if (tableData.dealerHand) {
+          setDealerHand(tableData.dealerHand);
+        }
+
+        if (typeof tableData.playerIndex === 'number') {
+          setPlayerIndex(tableData.playerIndex);
+          console.log("IN LISTENER", playerIndex)
+        }
+
+        if (typeof tableData.gameStarted === 'boolean') {
+          setGameStarted(tableData.gameStarted);
+        }
+
+        if (tableData.players && Array.isArray(tableData.players)) {
+          setPlayers(tableData.players);
+        }
+
+        if (tableData.playerBets) {
+          setPlayerBets(tableData.playerBets);
+        }
       }
+    }, (error) => {
+      console.error("Error in real-time listener:", error);
+    });
+
+    // Cleanup listener on component unmount
+    return () => unsubscribe();
+  }, [tableId]);
+
+  const updatePlayerIndex = async () => {
+    if (!tableId) return;
+
+    try {
+      const tableRef = doc(db, 'Table', tableId);
+      await updateDoc(tableRef, {
+        playerIndex: playerIndex + 1
+      });
+      console.log("AFTER UPDATE FUNCTION", playerIndex)
+    } catch (error) {
+      console.error("Error updating player index in Firestore:", error);
     }
-  }, []);
+  };
 
-  // Debug log for initial mount
-  useEffect(() => {
-    console.log("Component mounted with tableId:", tableId);
-  }, []);
+  const updateGameState = async (newPlayerHands, newDealerHand, newPlayerIndex) => {
+    if (!tableId) return;
 
-  // Debug logging for state changes
-  useEffect(() => {
-    console.log("Current players:", players);
-    console.log("Current player hands:", playerHands);
-    console.log("Current player index:", currentPlayerIndex);
-    console.log("Current user ID:", auth?.currentUser?.uid);
-  }, [players, playerHands, currentPlayerIndex]);
+    try {
+      const tableRef = doc(db, 'Table', tableId);
+      await updateDoc(tableRef, {
+        playerHands: newPlayerHands,
+        dealerHand: newDealerHand,
+        playerIndex: newPlayerIndex
+      });
+    } catch (error) {
+      console.error("Error updating hands in Firestore:", error);
+    }
+  };
 
   useEffect(() => {
     const loadPlayers = async () => {
-      console.log("Loading players with tableId:", tableId);
       if (!tableId) {
         console.error("No tableId provided");
         return;
@@ -72,52 +118,44 @@ export default function CardDisplay({ tableId }) {
         const tableRef = doc(db, 'Table', tableId);
         const tableSnap = await getDoc(tableRef);
 
-        console.log("Raw Firestore snapshot:", tableSnap);
-
         if (tableSnap.exists()) {
           const tableData = tableSnap.data();
-          console.log("Table data loaded:", tableData);
-          console.log("Raw table data:", tableData);
-          console.log("Players from table:", tableData.players);
 
           if (tableData.players && Array.isArray(tableData.players) && tableData.players.length > 0) {
-            // Set players first
             setPlayers([...tableData.players]);
 
-            // Then initialize hands
-            const initialHands = {};
-            tableData.players.forEach(playerId => {
-              initialHands[playerId] = [];
-            });
-            setPlayerHands({...initialHands});
+            // Load saved hands if they exist
+            if (tableData.playerHands) {
+              setPlayerHands(tableData.playerHands);
+            } else {
+              const initialHands = {};
+              tableData.players.forEach(playerId => {
+                initialHands[playerId] = [];
+              });
+              setPlayerHands(initialHands);
+            }
 
-            // Store tableId
+            if (tableData.dealerHand) {
+              setDealerHand(tableData.dealerHand);
+            }
+
+            if (typeof tableData.playerIndex !== 'undefined') {
+              setPlayerIndex(tableData.playerIndex);
+              console.log("IN IF EXISTS", playerIndex)
+            }
+
             sessionStorage.setItem('gameTableId', tableId);
-
-            console.log("Players set to:", tableData.players);
-            console.log("Initial hands set to:", initialHands);
-          } else {
-            console.error("No players found in table data or invalid players array");
           }
-        } else {
-          console.error("Table document doesn't exist");
         }
       } catch (error) {
-        console.error("Error loading players:", error);
+        console.error("Error loading game state:", error);
       }
     };
 
     if (tableId) {
-      console.log("Triggering loadPlayers with tableId:", tableId);
       loadPlayers();
-    } else {
-      console.log("No tableId available yet");
     }
   }, [tableId]);
-
-  useEffect(() => {
-    console.log("Players state updated:", players);
-  }, [players]);
 
   const validateBet = async (betAmount) => {
     try {
@@ -170,36 +208,54 @@ export default function CardDisplay({ tableId }) {
     if (!gameState || !gameState.gameStatus) return;
 
     const status = gameState.gameStatus.endStatus;
-    if (status !== "IN_PROGRESS") {
+    if (status !== "IN_PROGRESS" && status !== "NEXT_PLAYER") {
       isGameOver(true);
 
-      const user = auth?.currentUser?.uid;
-      const docRef = doc(db, 'users', user);
-      const docSnap = await getDoc(docRef);
+      // Process each player in the game
+      for (let i = 0; i < players.length; i++) {
+        const playerId = players[i];
+        const playerBet = playerBets[playerId]?.amount || 0;
+        const docRef = doc(db, 'users', playerId);
+        const docSnap = await getDoc(docRef);
 
-      if (status == "PLAYER_WIN" ||
-          status == "PLAYER_BLACKJACK" || status == "DEALER_BUST") {
+        if (!docSnap.exists()) continue;
 
-        if (docSnap.exists()) {
-          const currentWins = docSnap.data()['totalWins'];
-          const currentChips = docSnap.data()['chipBalance'];
-          await updateDoc(docRef, {totalWins: currentWins + 1});
+        const userData = docSnap.data();
+        const currentChips = userData['chipBalance'];
+        const currentWins = userData['totalWins'];
+        const currentLosses = userData['totalLosses'];
 
-          if (status == "PLAYER_BLACKJACK") {
-            const payout = Math.trunc(Number(betAmount) * 1.5);
-            await updateDoc(docRef, {chipBalance: currentChips + payout});
-          } else
-            await updateDoc(docRef, {chipBalance: currentChips + Number(betAmount)});
-        }
-      } else if (status == "DEALER_WIN" ||
-          status == "DEALER_BLACKJACK" || status == "PLAYER_BUST") {
-        if (docSnap.exists()) {
-          const currentLosses = docSnap.data()['totalLosses'];
-          const currentChips = docSnap.data()['chipBalance'];
-          await updateDoc(docRef, {totalLosses: currentLosses + 1});
-          await updateDoc(docRef, {chipBalance: currentChips - Number(betAmount)});
+        switch(status) {
+          case "PLAYER_WIN":
+          case "DEALER_BUST":
+            await updateDoc(docRef, {
+              totalWins: currentWins + 1,
+              chipBalance: currentChips + playerBet
+            });
+            break;
+
+          case "PLAYER_BLACKJACK":
+            const blackjackPayout = Math.trunc(playerBet * 1.5);
+            await updateDoc(docRef, {
+              totalWins: currentWins + 1,
+              chipBalance: currentChips + blackjackPayout
+            });
+            break;
+
+          case "DEALER_WIN":
+          case "DEALER_BLACKJACK":
+          case "PLAYER_BUST":
+            await updateDoc(docRef, {
+              totalLosses: currentLosses + 1,
+              chipBalance: currentChips - playerBet
+            });
+            break;
+
+          case "PUSH":
+            break;
         }
       }
+
       setGameStatusMessage(gameState.gameStatus.endMessage);
     }
   }
@@ -235,19 +291,26 @@ export default function CardDisplay({ tableId }) {
     }
   };
 
+  const checkAllPlayerBets = () => {
+    if (!players.length) return false;
+
+    return players.every(playerId => {
+      const playerBet = playerBets[playerId];
+      return playerBet && playerBet.isValid && playerBet.amount > 0;
+    });
+  };
+
   const startGame = async () => {
-
-    console.log("Start game triggered");
-    console.log("Current players:", players);
-
     if (!players || players.length === 0) {
       console.error("No players available to start game");
       return;
     }
 
-    console.log("Using tableId:", tableId);
-    console.log("Starting game with players:", players);
-    setGameStarted(true);
+    const allBetsValid = checkAllPlayerBets();
+    if (!allBetsValid) {
+      console.error("Not all players have placed valid bets");
+      return;
+    }
 
     try {
       const response = await fetch('http://localhost:8080/gamestart', {
@@ -259,11 +322,10 @@ export default function CardDisplay({ tableId }) {
         body: JSON.stringify({
           players,
           tableId,
-          currentUserId: auth?.currentUser?.uid
+          currentUserId: auth?.currentUser?.uid,
+          playerBets: playerBets
         }),
       });
-
-      console.log("Game start response status:", response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -271,30 +333,29 @@ export default function CardDisplay({ tableId }) {
       }
 
       const result = await response.json();
-      console.log("Game start result:", result);
 
-      if (result.players && result.players.length > 0) {
-        const newPlayerHands = {};
-        result.players.forEach((playerState, index) => {
+      // Update Firestore with initial game state
+      const tableRef = doc(db, 'Table', tableId);
+      await updateDoc(tableRef, {
+        dealerHand: result.dealerHand || [],
+        playerHands: result.players.reduce((hands, playerState, index) => {
           if (players[index]) {
-            newPlayerHands[players[index]] = playerState.hand || [];
+            hands[players[index]] = playerState.hand || [];
           }
-        });
-        console.log("Setting new player hands:", newPlayerHands);
-        setPlayerHands(newPlayerHands);
-        setDealerHand(result.dealerHand || []);
-        setCurrentPlayerIndex(result.currentPlayerIndex || 0);
-        setGameState(result);
-      } else {
-        console.error("No player data in game start result");
-      }
+          return hands;
+        }, {}),
+        playerIndex: result.playerIndex || 0,
+        gameStarted: true
+      });
+
+      setGameState(result);
     } catch (error) {
       console.error("Game failed to start", error);
     }
   };
 
   const playerHits = async () => {
-    if (gameOver || auth?.currentUser?.uid !== players[currentPlayerIndex]) return;
+    if (gameOver || auth?.currentUser?.uid !== players[playerIndex]) return;
 
     try {
       const response = await fetch('http://localhost:8080/hit', {
@@ -319,9 +380,25 @@ export default function CardDisplay({ tableId }) {
       });
 
       setPlayerHands(newPlayerHands);
-      setDealerHand(result.dealerHand || []);
-      setCurrentPlayerIndex(result.currentPlayerIndex || 0);
-      setGameState(result);
+
+      if (!result.players[playerIndex].isActive ||
+          result.gameStatus?.endStatus === "PLAYER_WIN" ||
+          result.gameStatus?.endStatus === "PLAYER_BUST" ||
+          result.gameStatus?.endStatus === "NEXT_PLAYER") {
+        await updatePlayerIndex();
+      }
+
+      console.log("AFTER PLAYER HITS AND IS INACTIVE", playerIndex)
+
+
+      await updateDoc(doc(db, 'Table', tableId), {
+        playerHands: newPlayerHands,
+        dealerHand: result.dealerHand || []
+      });
+
+      console.log("AFTER UPDATE GAME STATE", playerIndex)
+
+
       endGame(result);
     } catch (error) {
       console.log("Hit failed", error);
@@ -329,7 +406,7 @@ export default function CardDisplay({ tableId }) {
   };
 
   const playerStands = async () => {
-    if (gameOver || auth?.currentUser?.uid !== players[currentPlayerIndex]) return;
+    if (gameOver || auth?.currentUser?.uid !== players[playerIndex]) return;
 
     try {
       const response = await fetch('http://localhost:8080/stand', {
@@ -352,10 +429,19 @@ export default function CardDisplay({ tableId }) {
       });
 
       setPlayerHands(newPlayerHands);
-      setDealerHand(result.dealerHand || []);
-      setCurrentPlayerIndex(result.currentPlayerIndex || 0);
       setPlayerStand(true);
-      setGameState(result);
+      await updatePlayerIndex();
+
+      console.log("AFTER STAND FUNCTION", playerIndex)
+
+      await updateDoc(doc(db, 'Table', tableId), {
+        playerHands: newPlayerHands,
+        dealerHand: result.dealerHand || []
+      });
+
+      console.log("AFTER UPDATE GAME STATE", playerIndex)
+
+
       endGame(result);
     } catch (error) {
       console.log("Stand failed", error);
@@ -363,7 +449,7 @@ export default function CardDisplay({ tableId }) {
   };
 
   const promptAce = async (selectedValue) => {
-    if (!gameStarted || !gameState || auth?.currentUser?.uid !== players[currentPlayerIndex]) return;
+    if (!gameStarted || !gameState || auth?.currentUser?.uid !== players[playerIndex]) return;
 
     try {
       const response = await fetch('http://localhost:8080/promptAce', {
@@ -386,10 +472,17 @@ export default function CardDisplay({ tableId }) {
       });
 
       setPlayerHands(newPlayerHands);
-      setDealerHand(result.dealerHand || []);
-      setCurrentPlayerIndex(result.currentPlayerIndex || 0);
       setGameState(result);
       setShowAceModal(false);
+
+      // Persist hands to Firestore
+      if (!result.players[playerIndex].isActive ||
+          result.gameStatus?.endStatus === "PLAYER_WIN" ||
+          result.gameStatus?.endStatus === "PLAYER_BUST" ||
+          result.gameStatus?.endStatus === "NEXT_PLAYER") {
+        await updatePlayerIndex();
+      }
+
     } catch (error) {
       console.log("Prompt Ace failed", error);
     }
@@ -397,23 +490,42 @@ export default function CardDisplay({ tableId }) {
 
   useEffect(() => {
     if (gameStarted && gameState && gameState.hasAce === true &&
-        auth?.currentUser?.uid === players[currentPlayerIndex]) {
+        auth?.currentUser?.uid === players[playerIndex]) {
       setShowAceModal(true);
     }
-  }, [gameState?.hasAce, currentPlayerIndex, players]);
+  }, [gameState?.hasAce, playerIndex, players]);
 
   const handleAceValueSelect = (value) => {
     promptAce(value);
   };
 
-  const handleBetPlaced = (betValue) => {
+  const handleBetPlaced = async (betValue) => {
     const bet = betValue.target.value;
-    if(validateBet(bet)) {
-      setBetAmount(bet);
+    setBetAmount(bet);
+    const isValid = await validateBet(bet);
+
+    if (isValid) {
+      // Update Firestore with the new bet
+      const tableRef = doc(db, 'Table', tableId);
+      const currentUserId = auth?.currentUser?.uid;
+
+      try {
+        const newPlayerBets = {
+          ...playerBets,
+          [currentUserId]: {
+            amount: parseFloat(bet),
+            isValid: true,
+          }
+        };
+
+        await updateDoc(tableRef, {playerBets: newPlayerBets});
+
+        setPlayerBets(newPlayerBets);
+      } catch (error) {
+        console.error("Error updating bet in Firestore:", error);
+      }
     }
   };
-
-  const isCurrentPlayer = auth?.currentUser?.uid === players[currentPlayerIndex];
 
   const handleClose = () => {
     console.log("Closing chat...");
@@ -432,95 +544,109 @@ export default function CardDisplay({ tableId }) {
           </div>
 
           {gameStarted && (
-            <div className="leave-btn">
-              <button className="mt-3 btn btn-danger" onClick={handleLeaveTable}>
-                Leave Game
-              </button>
-            </div>
-          )}
-
-          {!gameStarted && (
-            <div className="bet-container">
-              <div className="place-bet-title">
-                <div className="place-bet-content">
-                  <PlaceBetAnimation>
-                    Place Your Bet!
-                  </PlaceBetAnimation>
-                </div>
-              </div>
-              <div className="bet-value">
-                <InputGroup className="mb-3">
-                  <InputGroup.Text>$</InputGroup.Text>
-                  <Form.Control
-                    type="number"
-                    min={MIN_BET}
-                    max={MAX_BET}
-                    step={BET_INCREMENT}
-                    onChange={handleBetPlaced}
-                    isInvalid={!!betError}
-                    aria-label="Amount (to the nearest dollar)"
-                  />
-                  <InputGroup.Text>.00</InputGroup.Text>
-                </InputGroup>
-              </div>
-              <div className="start-container">
-                <button
-                  className="btn btn-lg btn-success"
-                  onClick={startGame}
-                  disabled={!isValidBet}
-                >
-                  Start Game
+              <div className="leave-btn">
+                <button className="mt-3 btn btn-danger" onClick={handleLeaveTable}>
+                  Leave Game
                 </button>
               </div>
-            </div>
           )}
 
+          {!gameStarted ? (
+              <div className="bet-container">
+                <div className="place-bet-title">
+                  <div className="place-bet-content">
+                    <PlaceBetAnimation>
+                      Place Your Bet!
+                    </PlaceBetAnimation>
+                  </div>
+                </div>
+                <div className="bet-value">
+                  <InputGroup className="mb-3">
+                    <InputGroup.Text>$</InputGroup.Text>
+                    <Form.Control
+                        type="number"
+                        min={MIN_BET}
+                        max={MAX_BET}
+                        step={BET_INCREMENT}
+                        onChange={handleBetPlaced}
+                        isInvalid={!!betError}
+                        aria-label="Amount (to the nearest dollar)"
+                    />
+                    <InputGroup.Text>.00</InputGroup.Text>
+                  </InputGroup>
+                </div>
+                {isFirstPlayer && (
+                    <div className="start-container">
+                      <button
+                          className="btn btn-lg btn-success"
+                          onClick={startGame}
+                          disabled={!allPlayersHaveBet}
+                      >
+                        {allPlayersHaveBet ? "Start Game" : "Waiting for all players to bet..."}
+                      </button>
+                    </div>
+                )}
+              </div>
+          ) : null}
+
           {gameStarted && (
-            <div className="dealerHand-container">
-              {dealerHand.map((card, index) => (
-                <Card key={index} suit={card.suit} rank={card.rank}/>
-              ))}
-            </div>
+              <div className="dealerHand-container">
+                {dealerHand.map((card, index) => (
+                    <Card key={index} suit={card.suit} rank={card.rank}/>
+                ))}
+              </div>
           )}
 
           {gameOver && (
-            <div className="end-container">
-              {gameStatusMessage}
-            </div>
+              <div className="end-container">
+                {gameStatusMessage}
+              </div>
           )}
 
-          {gameStarted && isCurrentPlayer && !playerStand && !gameOver && (
-            <div className="btn-container">
-              <button className="action-btn" onClick={playerHits}>Hit</button>
-              <button className="action-btn" onClick={playerStands}>Stand</button>
-            </div>
-          )}
-
-          {gameStarted && (
-            <div className="all-players-container">
-              {Array.isArray(players) && players.length > 0 ? (
-                players.map((playerId, index) => (
-                  <div key={playerId}
-                       className={`playerHand-container ${index === currentPlayerIndex ? 'active-player' : ''}`}>
-                    {playerHands && playerHands[playerId] && Array.isArray(playerHands[playerId]) ? (
-                      playerHands[playerId].map((card, cardIndex) => (
-                        <Card key={cardIndex} suit={card.suit} rank={card.rank}/>
-                      ))
-                    ) : (
-                      <div>Waiting for cards...</div>
-                    )}
-                  </div>
-                ))
-              ) : (
-                <div>Loading players...</div>
-              )}
-            </div>
+          {gameStarted && !gameOver && (
+              <div className="btn-container">
+                <button
+                    className="action-btn"
+                    onClick={playerHits}
+                    disabled={!isCurrentPlayer || playerStand}
+                >
+                  Hit
+                </button>
+                <button
+                    className="action-btn"
+                    onClick={playerStands}
+                    disabled={!isCurrentPlayer || playerStand}
+                >
+                  Stand
+                </button>
+              </div>
           )}
 
           {gameStarted && (
-            <div className="bet-value">
-              {betAmount}
-            </div>
+              <div className="all-players-container">
+                {Array.isArray(players) && players.length > 0 ? (
+                    players.map((playerId, index) => (
+                        <div key={playerId}
+                             className={`playerHand-container ${index === playerIndex ? 'active-player' : ''}`}>
+                          {playerHands && playerHands[playerId] && Array.isArray(playerHands[playerId]) ? (
+                              playerHands[playerId].map((card, cardIndex) => (
+                                  <Card key={cardIndex} suit={card.suit} rank={card.rank}/>
+                              ))
+                          ) : (
+                              <div>Waiting for cards...</div>
+                          )}
+                        </div>
+                    ))
+                ) : (
+                    <div>Loading players...</div>
+                )}
+              </div>
+          )}
+
+          {gameStarted && (
+              <div className="bet-value">
+                {betAmount}
+              </div>
           )}
           <div className="message-icon">
             <div className="icons-btn" onClick={() => setIsChatOpen((prev) => !prev)}>
@@ -528,16 +654,16 @@ export default function CardDisplay({ tableId }) {
               {isChatOpen && <ChatBox onClose={handleClose}/>}
             </div>
           </div>
-            {gameStarted && (
+          {gameStarted && (
               <div className="game-stats-container">
                 <GameInfo/>
               </div>
-            )}
-            <AceModal
+          )}
+          <AceModal
               showModal={showAceModal}
               onSelectValue={handleAceValueSelect}
-            />
-          </div>
+          />
         </div>
-        );
-        }
+      </div>
+  );
+}

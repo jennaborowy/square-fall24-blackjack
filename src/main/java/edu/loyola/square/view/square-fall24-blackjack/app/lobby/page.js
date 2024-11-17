@@ -56,7 +56,7 @@ function Lobby() {
                 id: doc.id,
                 ...doc.data()
             }));
-            console.log("Users data:", userData);
+            //console.log("Users data:", userData);
             setUsers(userData);
         });
 
