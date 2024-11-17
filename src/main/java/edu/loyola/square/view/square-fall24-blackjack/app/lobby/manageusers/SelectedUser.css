@@ -1,0 +1,37 @@
+/* Style for UserList header */
+.SelectedUser-header {
+    text-align: center;
+    color: lightgrey;
+    width: 45vw;
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+/* Style for UserList container */
+.SelectedUser-container {
+    width: 45vw;
+    height: 85vh;
+    background-color: rgba(0, 0, 0, 0.7);
+    margin-bottom: 20px;
+    color: lightgrey;
+    scrollbar-color: rgba(255, 255, 255, 0.2) rgba(30, 30, 30, .4);
+    scrollbar-width: thin;
+    box-sizing: border-box;
+    position: relative;
+}
+
+/* Style for form */
+.form-style {
+    position: relative;
+    background-color: #290000;
+    border: 1px solid #5B0F0F;
+    height: auto;
+}
+
+.password-change {
+    height: 22vh;
+    background-color: #5B0F0F;
+    border: 1px solid #5B0F0F;
+}
+
+
+

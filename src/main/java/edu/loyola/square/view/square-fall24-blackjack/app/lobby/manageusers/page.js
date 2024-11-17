@@ -1,7 +1,6 @@
 "use client";
 import "../../globals.css"
 import React, { useEffect, useState } from "react";
-import "../managefriends/UserList.css";
 import AllUsers from "@/app/lobby/manageusers/AllUsers";
 import SelectedUser from "@/app/lobby/manageusers/SelectedUser";
 import { useAuth } from "@/app/context/auth";
@@ -10,7 +9,6 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogActions from "@mui/material/DialogActions";
 import Dialog from "@mui/material/Dialog";
-
 
 function ManageUsers() {
     const [userList, setUserList] = useState([]);
