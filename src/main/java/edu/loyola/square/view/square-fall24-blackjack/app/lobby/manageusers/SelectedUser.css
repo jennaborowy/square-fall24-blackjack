@@ -28,10 +28,15 @@
 }
 
 .password-change {
-    height: 155px;
+    height: 180px;
     background-color: #5B0F0F;
     border: 1px solid #5B0F0F;
 }
+
+.reset-button {
+    width: 155px;
+}
+
 
 
 

@@ -180,57 +180,74 @@ function SelectedUser({ userInfo, setErr, setErrMsg, setSuccess, setSuccessMsg }
             <div className="SelectedUser-container p-10 rounded-bottom overflow-y-auto shadow-md">
                 <div className="space-y-2 pt-1 p-4 d-flex flex-column">
                     {userInfo && (
-                    <div>
-                        <div className="form-style flex-grow-1 pb-3">
-                            <form className="m-3" onSubmit={(e) => handleFirstNameChange(e)}>
-                                <label htmlFor={userInfo.firstName}>{userInfo.firstName}</label>
-                                <div className="input-group m-3 w-100">
-                                    <input className="form-control" type="text" placeholder="Enter New First Name" name="first"
-                                               onInput={handleChange}/>
-                                    <button className="btn btn-danger" type="submit" title="change first name">
-                                        Change First Name
-                                    </button>
-                                </div>
-                            </form>
+                        <div>
+                            <div className="form-style flex-grow-1">
+                                <form className="mx-3 my-4" onSubmit={(e) => handleFirstNameChange(e)}>
+                                    <label htmlFor={userInfo.firstName}>{userInfo.firstName}</label>
+                                    <div className="input-group w-100 d-flex align-items-center">
+                                        <input
+                                            className="form-control"
+                                            type="text"
+                                            placeholder="Enter New First Name"
+                                            name="first"
+                                            onInput={handleChange}/>
+                                        <button className="btn btn-danger reset-button" type="submit" title="change first name">
+                                            Reset First Name
+                                        </button>
+                                    </div>
+                                </form>
 
-                            <form className="m-3" onSubmit={(e) => handleLastNameChange(e)}>
-                                <label htmlFor={userInfo.lastName}>{userInfo.lastName}</label>
-                                <div className="input-group m-3 w-100">
-                                    <input className="form-control" type="text" placeholder="Enter New Last Name" name="last"
-                                               onInput={handleChange}/>
-                                    <button className="btn btn-danger" type="submit" title="change last name">
-                                        Change Last Name
-                                    </button>
-                                </div>
-                            </form>
+                                <form className="mx-3 my-4" onSubmit={(e) => handleLastNameChange(e)}>
+                                    <label htmlFor={userInfo.lastName}>{userInfo.lastName}</label>
+                                    <div className="input-group w-100 d-flex align-items-center">
+                                        <input
+                                            className="form-control"
+                                            type="text"
+                                            placeholder="Enter New Last Name"
+                                            name="last"
+                                            onInput={handleChange}/>
+                                        <button className="btn btn-danger reset-button" type="submit" title="change last name">
+                                            Reset Last Name
+                                        </button>
+                                    </div>
+                                </form>
 
-                            <form className="m-3" onSubmit={(e) => handleUsernameChange(e)}>
-                                <label htmlFor={userInfo.username}>{userInfo.username}</label>
-                                <div className="input-group m-3 w-100">
-                                    <input className="form-control" type="text" placeholder="Enter New Username" name="username"
-                                               onInput={handleChange}
-                                               required/>
+                                <form className="mx-3 my-4" onSubmit={(e) => handleUsernameChange(e)}>
+                                    <label htmlFor={userInfo.username}>{userInfo.username}</label>
+                                    <div className="input-group w-100 d-flex align-items-center">
+                                        <input
+                                            className="form-control"
+                                            type="text"
+                                            placeholder="Enter New Username"
+                                            name="username"
+                                            onInput={handleChange}
+                                            required/>
 
-                                    <button className="btn btn-danger" type="submit" title="change username">
-                                        Change Username
-                                    </button>
-                                </div>
-                            </form>
+                                        <button className="btn btn-danger reset-button" type="submit" title="change username">
+                                            Reset Username
+                                        </button>
+                                    </div>
+                                </form>
 
-                            <form className="m-3" onSubmit={(e) => handleEmailChange(e)}>
-                                <label htmlFor={userInfo.email}>{userInfo.email}</label>
-                                <div className="input-group m-3 w-100">
-                                    <input className="form-control" type="text" placeholder="Enter New Email" name="email"
-                                               onInput={handleChange}/>
+                                <form className="mx-3 my-4" onSubmit={(e) => handleEmailChange(e)}>
+                                    <label htmlFor={userInfo.email}>{userInfo.email}</label>
+                                    <div className="input-group w-100 d-flex align-items-center">
+                                        <input
+                                            className="form-control"
+                                            type="text"
+                                            placeholder="Enter New Email"
+                                            name="email"
+                                            onInput={handleChange}
+                                        />
+                                        <button className="btn btn-danger reset-button" type="submit" title="change email">
+                                            Reset Email
+                                        </button>
+                                    </div>
+                                </form>
 
-                                    <button className="btn btn-danger" type="submit" title="change email">
-                                        Change Email
-                                    </button>
-                                </div>
-                            </form>
 
-                            <div>
-                                <form className="password-change d-flex align-items-center" onSubmit={(e) => handlePasswordReset(e)}>
+                                <form className="password-change d-flex align-items-center"
+                                      onSubmit={(e) => handlePasswordReset(e)}>
                                     <div className="input-group m-3 w-100">
                                         <input
                                             className="form-control"
@@ -239,16 +256,18 @@ function SelectedUser({ userInfo, setErr, setErrMsg, setSuccess, setSuccessMsg }
                                             name="password"
                                             onInput={handleChange}
                                         />
-                                        <button className="btn btn-danger" type="submit">Reset Password</button>
+                                        <button className="btn btn-danger reset-button" type="submit">
+                                            Reset Password
+                                        </button>
                                     </div>
                                 </form>
                             </div>
                         </div>
-                    </div>
                     )}
                 </div>
             </div>
         </div>
     );
 }
-    export default SelectedUser;
+
+export default SelectedUser;
