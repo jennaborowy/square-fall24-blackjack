@@ -1,13 +1,28 @@
 package edu.loyola.square.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.io.Serializable;
 import java.util.*;
+import java.io.IOException;
 
+@SpringBootApplication
 @RestController
 @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class GameController implements Serializable {
+
+
+  private static final Logger logger = LoggerFactory.getLogger(GameController.class);
+
+  private void logDebug(String message) {
+    logger.debug(message);  // Changed from info to debug
+    logger.info(message);   // Keep info if needed
+    System.out.println(message);  // Keep console output if needed
+  }
+
   public enum GameStatus {
     PLAYER_WIN,
     DEALER_WIN,
@@ -95,6 +110,7 @@ public class GameController implements Serializable {
         if (calculateHandValue(hand) == 21) {
           playerTurnComplete.put(playerId, true);
           playerStatuses.put(playerId, GameStatus.PLAYER_BLACKJACK);
+          playerIndex = (playerIndex + 1);
         }
       }
 
@@ -103,11 +119,6 @@ public class GameController implements Serializable {
       dealerHand.add(deck.dealCard());
 
       Map<String, Object> gameState = getGameState();
-
-      String currentPlayer = players.get(playerIndex);
-      if (playerTurnComplete.get(currentPlayer)) {
-        nextPlayer();
-      }
       return ResponseEntity.ok(gameState);
     }
   }
@@ -115,46 +126,60 @@ public class GameController implements Serializable {
   @PostMapping("/hit")
   public ResponseEntity<Map<String, Object>> playerHit() {
     synchronized (lock) {
+      if (playerIndex >= players.size()) {
+        return ResponseEntity.ok(getGameState());
+      }
+
       String currentPlayer = players.get(playerIndex);
+
+      // Check if player has already busted or won
+      GameStatus playerStatus = playerStatuses.get(currentPlayer);
+      if (playerStatus == GameStatus.PLAYER_BUST ||
+              playerStatus == GameStatus.PLAYER_WIN ||
+              playerTurnComplete.get(currentPlayer)) {
+        return ResponseEntity.badRequest().body(Map.of(
+                "error", "Invalid player state for hit.",
+                "playerStatus", playerStatus,
+                "playerIndex", playerIndex,
+                "currentPlayer", currentPlayer
+        ));
+      }
+
       List<Card> currentHand = playerHands.get(currentPlayer);
       currentHand.add(deck.dealCard());
 
       int handValue = calculateHandValue(currentHand);
-      Map<String, Object> gameState = getGameState();
-
       if (handValue > 21) {
-        playerTurnComplete.put(currentPlayer, true);
         playerStatuses.put(currentPlayer, GameStatus.PLAYER_BUST);
-
-        if (shouldDealerPlay()) {
-          playDealer();
-        } else {
-          nextPlayer();
-        }
-      } else if (handValue == 21) {
         playerTurnComplete.put(currentPlayer, true);
+        advanceTurn();
+      } else if (handValue == 21) {
         playerStatuses.put(currentPlayer, GameStatus.PLAYER_WIN);
-
-        if (shouldDealerPlay()) {
-          playDealer();
-        } else {
-          nextPlayer();
-        }
+        playerTurnComplete.put(currentPlayer, true);
+        advanceTurn();
       }
-      return ResponseEntity.ok(gameState);
+
+      Map<String, Object> response = getGameState();
+      response.put("currentPlayerIndex", playerIndex);
+      response.put("currentPlayerStatus", playerStatuses.get(currentPlayer));
+
+      return ResponseEntity.ok(response);
     }
   }
 
   @PostMapping("/stand")
   public ResponseEntity<Map<String, Object>> playerStand() {
     synchronized (lock) {
+      if (playerIndex >= players.size()) {
+        return ResponseEntity.ok(getGameState()); // Return current state instead of error
+      }
+
       String currentPlayer = players.get(playerIndex);
       playerTurnComplete.put(currentPlayer, true);
+      advanceTurn();
 
       if (shouldDealerPlay()) {
         playDealer();
-      } else {
-        nextPlayer();
       }
       return ResponseEntity.ok(getGameState());
     }
@@ -174,8 +199,6 @@ public class GameController implements Serializable {
 
         if (shouldDealerPlay()) {
           playDealer();
-        } else {
-          nextPlayer();
         }
       } else if (handValue == 21) {
         playerTurnComplete.put(currentPlayer, true);
@@ -183,8 +206,6 @@ public class GameController implements Serializable {
 
         if (shouldDealerPlay()) {
           playDealer();
-        } else {
-          nextPlayer();
         }
       }
 
@@ -192,27 +213,48 @@ public class GameController implements Serializable {
     }
   }
 
+  @PostMapping("/dealerTurn")
+  public ResponseEntity<Map<String, Object>> playDealerTurn() {
+    synchronized (lock) {
+      playDealer();
+      return ResponseEntity.ok(getGameState());
+    }
+  }
+
+  private boolean areAnyPlayersStillActive() {
+    return players.stream().anyMatch(playerId -> {
+      GameStatus status = playerStatuses.get(playerId);
+      return status != GameStatus.PLAYER_BUST &&
+              status != GameStatus.PLAYER_BLACKJACK;
+    });
+  }
+
   private void playDealer() {
-    while (calculateHandValue(dealerHand) < 17) {
-      dealerHand.add(deck.dealCard());
+    boolean allPlayersBusted = players.stream().allMatch(playerId -> playerStatuses.get(playerId) == GameStatus.PLAYER_BUST);
+    if (!allPlayersBusted) {
+      while (calculateHandValue(dealerHand) < 17) {
+        dealerHand.add(deck.dealCard());
+      }
     }
 
     int dealerValue = calculateHandValue(dealerHand);
     boolean dealerBust = dealerValue > 21;
 
     for (String playerId : players) {
-      if (playerStatuses.get(playerId) == GameStatus.PLAYER_BUST) {
-        continue;
-      }
+      if (!playerTurnComplete.get(playerId)) continue;
 
       int playerValue = calculateHandValue(playerHands.get(playerId));
+      GameStatus status = playerStatuses.get(playerId);
+
+      // If player has already busted, their status stays as PLAYER_BUST
+      if (status == GameStatus.PLAYER_BUST) continue;
 
       if (dealerBust) {
         playerStatuses.put(playerId, GameStatus.DEALER_BUST);
-      } else if (dealerValue > playerValue) {
-        playerStatuses.put(playerId, GameStatus.DEALER_WIN);
       } else if (playerValue > dealerValue) {
         playerStatuses.put(playerId, GameStatus.PLAYER_WIN);
+      } else if (dealerValue > playerValue) {
+        playerStatuses.put(playerId, GameStatus.DEALER_WIN);
       } else {
         playerStatuses.put(playerId, GameStatus.PUSH);
       }
@@ -239,15 +281,56 @@ public class GameController implements Serializable {
     gameState.put("dealerHand", dealerHand);
     gameState.put("dealerValue", calculateHandValue(dealerHand));
 
-    String currentPlayer = players.get(playerIndex);
-    //gameState.put("hasAce", hasAce(playerHands.get(currentPlayer)));
-    gameState.put("isCurrentPlayerActive", !playerTurnComplete.get(currentPlayer));
+    // Add this check to handle when all players are done
+    if (playerIndex < players.size()) {
+      String currentPlayer = players.get(playerIndex);
+      gameState.put("hasAce", hasAce(playerHands.get(currentPlayer)));
+      gameState.put("isCurrentPlayerActive", !playerTurnComplete.get(currentPlayer));
+    } else {
+      gameState.put("hasAce", false);
+      gameState.put("isCurrentPlayerActive", false);
+    }
 
     return gameState;
   }
 
   private boolean shouldDealerPlay() {
-    return playerTurnComplete.values().stream().allMatch(complete -> complete);
+    boolean allPlayersComplete = players.stream()
+            .allMatch(playerId -> playerTurnComplete.get(playerId));
+
+    return playerIndex >= players.size() &&
+            allPlayersComplete &&
+            areAnyPlayersStillActive();
+  }
+
+  private void advanceTurn() {
+    playerIndex++;
+
+    // Check if we've reached the end of players
+    if (playerIndex >= players.size()) {
+      if (shouldDealerPlay()) {
+        playDealer();
+      }
+      return;
+    }
+
+    // Look for next valid player
+    while (playerIndex < players.size()) {
+      String currentPlayer = players.get(playerIndex);
+      GameStatus status = playerStatuses.get(currentPlayer);
+
+      if (status != GameStatus.PLAYER_BUST &&
+              status != GameStatus.PLAYER_WIN &&
+              status != GameStatus.PLAYER_BLACKJACK) {
+        break;
+      }
+      playerIndex++;
+    }
+
+    // If we've gone through all players, check if dealer should play
+    if (playerIndex >= players.size() && shouldDealerPlay()) {
+      playDealer();
+    }
   }
 
   private int calculateHandValue(List<Card> hand) {
@@ -271,9 +354,5 @@ public class GameController implements Serializable {
 
   private boolean hasAce(List<Card> hand) {
     return hand.stream().anyMatch(card -> card.getRank().equals("A"));
-  }
-
-  private void nextPlayer() {
-    playerIndex = (playerIndex + 1);
   }
 }
