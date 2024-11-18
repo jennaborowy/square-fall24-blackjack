@@ -2,6 +2,7 @@ package edu.loyola.square.controller.service;
 
 import java.util.concurrent.ExecutionException;
 
+import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.cloud.FirestoreClient;
@@ -57,6 +58,12 @@ public class UserService {
   public void updateChipBalance(String uid, int newBalance) throws ExecutionException, InterruptedException {
     usersCollection.document(uid).update("chipBalance", newBalance).get();
   }
+
+  public void updateUsername(String uid, String newUsername) throws ExecutionException, InterruptedException {
+    DocumentReference docRef = usersCollection.document(uid);
+    docRef.update("username", newUsername).get();
+  }
+
 
   public void incrementWins(String uid) throws ExecutionException, InterruptedException {
     DocumentReference docRef = usersCollection.document(uid);

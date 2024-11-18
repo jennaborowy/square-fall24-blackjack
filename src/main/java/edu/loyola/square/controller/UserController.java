@@ -1,10 +1,7 @@
 package edu.loyola.square.controller;
 
-import com.google.api.Http;
-import com.google.auth.oauth2.JwtClaims;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
-import com.google.firebase.auth.FirebaseToken;
 import com.google.firebase.auth.UserRecord;
 import com.google.firebase.auth.UserRecord.CreateRequest;
 import com.google.firebase.auth.UserRecord.UpdateRequest;
@@ -83,6 +80,32 @@ public class UserController {
       System.out.println(authDTO);
       System.out.println(authDTO.getPassword());
       System.out.println(authDTO.getUid());
+      return ResponseEntity.internalServerError().build();
+    }
+  }
+
+
+  @PostMapping("/reset-username")
+  public ResponseEntity<Object> resetUsername(@Valid @RequestBody AuthDTO authDTO) {
+    try {
+      //make sure username is not already used
+      User user = userService.getUserByUsername(authDTO.getUsername());
+      if (user != null) {
+        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Username is already in our records");
+      }
+
+      //update auth
+      UpdateRequest request = new UserRecord.UpdateRequest(authDTO.getUid())
+              .setDisplayName(authDTO.getUsername());
+      UserRecord userRecord = FirebaseAuth.getInstance().updateUser(request);
+
+      //update firestore doc
+      UserService service = new UserService();
+      service.updateUsername(authDTO.getUid(), authDTO.getUsername());
+
+      return ResponseEntity.ok(userRecord);
+
+    } catch (Exception e) {
       return ResponseEntity.internalServerError().build();
     }
   }
