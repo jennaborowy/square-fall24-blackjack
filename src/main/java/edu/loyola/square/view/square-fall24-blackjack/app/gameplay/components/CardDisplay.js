@@ -420,7 +420,7 @@ export default function CardDisplay({ tableId }) {
           }
         }
       }
-
+      console.log("WE GOT STUCK");
     } catch (error) {
       console.error("Hit failed:", error);
     }
@@ -469,7 +469,35 @@ export default function CardDisplay({ tableId }) {
       if (shouldPlayDealer) {
         console.log('=== DEALER TURN STARTING ===');
         const dealerResult = await playDealer();
-        // Process results for all players...
+        // Process all players' results
+        for (let i = 0; i < players.length; i++) {
+          const playerId = players[i];
+          const playerBet = playerBets[playerId]?.amount || 0;
+          const docRef = doc(db, 'users', playerId);
+          const docSnap = await getDoc(docRef);
+
+          if (!docSnap.exists()) continue;
+
+          const userData = docSnap.data();
+          const playerState = result.players[i];
+          const playerValue = playerState.value;
+          const dealerValue = dealerResult.dealerHand?.reduce((total, card) =>
+              total + card.value, 0) || 0;
+
+          if (playerValue > 21) {
+            // Handle busted players
+            console.log('Processing bust for player:', playerId);
+            await updateDoc(docRef, {
+              totalLosses: userData.totalLosses + 1,
+              chipBalance: userData.chipBalance - playerBet
+            });
+            await updateTableStatus(playerId, "PLAYER_BUST");
+          } else {
+            // Process non-busted players
+            await processWinLossPush(playerId, playerValue, dealerValue,
+                playerBet, userData, docRef);
+          }
+        }
       }
 
       setPlayerHands(newPlayerHands);
