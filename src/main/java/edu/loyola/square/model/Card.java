@@ -25,20 +25,14 @@ public class Card implements Serializable {
 
   /**
    * this function returns the numeric value of a given card
-   * @param aceValue - the hand's ace value
    * @return rank - the value of the card
    */
-  public int getValue(int aceValue) {
-    switch (rank) {
-      case "A":
-        return aceValue;
-      case "J":
-      case "Q":
-      case "K":
-        return 10;
-      default:
-        return Integer.parseInt(rank);
-    }
+  public int getValue() {
+    return switch (rank) {
+      case "A" -> 11;
+      case "K", "Q", "J" -> 10;
+      default -> Integer.parseInt(rank);
+    };
   }
 
   @Override

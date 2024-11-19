@@ -15,25 +15,12 @@ public class Hand implements Serializable {
 
   /**
    * This function returns the total value of a hand
-   * @param aceValue the ace value for that hand (1 or 11)
    * @return v - the total point total of the hand
    */
-  private int value(int aceValue) {
+  private int value() {
     int v = 0;
     for (Card card : cards) {
-      switch (card.getRank()) {
-        case "A":
-          v += aceValue;
-          break;
-        case "J":
-        case "Q":
-        case "K":
-          v += 10;
-          break;
-        default:
-          v += card.getValue(aceValue);
-          break;
-      }
+      v += card.getValue();
     }
     return v;
   }
@@ -43,10 +30,10 @@ public class Hand implements Serializable {
    */
   public void optimizeAces() {
     if (aceCount > 0) {
-      if (getValue(11) > 21) {
+      if (getValue() + 10 > 21) {
         setAceValue(1);
       } else {
-        if (getValue(11) == 21) {
+        if (getValue() + 10 == 21) {
           setAceValue(11);
         }
       }
@@ -97,7 +84,7 @@ public class Hand implements Serializable {
     if (cards.size() == 2) {
       Card card1 = cards.get(0);
       Card card2 = cards.get(1);
-      if (card1.getRank().equals("A") && card2.getValue(aceValue) == 10 || card2.getRank().equals("A") && card1.getValue(aceValue) == 10) {
+      if (card1.getRank().equals("A") && card2.getValue() == 10 || card2.getRank().equals("A") && card1.getValue() == 10) {
         aceValue = 11;
         return true;
       }
@@ -106,12 +93,10 @@ public class Hand implements Serializable {
   }
 
   public int getValue() {
-    return value(aceValue);
+    return value();
   }
 
-  public int getValue(int aceValue) {
-    return value(aceValue);
-  }
+  public int getAceValue() {return aceValue;}
 
   public int getAceCount() {
     return aceCount;
@@ -124,5 +109,4 @@ public class Hand implements Serializable {
     }
     return handString;
   }
-
 } // Hand

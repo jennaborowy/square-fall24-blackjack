@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import CardDisplay from '../app/gameplay/components/CardDisplay';
+import { auth, db } from "../firebaseConfig";
 import { doc, getDoc, deleteDoc, updateDoc, arrayRemove } from 'firebase/firestore';
 import playerHits from '../app/gameplay/components/CardDisplay'
 import promptAce from '../app/gameplay/components/CardDisplay'
@@ -39,15 +40,11 @@ Object.defineProperty(window, 'sessionStorage', {
 });
 
 // Mock child components
-// eslint-disable-next-line react/display-name
 jest.mock('../app/messages/chatbox/chatbox', () => () => <div>Mock ChatBox</div>);
-// eslint-disable-next-line react/display-name
 jest.mock('../app/gameplay/GameInfo', () => () => <div>Mock GameInfo</div>);
-// eslint-disable-next-line react/display-name
 jest.mock('../app/gameplay/AceModal', () => ({ showModal, onSelectValue }) => (
   <div data-testid="ace-modal">Mock AceModal</div>
 ));
-// eslint-disable-next-line react/display-name
 jest.mock('../app/gameplay/BetTypeAnimation', () => ({ children }) => (
   <div>{children}</div>
 ));
@@ -81,6 +78,11 @@ describe('CardDisplay Component', () => {
     );
   });
 
+    describe('Initial Render and Error Cases', () => {
+        it('handles missing tableId', async () => {
+            render(<CardDisplay tableId={null} />);
+            expect(mockSessionStorage.getItem).toHaveBeenCalledWith('gameTableId');
+        });
   describe('Initial Render and Error Cases', () => {
     // Mock console.error before tests
     let consoleErrorSpy;
@@ -121,6 +123,13 @@ describe('CardDisplay Component', () => {
       });
     });
 
+        it('handles Firestore errors', async () => {
+            getDoc.mockRejectedValueOnce(new Error('Firestore error'));
+            render(<CardDisplay tableId={mockTableId} />);
+            await waitFor(() => {
+                expect(console.error).toHaveBeenCalled();
+            });
+        });
     it('handles Firestore errors', async () => {
       // Mock Firestore error
       getDoc.mockRejectedValueOnce(new Error('Firestore error'));
@@ -138,6 +147,15 @@ describe('CardDisplay Component', () => {
       });
     });
 
+        it('handles non-existent table', async () => {
+            getDoc.mockResolvedValueOnce({
+                exists: () => false
+            });
+            render(<CardDisplay tableId={mockTableId} />);
+            await waitFor(() => {
+                expect(console.error).toHaveBeenCalledWith("Table document doesn't exist");
+            });
+        });
     it('handles non-existent table', async () => {
       // Mock non-existent table
       getDoc.mockResolvedValueOnce({
@@ -155,6 +173,39 @@ describe('CardDisplay Component', () => {
       });
     });
 
+        it('handles invalid players array', async () => {
+            getDoc.mockResolvedValueOnce({
+                exists: () => true,
+                data: () => ({
+                    players: null,
+                    minimum_bet: 5
+                })
+            });
+            render(<CardDisplay tableId={mockTableId} />);
+            await waitFor(() => {
+                expect(console.error).toHaveBeenCalled();
+            });
+        });
+    });
+
+    describe('Betting Validation', () => {
+        it('handles non-numeric bet input', async () => {
+            render(<CardDisplay tableId={mockTableId} />);
+            const betInput = screen.getByLabelText(/Amount/i);
+            fireEvent.change(betInput, { target: { value: 'abc' } });
+            await waitFor(() => {
+                expect(screen.getByText(/Your bet should be a valid number!/i)).toBeInTheDocument();
+            });
+        });
+
+        it('handles bet above maximum', async () => {
+            render(<CardDisplay tableId={mockTableId} />);
+            const betInput = screen.getByLabelText(/Amount/i);
+            fireEvent.change(betInput, { target: { value: '20000' } });
+            await waitFor(() => {
+                expect(screen.getByText(/You cannot bet more than/i)).toBeInTheDocument();
+            });
+        });
     it('handles invalid players array', async () => {
       // Mock invalid players data
       getDoc.mockResolvedValueOnce({
@@ -207,7 +258,25 @@ describe('CardDisplay Component', () => {
           minimum_bet: 5
         })
       });
+        it('handles invalid bet increment', async () => {
+            render(<CardDisplay tableId={mockTableId} />);
+            const betInput = screen.getByLabelText(/Amount/i);
+            fireEvent.change(betInput, { target: { value: '7' } });
+            await waitFor(() => {
+                expect(screen.getByText(/Your bet must satisfy increments/i)).toBeInTheDocument();
+            });
+        });
 
+        it('handles failed bet validation request', async () => {
+            getDoc.mockRejectedValueOnce(new Error('Validation error'));
+            render(<CardDisplay tableId={mockTableId} />);
+            const betInput = screen.getByLabelText(/Amount/i);
+            fireEvent.change(betInput, { target: { value: '100' } });
+            await waitFor(() => {
+                expect(screen.getByText(/Error validating bet/i)).toBeInTheDocument();
+            });
+        });
+    });
       await act(async () => {
         render(<CardDisplay tableId={mockTableId} />);
       });
@@ -221,6 +290,27 @@ describe('CardDisplay Component', () => {
     });
   });
 
+    describe('Game Actions and State Changes', () => {
+        it('handles failed game start', async () => {
+            global.fetch.mockImplementationOnce(() => Promise.reject(new Error('Failed to start')));
+            render(<CardDisplay tableId={mockTableId} />);
+
+            const betInput = screen.getByLabelText(/Amount/i);
+            fireEvent.change(betInput, { target: { value: '100' } });
+
+            const startButton = await waitFor(() => screen.getByText(/Start Game/i));
+            fireEvent.click(startButton);
+
+            await waitFor(() => {
+                expect(console.error).toHaveBeenCalledWith('Game failed to start', expect.any(Error));
+            });
+        });
+
+        it('handles hit action when not current player', async () => {
+            render(<CardDisplay tableId={mockTableId} />);
+            await act(async () => {
+                const betInput = screen.getByLabelText(/Amount/i);
+                fireEvent.change(betInput, { target: { value: '100' } });
 
     it('handles ace prompt scenario', async () => {
       render(<CardDisplay tableId={mockTableId}/>);
@@ -229,9 +319,9 @@ describe('CardDisplay Component', () => {
         const betInput = screen.getByLabelText(/Amount/i);
         fireEvent.change(betInput, {target: {value: '100'}});
 
-        const startButton = screen.getByText(/Start Game/i);
-        fireEvent.click(startButton);
-      });
+                const startButton = screen.getByText(/Start Game/i);
+                fireEvent.click(startButton);
+            });
 
       // Trigger ace prompt
       await act(async () => {
@@ -249,7 +339,26 @@ describe('CardDisplay Component', () => {
           })
         );
       });
+            // Set different current player
+            await act(async () => {
+                global.fetch.mockImplementationOnce(() =>
+                    Promise.resolve({
+                        ok: true,
+                        json: () => Promise.resolve({
+                            players: [
+                                { hand: [{ suit: 'hearts', rank: 'A' }] }
+                            ],
+                            dealerHand: [{ suit: 'diamonds', rank: 'K' }],
+                            currentPlayerIndex: 1
+                        })
+                    })
+                );
+            });
 
+            const hitButton = await screen.findByText(/Hit/i);
+            fireEvent.click(hitButton);
+            expect(fetch).not.toHaveBeenCalledWith('http://localhost:8080/hit', expect.any(Object));
+        });
       await waitFor(() => {
         expect(screen.getByTestId('ace-modal')).toBeInTheDocument();
       });
@@ -269,7 +378,15 @@ describe('CardDisplay Component', () => {
           expect(startButton).not.toBeDisabled();
         });
       });
+        it('handles stand action when game is over', async () => {
+            render(<CardDisplay tableId={mockTableId} />);
+            await act(async () => {
+                const betInput = screen.getByLabelText(/Amount/i);
+                fireEvent.change(betInput, { target: { value: '100' } });
 
+                const startButton = screen.getByText(/Start Game/i);
+                fireEvent.click(startButton);
+            });
     describe('Player Turn Management', () => {
       it('correctly identifies and handles dealer turn', async () => {
         render(<CardDisplay tableId={mockTableId}/>);
@@ -280,6 +397,25 @@ describe('CardDisplay Component', () => {
         const startButton = screen.getByText(/Start Game/i);
         fireEvent.click(startButton);
 
+            // Set game over state
+            await act(async () => {
+                global.fetch.mockImplementationOnce(() =>
+                    Promise.resolve({
+                        ok: true,
+                        json: () => Promise.resolve({
+                            players: [
+                                { hand: [{ suit: 'hearts', rank: '10' }, { suit: 'spades', rank: 'K' }] }
+                            ],
+                            dealerHand: [{ suit: 'diamonds', rank: 'K' }],
+                            currentPlayerIndex: 0,
+                            gameStatus: {
+                                endStatus: "GAME_OVER",
+                                endMessage: "Game Over!"
+                            }
+                        })
+                    })
+                );
+            });
         // Simulate dealer turn
         await act(async () => {
           global.fetch.mockImplementationOnce(() =>
@@ -297,6 +433,10 @@ describe('CardDisplay Component', () => {
           );
         });
 
+            const standButton = await screen.findByText(/Stand/i);
+            fireEvent.click(standButton);
+            expect(fetch).not.toHaveBeenCalledWith('http://localhost:8080/stand', expect.any(Object));
+        });
         // Verify dealer turn UI state
         await waitFor(() => {
           const actionButtons = screen.queryAllByRole('button', {name: /hit|stand/i});
@@ -306,6 +446,8 @@ describe('CardDisplay Component', () => {
 
       it('handles multiple player turns correctly', async () => {
         render(<CardDisplay tableId={mockTableId}/>);
+        it('handles ace prompt scenario', async () => {
+            render(<CardDisplay tableId={mockTableId} />);
 
         // Start game
         const betInput = screen.getByLabelText(/Amount/i);
@@ -330,7 +472,30 @@ describe('CardDisplay Component', () => {
         render(<CardDisplay tableId={null}/>);
         expect(mockSessionStorage.getItem).toHaveBeenCalledWith('gameTableId');
       });
+            await act(async () => {
+                const betInput = screen.getByLabelText(/Amount/i);
+                fireEvent.change(betInput, { target: { value: '100' } });
 
+                const startButton = screen.getByText(/Start Game/i);
+                fireEvent.click(startButton);
+            });
+
+            // Trigger ace prompt
+            await act(async () => {
+                global.fetch.mockImplementationOnce(() =>
+                    Promise.resolve({
+                        ok: true,
+                        json: () => Promise.resolve({
+                            players: [
+                                { hand: [{ suit: 'hearts', rank: 'A' }] }
+                            ],
+                            dealerHand: [{ suit: 'diamonds', rank: 'K' }],
+                            currentPlayerIndex: 0,
+                            hasAce: true
+                        })
+                    })
+                );
+            });
       it('saves tableId to session storage on successful load', async () => {
         render(<CardDisplay tableId={mockTableId}/>);
         await waitFor(() => {
@@ -369,12 +534,23 @@ describe('CardDisplay Component', () => {
       );
     });
 
+            await waitFor(() => {
+                expect(screen.getByTestId('ace-modal')).toBeInTheDocument();
+            });
+        });
+    });
     describe('Initial Render and Error Cases', () => {
       it('handles missing tableId', async () => {
         render(<CardDisplay tableId={null}/>);
         expect(mockSessionStorage.getItem).toHaveBeenCalledWith('gameTableId');
       });
 
+    describe('Game Chat Functionality', () => {
+        it('toggles chat visibility', async () => {
+            render(<CardDisplay tableId={mockTableId} />);
+            const chatIcon = screen.getByRole('button', { name: /message/i });
+            fireEvent.click(chatIcon);
+            expect(screen.getByText('Mock ChatBox')).toBeInTheDocument();
       it('handles Firestore errors', async () => {
         getDoc.mockRejectedValueOnce(new Error('Firestore error'));
         render(<CardDisplay tableId={mockTableId}/>);
@@ -421,6 +597,8 @@ describe('CardDisplay Component', () => {
         await act(async () => {
           fireEvent.change(betInput, { target: { value: 'invalid' } });
         });
+    });
+});
 
         const startButton = screen.getByText(/Start Game/i);
         expect(startButton).toBeDisabled();
@@ -439,5 +617,6 @@ describe('CardDisplay Component', () => {
   });
   });
     });
+});
 
 
