@@ -11,7 +11,12 @@
     left: 20px;
     z-index: 100;
 }
-
+.table-chat-icon {
+    position: fixed;
+    bottom: 15px;
+    left: 70px;
+    z-index: 100;
+}
 .icons-btn{
     background-color: transparent;
 }

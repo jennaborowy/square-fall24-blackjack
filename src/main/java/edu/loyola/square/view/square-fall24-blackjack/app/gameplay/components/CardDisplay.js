@@ -13,6 +13,8 @@ import PlaceBetAnimation from '../BetTypeAnimation'
 import { auth, db } from "@/firebaseConfig";
 import {doc, getDoc, deleteDoc, updateDoc, arrayRemove, onSnapshot} from 'firebase/firestore';
 import ChatBox from "@/app/messages/chatbox/chatbox";
+import {MessagesSquare} from "lucide-react";
+import TableChat from '../../messages/tablechat/tablechat'
 
 export default function CardDisplay({ tableId }) {
   const [playerHands, setPlayerHands] = useState({});
@@ -31,7 +33,10 @@ export default function CardDisplay({ tableId }) {
   const [playerBets, setPlayerBets] = useState({});
   const isFirstPlayer = auth?.currentUser?.uid === players[0];
   const allPlayersHaveBet = players.length > 0 && players.every(playerId => playerBets[playerId]?.isValid);
-  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isFriendChatOpen, setIsFriendChatOpen] = useState(false);
+  const [isTableChatOpen, setIsTableChatOpen] = useState(false);
+
+  const [tableMessages, setTableMessages] = useState();
   const isCurrentPlayer = auth?.currentUser?.uid === players[playerIndex];
 
   const MIN_BET = 0;
@@ -68,6 +73,9 @@ export default function CardDisplay({ tableId }) {
 
         if (tableData.playerBets) {
           setPlayerBets(tableData.playerBets);
+        }
+        if(tableData.tableChat){
+          setTableMessages(tableData.tableChat)
         }
       }
     }, (error) => {
@@ -137,6 +145,9 @@ export default function CardDisplay({ tableId }) {
 
             if (tableData.dealerHand) {
               setDealerHand(tableData.dealerHand);
+            }
+            if(tableData.tableMessages){
+              setTableMessages(tableData.tableMessages)
             }
 
             if (typeof tableData.playerIndex !== 'undefined') {
@@ -527,14 +538,23 @@ export default function CardDisplay({ tableId }) {
     }
   };
 
-  const handleClose = () => {
+  const handleCloseFriendChat = () => {
     console.log("Closing chat...");
-    setIsChatOpen(false);
-    console.log("Chat is now closed:", isChatOpen);
+    setIsFriendChatOpen(false);
+    console.log("Chat is now closed:", isFriendChatOpen);
   };
   useEffect(() => {
-    console.log("isChatOpen changed:", isChatOpen);
-  }, [isChatOpen]);
+    console.log("isChatOpen changed:", isFriendChatOpen);
+  }, [isFriendChatOpen]);
+
+  const handleCloseTableChat = () => {
+    console.log("Closing chat...");
+    setIsTableChatOpen(false);
+    console.log("Chat is now closed:", isTableChatOpen);
+  };
+  useEffect(() => {
+    console.log("isChatOpen changed:", isTableChatOpen);
+  }, [isTableChatOpen]);
 
   return (
       <div>
@@ -544,124 +564,130 @@ export default function CardDisplay({ tableId }) {
           </div>
 
           {gameStarted && (
-              <div className="leave-btn">
-                <button className="mt-3 btn btn-danger" onClick={handleLeaveTable}>
-                  Leave Game
-                </button>
-              </div>
+            <div className="leave-btn">
+              <button className="mt-3 btn btn-danger" onClick={handleLeaveTable}>
+                Leave Game
+              </button>
+            </div>
           )}
 
           {!gameStarted ? (
-              <div className="bet-container">
-                <div className="place-bet-title">
-                  <div className="place-bet-content">
-                    <PlaceBetAnimation>
-                      Place Your Bet!
-                    </PlaceBetAnimation>
-                  </div>
+            <div className="bet-container">
+              <div className="place-bet-title">
+                <div className="place-bet-content">
+                  <PlaceBetAnimation>
+                    Place Your Bet!
+                  </PlaceBetAnimation>
                 </div>
-                <div className="bet-value">
-                  <InputGroup className="mb-3">
-                    <InputGroup.Text>$</InputGroup.Text>
-                    <Form.Control
-                        type="number"
-                        min={MIN_BET}
-                        max={MAX_BET}
-                        step={BET_INCREMENT}
-                        onChange={handleBetPlaced}
-                        isInvalid={!!betError}
-                        aria-label="Amount (to the nearest dollar)"
-                    />
-                    <InputGroup.Text>.00</InputGroup.Text>
-                  </InputGroup>
-                </div>
-                {isFirstPlayer && (
-                    <div className="start-container">
-                      <button
-                          className="btn btn-lg btn-success"
-                          onClick={startGame}
-                          disabled={!allPlayersHaveBet}
-                      >
-                        {allPlayersHaveBet ? "Start Game" : "Waiting for all players to bet..."}
-                      </button>
-                    </div>
-                )}
               </div>
+              <div className="bet-value">
+                <InputGroup className="mb-3">
+                  <InputGroup.Text>$</InputGroup.Text>
+                  <Form.Control
+                    type="number"
+                    min={MIN_BET}
+                    max={MAX_BET}
+                    step={BET_INCREMENT}
+                    onChange={handleBetPlaced}
+                    isInvalid={!!betError}
+                    aria-label="Amount (to the nearest dollar)"
+                  />
+                  <InputGroup.Text>.00</InputGroup.Text>
+                </InputGroup>
+              </div>
+              {isFirstPlayer && (
+                <div className="start-container">
+                  <button
+                    className="btn btn-lg btn-success"
+                    onClick={startGame}
+                    disabled={!allPlayersHaveBet}
+                  >
+                    {allPlayersHaveBet ? "Start Game" : "Waiting for all players to bet..."}
+                  </button>
+                </div>
+              )}
+            </div>
           ) : null}
 
           {gameStarted && (
-              <div className="dealerHand-container">
-                {dealerHand.map((card, index) => (
-                    <Card key={index} suit={card.suit} rank={card.rank}/>
-                ))}
-              </div>
+            <div className="dealerHand-container">
+              {dealerHand.map((card, index) => (
+                <Card key={index} suit={card.suit} rank={card.rank}/>
+              ))}
+            </div>
           )}
 
           {gameOver && (
-              <div className="end-container">
-                {gameStatusMessage}
-              </div>
+            <div className="end-container">
+              {gameStatusMessage}
+            </div>
           )}
 
           {gameStarted && !gameOver && (
-              <div className="btn-container">
-                <button
-                    className="action-btn"
-                    onClick={playerHits}
-                    disabled={!isCurrentPlayer || playerStand}
-                >
-                  Hit
-                </button>
-                <button
-                    className="action-btn"
-                    onClick={playerStands}
-                    disabled={!isCurrentPlayer || playerStand}
-                >
-                  Stand
-                </button>
-              </div>
+            <div className="btn-container">
+              <button
+                className="action-btn"
+                onClick={playerHits}
+                disabled={!isCurrentPlayer || playerStand}
+              >
+                Hit
+              </button>
+              <button
+                className="action-btn"
+                onClick={playerStands}
+                disabled={!isCurrentPlayer || playerStand}
+              >
+                Stand
+              </button>
+            </div>
           )}
 
           {gameStarted && (
-              <div className="all-players-container">
-                {Array.isArray(players) && players.length > 0 ? (
-                    players.map((playerId, index) => (
-                        <div key={playerId}
-                             className={`playerHand-container ${index === playerIndex ? 'active-player' : ''}`}>
-                          {playerHands && playerHands[playerId] && Array.isArray(playerHands[playerId]) ? (
-                              playerHands[playerId].map((card, cardIndex) => (
-                                  <Card key={cardIndex} suit={card.suit} rank={card.rank}/>
-                              ))
-                          ) : (
-                              <div>Waiting for cards...</div>
-                          )}
-                        </div>
-                    ))
-                ) : (
-                    <div>Loading players...</div>
-                )}
-              </div>
+            <div className="all-players-container">
+              {Array.isArray(players) && players.length > 0 ? (
+                players.map((playerId, index) => (
+                  <div key={playerId}
+                       className={`playerHand-container ${index === playerIndex ? 'active-player' : ''}`}>
+                    {playerHands && playerHands[playerId] && Array.isArray(playerHands[playerId]) ? (
+                      playerHands[playerId].map((card, cardIndex) => (
+                        <Card key={cardIndex} suit={card.suit} rank={card.rank}/>
+                      ))
+                    ) : (
+                      <div>Waiting for cards...</div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div>Loading players...</div>
+              )}
+            </div>
           )}
 
           {gameStarted && (
-              <div className="bet-value">
-                {betAmount}
-              </div>
+            <div className="bet-value">
+              {betAmount}
+            </div>
           )}
           <div className="message-icon">
-            <div className="icons-btn" onClick={() => setIsChatOpen((prev) => !prev)}>
+            <div className="icons-btn" onClick={() => setIsFriendChatOpen((prev) => !prev)}>
               <MessageIcon/>
-              {isChatOpen && <ChatBox onClose={handleClose}/>}
+              {isFriendChatOpen && <ChatBox onClose={handleCloseFriendChat}/>}
+            </div>
+          </div>
+          <div className="table-chat-icon">
+            <div className="icons-btn" onClick={() => setIsTableChatOpen((prev) => !prev)}>
+              <MessagesSquare/>
+              {isTableChatOpen && <TableChat db={db} tableId={tableId} onClose={handleCloseTableChat}/>}
             </div>
           </div>
           {gameStarted && (
-              <div className="game-stats-container">
-                <GameInfo/>
-              </div>
+            <div className="game-stats-container">
+              <GameInfo/>
+            </div>
           )}
           <AceModal
-              showModal={showAceModal}
-              onSelectValue={handleAceValueSelect}
+            showModal={showAceModal}
+            onSelectValue={handleAceValueSelect}
           />
         </div>
       </div>
