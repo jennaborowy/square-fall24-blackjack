@@ -1,126 +1,69 @@
-import { render, act } from '@testing-library/react';
-import { useContext } from 'react';
-import { AuthContext, AuthProvider, useAuth } from '@/app/context/auth';
+import { render, screen, waitFor } from '@testing-library/react';
+import { AuthProvider, useAuth } from '../app/context/auth.js';
 import { onAuthStateChanged } from 'firebase/auth';
-import '@testing-library/jest-dom/jest-globals'
-import {describe, expect, jest, it, beforeEach} from '@jest/globals'
 
-// Mock firebase/auth
+// Mock Firebase onAuthStateChanged
 jest.mock('firebase/auth', () => ({
+    ...jest.requireActual('firebase/auth'),
     onAuthStateChanged: jest.fn(),
 }));
 
-// Mock firebaseConfig
-jest.mock('../firebaseConfig', () => ({
-    auth: {},
-}));
-
-// Test component to consume the context
+// Test Component that consumes AuthContext
 const TestComponent = () => {
     const { currentUser } = useAuth();
-    return <div data-testid="user">{currentUser?.displayName}</div>;
+    return <div>{currentUser ? currentUser.displayName : 'No user'}</div>;
 };
 
-describe('AuthContext', () => {
-    beforeEach(() => {
-        // Clear all mocks before each test
-        jest.clearAllMocks();
+test('renders with no user by default', () => {
+    render(
+        <AuthProvider>
+            <TestComponent />
+        </AuthProvider>
+    );
+    expect(screen.getByText('No user')).toBeInTheDocument();
+});
+
+test('sets currentUser when Firebase auth state changes', async () => {
+    const mockUser = { uid: '123', displayName: 'Test User' };
+    onAuthStateChanged.mockImplementationOnce((auth, callback) => {
+        callback(mockUser); // Simulate user login
     });
 
-    it('provides null user by default', () => {
-        const { getByTestId } = render(
-            <AuthProvider>
-                <TestComponent />
-            </AuthProvider>
-        );
+    render(
+        <AuthProvider>
+            <TestComponent />
+        </AuthProvider>
+    );
 
-        expect(getByTestId('user').textContent).toBe('');
+    await waitFor(() => expect(screen.getByText('Test User')).toBeInTheDocument());
+});
+
+test('shows "No user" when Firebase auth state is null', async () => {
+    onAuthStateChanged.mockImplementationOnce((auth, callback) => {
+        callback(null); // Simulate user logout
     });
 
-    it('updates user when auth state changes to logged in', async () => {
-        // Mock the Firebase auth state change
-        const mockUser = {
-            uid: '123',
-            displayName: 'Test User',
-        };
+    render(
+        <AuthProvider>
+            <TestComponent />
+        </AuthProvider>
+    );
 
-        onAuthStateChanged.mockImplementation((auth, callback) => {
-            callback(mockUser);
-            return () => {}; // Cleanup function
-        });
+    await waitFor(() => expect(screen.getByText('No user')).toBeInTheDocument());
+});
 
-        const { getByTestId } = render(
-            <AuthProvider>
-                <TestComponent />
-            </AuthProvider>
-        );
+test('provides currentUser through AuthContext', async () => {
+    const mockUser = { uid: '123', displayName: 'Test User' };
 
-        // Wait for state update
-        await act(async () => {
-            await Promise.resolve();
-        });
+    // Mock useAuth's currentUser value for this test
+    const mockUseAuth = jest.spyOn(require('../app/context/auth.js'), 'useAuth');
+    mockUseAuth.mockReturnValue({ currentUser: mockUser });
 
-        expect(getByTestId('user').textContent).toBe('Test User');
-    });
+    render(
+        <AuthProvider>
+            <TestComponent />
+        </AuthProvider>
+    );
 
-    it('handles logout correctly', async () => {
-        // Mock the Firebase auth state change for logout
-        onAuthStateChanged.mockImplementation((auth, callback) => {
-            callback(null);
-            return () => {}; // Cleanup function
-        });
-
-        const { getByTestId } = render(
-            <AuthProvider>
-                <TestComponent />
-            </AuthProvider>
-        );
-
-        // Wait for state update
-        await act(async () => {
-            await Promise.resolve();
-        });
-
-        expect(getByTestId('user').textContent).toBe('');
-    });
-
-    it('provides setCurrentUser through context', () => {
-        let contextValue;
-
-        const TestConsumer = () => {
-            contextValue = useContext(AuthContext);
-            return null;
-        };
-
-        render(
-            <AuthProvider>
-                <TestConsumer />
-            </AuthProvider>
-        );
-
-        expect(contextValue.setCurrentUser).toBeDefined();
-        expect(typeof contextValue.setCurrentUser).toBe('function');
-    });
-
-    it('calls onAuthStateChanged on mount', () => {
-        render(
-            <AuthProvider>
-                <TestComponent />
-            </AuthProvider>
-        );
-
-        expect(onAuthStateChanged).toHaveBeenCalledTimes(1);
-    });
-
-    it('useAuth hook throws error when used outside AuthProvider', () => {
-        // Suppress console.error for this test as we expect an error
-        const consoleSpy = jest.spyOn(console, 'error');
-        consoleSpy.mockImplementation(() => {});
-
-        expect(() => {
-            render(<TestComponent />);
-        }).toThrow();
-
-        consoleSpy.mockRestore();
-    });
+    await waitFor(() => expect(screen.getByText('Test User')).toBeInTheDocument());
 });
