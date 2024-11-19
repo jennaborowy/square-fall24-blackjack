@@ -231,7 +231,7 @@ public class Game implements Serializable {
   }
 
   private void handleAceAction(Player player) {
-    if ((player.getPlayerHand().getAceCount() > 0) && (player.getPlayerHand().getValue(11) <= 21)) {
+    if ((player.getPlayerHand().getAceCount() > 0) && (player.getPlayerHand().getValue() + 10 <= 21)) {
       promptPlayerAce(player);
     } else {
       System.out.println("Invalid option. Please try again.");
@@ -243,7 +243,7 @@ public class Game implements Serializable {
     System.out.println("(s)tand");
     Player currentPlayer = players.get(currentPlayerIndex);
     if ((currentPlayer.getPlayerHand().getAceCount() > 0) &&
-            (currentPlayer.getPlayerHand().getValue(11) <= 21)) {
+            (currentPlayer.getPlayerHand().getValue() <= 21)) {
       System.out.println("(a)ces");
     }
   }

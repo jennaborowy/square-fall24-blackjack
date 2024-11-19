@@ -33,11 +33,10 @@ public class Player {
    *
    * used in controller to access player's hand
    * @param hand
-   * @return
+   * @return hand
    */
   public Hand setHand(Hand hand) {
     return this.hand = hand;
-
   }
 
   public int getBet() {
@@ -54,16 +53,5 @@ public class Player {
 
   public double getPayout() {
     return this.payout;
-  }
-
-  public boolean getHasAce() {
-    if ((getPlayerHand().getAceCount() > 0) && (getPlayerHand().getValue(11) <= 21))
-    {
-      hasAce = true;
-    }
-    else {
-      hasAce = false;
-    }
-    return hasAce;
   }
 } // Player

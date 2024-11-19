@@ -1,27 +1,18 @@
 package edu.loyola.square.controller;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import edu.loyola.square.model.Card;
+import edu.loyola.square.model.Deck;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.io.Serializable;
 import java.util.*;
-import java.io.IOException;
+import java.util.concurrent.ConcurrentHashMap;
 
 @SpringBootApplication
 @RestController
 @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class GameController implements Serializable {
-
-
-  private static final Logger logger = LoggerFactory.getLogger(GameController.class);
-
-  private void logDebug(String message) {
-    logger.debug(message);  // Changed from info to debug
-    logger.info(message);   // Keep info if needed
-    System.out.println(message);  // Keep console output if needed
-  }
 
   public enum GameStatus {
     PLAYER_WIN,
@@ -35,324 +26,396 @@ public class GameController implements Serializable {
     NEXT_PLAYER
   }
 
-  private final Object lock = new Object();
-  private Deck deck;
-  private List<Card> dealerHand;
-  private Map<String, List<Card>> playerHands;
-  private List<String> players;
-  private int playerIndex;
-  private boolean gameStarted;
-  private Map<String, Boolean> playerTurnComplete;
-  private Map<String, GameStatus> playerStatuses;
+  private final Map<String, GameState> tableGames = new ConcurrentHashMap<>();
 
-  private static class Card {
-    private final String suit;
-    private final String rank;
+  // GameState class to hold all state for a single table's game
+  private static class GameState implements Serializable {
+    private final Object lock = new Object();
+    Deck deck;
+    List<Card> dealerHand;
+    Map<String, List<Card>> playerHands;
+    List<String> players;
+    int playerIndex;
+    boolean gameStarted;
+    Map<String, Boolean> playerTurnComplete;
+    Map<String, GameStatus> playerStatuses;
 
-    public Card(String suit, String rank) {
-      this.suit = suit;
-      this.rank = rank;
-    }
-
-    public String getSuit() { return suit; }
-    public String getRank() { return rank; }
-    public int getValue() {
-      return switch (rank) {
-        case "A" -> 11;
-        case "K", "Q", "J" -> 10;
-        default -> Integer.parseInt(rank);
-      };
+    GameState() {
+      this.deck = new Deck();
+      this.dealerHand = new ArrayList<>();
+      this.playerHands = new HashMap<>();
+      this.players = new ArrayList<>();
+      this.playerIndex = 0;
+      this.gameStarted = false;
+      this.playerTurnComplete = new HashMap<>();
+      this.playerStatuses = new HashMap<>();
     }
   }
 
-  private static class Deck {
-    private final List<Card> cards = new ArrayList<>();
-    private static final String[] SUITS = {"H", "D", "C", "S"};
-    private static final String[] RANKS = {"A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"};
-
-    public Deck() {
-      for (String suit : SUITS) {
-        for (String rank : RANKS) {
-          cards.add(new Card(suit, rank));
-        }
-      }
-      Collections.shuffle(cards);
-    }
-
-    public Card dealCard() {
-      return !cards.isEmpty() ? cards.remove(0) : null;
-    }
-  }
 
   @PostMapping("/gamestart")
   public ResponseEntity<Map<String, Object>> startGame(@RequestBody Map<String, Object> request) {
-    synchronized (lock) {
-      this.deck = new Deck();
-      this.players = (List<String>) request.get("players");
-      this.playerIndex = 0;
-      this.gameStarted = true;
-      this.playerHands = new HashMap<>();
-      this.playerTurnComplete = new HashMap<>();
-      this.dealerHand = new ArrayList<>();
-      this.playerStatuses = new HashMap<>();
+    String tableId = (String) request.get("tableId");
+    if (tableId == null) {
+      return ResponseEntity.badRequest().body(Map.of("error", "No table ID provided"));
+    }
 
-      // Set all players to in progress status at start of game
-      for (String playerId : players) {
-        playerStatuses.put(playerId, GameStatus.IN_PROGRESS);
-        playerTurnComplete.put(playerId, false);
+    GameState gameState = tableGames.computeIfAbsent(tableId, k -> new GameState());
+    synchronized (gameState.lock) {
+      gameState.deck = new Deck();
+      gameState.players = (List<String>) request.get("players");
+      gameState.playerIndex = 0;
+      gameState.gameStarted = true;
+      gameState.playerHands = new HashMap<>();
+      gameState.playerTurnComplete = new HashMap<>();
+      gameState.dealerHand = new ArrayList<>();
+      gameState.playerStatuses = new HashMap<>();
+
+        // Initial deal
+      for (String playerId : gameState.players) {
+        gameState.playerStatuses.put(playerId, GameStatus.IN_PROGRESS);
+        gameState.playerTurnComplete.put(playerId, false);
 
         List<Card> hand = new ArrayList<>();
-        hand.add(deck.dealCard());
-        hand.add(deck.dealCard());
-        playerHands.put(playerId, hand);
+        hand.add(gameState.deck.dealCard());
+        hand.add(gameState.deck.dealCard());
+        gameState.playerHands.put(playerId, hand);
 
         // Check for initial blackjack
-        if (calculateHandValue(hand) == 21) {
-          playerTurnComplete.put(playerId, true);
-          playerStatuses.put(playerId, GameStatus.PLAYER_BLACKJACK);
-          playerIndex = (playerIndex + 1);
+        if (calculateHandValue(hand, false) == 21) {
+          gameState.playerTurnComplete.put(playerId, true);
+          gameState.playerStatuses.put(playerId, GameStatus.PLAYER_BLACKJACK);
         }
       }
 
-      // Deal initial cards
-      dealerHand.add(deck.dealCard());
-      dealerHand.add(deck.dealCard());
+      // Deal initial dealer cards
+      gameState.dealerHand.add(gameState.deck.dealCard());
+      gameState.dealerHand.add(gameState.deck.dealCard());
 
-      Map<String, Object> gameState = getGameState();
-      return ResponseEntity.ok(gameState);
+      if (!gameState.players.isEmpty() && gameState.playerTurnComplete.get(gameState.players.get(0))) {
+        updatePlayerIndex(gameState);
+      }
+
+      return ResponseEntity.ok(getGameState(gameState));
     }
   }
 
   @PostMapping("/hit")
-  public ResponseEntity<Map<String, Object>> playerHit() {
-    synchronized (lock) {
-      if (playerIndex >= players.size()) {
-        return ResponseEntity.ok(getGameState());
+  public ResponseEntity<Map<String, Object>> playerHit(@RequestBody Map<String, Object> request) {
+    String tableId = (String) request.get("tableId");
+
+    if (tableId == null) {
+      return ResponseEntity.badRequest().body(Map.of("error", "Invalid table ID in request"));
+    }
+
+    GameState gameState = tableGames.get(tableId);
+
+    if (gameState == null) {
+      return ResponseEntity.badRequest().body(Map.of("error", "Invalid table ID in map look up " + tableId));
+    }
+
+    synchronized (gameState.lock) {
+      if (gameState.playerIndex >= gameState.players.size()) {
+        return ResponseEntity.ok(getGameState(gameState));
       }
 
-      String currentPlayer = players.get(playerIndex);
+      String currentPlayer = gameState.players.get(gameState.playerIndex);
 
-      // Check if player has already busted or won
-      GameStatus playerStatus = playerStatuses.get(currentPlayer);
+      GameStatus playerStatus = gameState.playerStatuses.get(currentPlayer);
       if (playerStatus == GameStatus.PLAYER_BUST ||
               playerStatus == GameStatus.PLAYER_WIN ||
-              playerTurnComplete.get(currentPlayer)) {
+              gameState.playerTurnComplete.get(currentPlayer)) {
         return ResponseEntity.badRequest().body(Map.of(
                 "error", "Invalid player state for hit.",
                 "playerStatus", playerStatus,
-                "playerIndex", playerIndex,
+                "playerIndex", gameState.playerIndex,
                 "currentPlayer", currentPlayer
         ));
       }
 
-      List<Card> currentHand = playerHands.get(currentPlayer);
-      currentHand.add(deck.dealCard());
+      List<Card> currentHand = gameState.playerHands.get(currentPlayer);
+      currentHand.add(gameState.deck.dealCard());
 
-      int handValue = calculateHandValue(currentHand);
+      int handValue = calculateHandValue(currentHand, false);
       if (handValue > 21) {
-        playerStatuses.put(currentPlayer, GameStatus.PLAYER_BUST);
-        playerTurnComplete.put(currentPlayer, true);
-        advanceTurn();
+        gameState.playerStatuses.put(currentPlayer, GameStatus.PLAYER_BUST);
+        gameState.playerTurnComplete.put(currentPlayer, true);
+        updatePlayerIndex(gameState);
       } else if (handValue == 21) {
-        playerStatuses.put(currentPlayer, GameStatus.PLAYER_WIN);
-        playerTurnComplete.put(currentPlayer, true);
-        advanceTurn();
+        gameState.playerStatuses.put(currentPlayer, GameStatus.PLAYER_WIN);
+        gameState.playerTurnComplete.put(currentPlayer, true);
+        updatePlayerIndex(gameState);
       }
 
-      Map<String, Object> response = getGameState();
-      response.put("currentPlayerIndex", playerIndex);
-      response.put("currentPlayerStatus", playerStatuses.get(currentPlayer));
+      Map<String, Object> response = getGameState(gameState);
+      response.put("currentPlayerIndex", gameState.playerIndex);
+      response.put("currentPlayerStatus", gameState.playerStatuses.get(currentPlayer));
 
       return ResponseEntity.ok(response);
     }
   }
 
   @PostMapping("/stand")
-  public ResponseEntity<Map<String, Object>> playerStand() {
-    synchronized (lock) {
-      if (playerIndex >= players.size()) {
-        return ResponseEntity.ok(getGameState()); // Return current state instead of error
+  public ResponseEntity<Map<String, Object>> playerStand(@RequestBody Map<String, Object> request) {
+    String tableId = (String) request.get("tableId");
+    GameState gameState = tableGames.get(tableId);
+    synchronized (gameState.lock) {
+      if (gameState.playerIndex >= gameState.players.size()) {
+        return ResponseEntity.ok(getGameState(gameState));
       }
 
-      String currentPlayer = players.get(playerIndex);
-      playerTurnComplete.put(currentPlayer, true);
-      advanceTurn();
+      String currentPlayer = gameState.players.get(gameState.playerIndex);
+      gameState.playerTurnComplete.put(currentPlayer, true);
+      updatePlayerIndex(gameState);
 
-      if (shouldDealerPlay()) {
-        playDealer();
+      if (shouldDealerPlay(gameState)) {
+        playDealer(gameState);
       }
-      return ResponseEntity.ok(getGameState());
+
+      return ResponseEntity.ok(getGameState(gameState));
     }
   }
 
   @PostMapping("/promptAce")
   public ResponseEntity<Map<String, Object>> promptAce(@RequestBody Map<String, Object> request) {
-    synchronized (lock) {
-      Integer aceValue = (Integer) request.get("aceValue");
-      String currentPlayer = players.get(playerIndex);
-      List<Card> currentHand = playerHands.get(currentPlayer);
-      int handValue = calculateHandValue(currentHand);
+    String tableId = (String) request.get("tableId");
+    GameState gameState = tableGames.get(tableId);
+
+    synchronized (gameState.lock) {
+      String currentPlayer = gameState.players.get(gameState.playerIndex);
+      List<Card> currentHand = gameState.playerHands.get(currentPlayer);
+      int handValue = calculateHandValue(currentHand, false);
 
       if (handValue > 21) {
-        playerTurnComplete.put(currentPlayer, true);
-        playerStatuses.put(currentPlayer, GameStatus.PLAYER_BUST);
+        gameState.playerTurnComplete.put(currentPlayer, true);
+        gameState.playerStatuses.put(currentPlayer, GameStatus.PLAYER_BUST);
+        updatePlayerIndex(gameState);
 
-        if (shouldDealerPlay()) {
-          playDealer();
+        if (shouldDealerPlay(gameState)) {
+          playDealer(gameState);
         }
       } else if (handValue == 21) {
-        playerTurnComplete.put(currentPlayer, true);
-        playerStatuses.put(currentPlayer, GameStatus.PLAYER_WIN);
+        gameState.playerTurnComplete.put(currentPlayer, true);
+        gameState.playerStatuses.put(currentPlayer, GameStatus.PLAYER_WIN);
+        updatePlayerIndex(gameState);
 
-        if (shouldDealerPlay()) {
-          playDealer();
+        if (shouldDealerPlay(gameState)) {
+          playDealer(gameState);
         }
       }
 
-      return ResponseEntity.ok(getGameState());
+      return ResponseEntity.ok(getGameState(gameState));
     }
   }
 
   @PostMapping("/dealerTurn")
-  public ResponseEntity<Map<String, Object>> playDealerTurn() {
-    synchronized (lock) {
-      playDealer();
-      return ResponseEntity.ok(getGameState());
+  public ResponseEntity<Map<String, Object>> playDealerTurn(@RequestBody Map<String, Object> request) {
+    String tableId = (String) request.get("tableId");
+    GameState gameState = tableGames.get(tableId);
+    synchronized (gameState.lock) {
+      playDealer(gameState);
+      return ResponseEntity.ok(getGameState(gameState));
     }
   }
 
-  private boolean areAnyPlayersStillActive() {
-    return players.stream().anyMatch(playerId -> {
-      GameStatus status = playerStatuses.get(playerId);
-      return status != GameStatus.PLAYER_BUST &&
-              status != GameStatus.PLAYER_BLACKJACK;
-    });
+  // handles the cleanup of the game's local state
+  @PostMapping("/endgame")
+  public ResponseEntity<Void> endGame(@RequestBody Map<String, Object> request) {
+    String tableId = (String) request.get("tableId");
+    tableGames.remove(tableId);
+    return ResponseEntity.ok().build();
   }
 
-  private void playDealer() {
-    boolean allPlayersBusted = players.stream().allMatch(playerId -> playerStatuses.get(playerId) == GameStatus.PLAYER_BUST);
-    if (!allPlayersBusted) {
-      while (calculateHandValue(dealerHand) < 17) {
-        dealerHand.add(deck.dealCard());
-      }
-    }
 
-    int dealerValue = calculateHandValue(dealerHand);
-    boolean dealerBust = dealerValue > 21;
-
-    for (String playerId : players) {
-      if (!playerTurnComplete.get(playerId)) continue;
-
-      int playerValue = calculateHandValue(playerHands.get(playerId));
-      GameStatus status = playerStatuses.get(playerId);
-
-      // If player has already busted, their status stays as PLAYER_BUST
-      if (status == GameStatus.PLAYER_BUST) continue;
-
-      if (dealerBust) {
-        playerStatuses.put(playerId, GameStatus.DEALER_BUST);
-      } else if (playerValue > dealerValue) {
-        playerStatuses.put(playerId, GameStatus.PLAYER_WIN);
-      } else if (dealerValue > playerValue) {
-        playerStatuses.put(playerId, GameStatus.DEALER_WIN);
-      } else {
-        playerStatuses.put(playerId, GameStatus.PUSH);
-      }
-    }
-  }
-
-  private Map<String, Object> getGameState() {
-    Map<String, Object> gameState = new HashMap<>();
-    List<Map<String, Object>> playerStates = new ArrayList<>();
-
-    for (String playerId : players) {
-      Map<String, Object> playerState = new HashMap<>();
-      List<Card> hand = playerHands.get(playerId);
-      playerState.put("hand", hand);
-      playerState.put("value", calculateHandValue(hand));
-      playerState.put("hasAce", hasAce(hand));
-      playerState.put("isActive", !playerTurnComplete.get(playerId));
-      playerState.put("status", playerStatuses.get(playerId));
-      playerStates.add(playerState);
-    }
-
-    gameState.put("players", playerStates);
-    gameState.put("currentPlayerIndex", playerIndex);
-    gameState.put("dealerHand", dealerHand);
-    gameState.put("dealerValue", calculateHandValue(dealerHand));
-
-    // Add this check to handle when all players are done
-    if (playerIndex < players.size()) {
-      String currentPlayer = players.get(playerIndex);
-      gameState.put("hasAce", hasAce(playerHands.get(currentPlayer)));
-      gameState.put("isCurrentPlayerActive", !playerTurnComplete.get(currentPlayer));
-    } else {
-      gameState.put("hasAce", false);
-      gameState.put("isCurrentPlayerActive", false);
-    }
-
-    return gameState;
-  }
-
-  private boolean shouldDealerPlay() {
-    boolean allPlayersComplete = players.stream()
-            .allMatch(playerId -> playerTurnComplete.get(playerId));
-
-    return playerIndex >= players.size() &&
-            allPlayersComplete &&
-            areAnyPlayersStillActive();
-  }
-
-  private void advanceTurn() {
-    playerIndex++;
-
-    // Check if we've reached the end of players
-    if (playerIndex >= players.size()) {
-      if (shouldDealerPlay()) {
-        playDealer();
-      }
-      return;
-    }
-
-    // Look for next valid player
-    while (playerIndex < players.size()) {
-      String currentPlayer = players.get(playerIndex);
-      GameStatus status = playerStatuses.get(currentPlayer);
-
-      if (status != GameStatus.PLAYER_BUST &&
-              status != GameStatus.PLAYER_WIN &&
-              status != GameStatus.PLAYER_BLACKJACK) {
-        break;
-      }
-      playerIndex++;
-    }
-
-    // If we've gone through all players, check if dealer should play
-    if (playerIndex >= players.size() && shouldDealerPlay()) {
-      playDealer();
-    }
-  }
-
-  private int calculateHandValue(List<Card> hand) {
+  // calculates the given hand and optimizes it depending on the value and if the hand is the dealer's
+  private int calculateHandValue(List<Card> hand, boolean isDealer) {
     int value = 0;
-    int aceCount = 0;
+    int numberOfAces = 0;
 
     for (Card card : hand) {
       if (card.getRank().equals("A")) {
-        aceCount++;
+        numberOfAces++;
+      } else {
+        value += card.getValue();
       }
-      value += card.getValue();
     }
 
-    while (value > 21 && aceCount > 0) {
-      value -= 10;
-      aceCount--;
+    if (numberOfAces > 0 && value == 10) {
+      return 21;
+    }
+
+    if (isDealer) {
+      for (int i = 0; i < numberOfAces; i++) {
+        value += 11;
+        if (value > 21) {
+          value -= 10;
+        }
+      }
+    } else {
+      for (int i = 0; i < numberOfAces; i++) {
+        if (value + 11 == 21) {
+          value += 11;
+        } else if (value + 11 > 21) {
+          value += 1;
+        } else {
+          value += 1;
+        }
+      }
     }
 
     return value;
   }
 
+  // checks to see if the player should be prompted for ace value
+  private boolean needsAcePrompt(List<Card> hand) {
+    if (!hasAce(hand)) return false;
+
+    int baseValue = 0;
+    int numberOfAces = 0;
+    for (Card card : hand) {
+      if (card.getRank().equals("A")) {
+        numberOfAces++;
+      } else {
+        baseValue += card.getValue();
+      }
+    }
+
+    if (baseValue == 10 && numberOfAces == 1) return false;
+
+    return ( baseValue + 11 <= 21 || (numberOfAces > 1));
+  }
+
+  // returns if the given hand has an ace
   private boolean hasAce(List<Card> hand) {
     return hand.stream().anyMatch(card -> card.getRank().equals("A"));
+  }
+
+  // moves to the next player's turn
+  private void updatePlayerIndex(GameState gameState) {
+    if (gameState.playerIndex >= gameState.players.size()) return;
+
+    gameState.playerIndex++;
+
+    // If we've reached the end of players, check if dealer should play
+    if (gameState.playerIndex >= gameState.players.size()) {
+      if (shouldDealerPlay(gameState)) {
+        playDealer(gameState);
+      }
+    } else {
+      // If the next player has blackjack or is complete, keep updating
+      while (gameState.playerIndex < gameState.players.size() &&
+              gameState.playerTurnComplete.get(gameState.players.get(gameState.playerIndex))) {
+        gameState.playerIndex++;
+
+        if (gameState.playerIndex >= gameState.players.size() && shouldDealerPlay(gameState)) {
+          playDealer(gameState);
+          break;
+        }
+      }
+    }
+  }
+
+
+  // checks if the dealer should play
+  private boolean shouldDealerPlay(GameState gameState) {
+    boolean allPlayersComplete = gameState.players.stream()
+            .allMatch(playerId -> gameState.playerTurnComplete.get(playerId));
+
+    return gameState.playerIndex >= gameState.players.size() &&
+            allPlayersComplete &&
+            areAnyPlayersStillActive(gameState);
+  }
+
+
+  // returns a status if there are any player's still active (haven't busted)
+  private boolean areAnyPlayersStillActive(GameState gameState) {
+    return gameState.players.stream().anyMatch(playerId -> {
+      GameStatus status = gameState.playerStatuses.get(playerId);
+      return status != GameStatus.PLAYER_BUST &&
+              status != GameStatus.PLAYER_BLACKJACK;
+    });
+  }
+
+
+  // plays out the dealer's turn
+  private void playDealer(GameState gameState) {
+    int dealerValue = calculateHandValue(gameState.dealerHand, true);
+    boolean dealerHasBlackjack = dealerValue == 21 && gameState.dealerHand.size() == 2;
+
+    if (dealerHasBlackjack) {
+      for (String playerId : gameState.players) {
+        if (gameState.playerStatuses.get(playerId) != GameStatus.PLAYER_BLACKJACK) {
+          gameState.playerStatuses.put(playerId, GameStatus.DEALER_BLACKJACK);
+        }
+      }
+      return;
+    }
+
+    boolean allPlayersBusted = gameState.players.stream()
+            .allMatch(playerId -> gameState.playerStatuses.get(playerId) == GameStatus.PLAYER_BUST);
+
+    if (!allPlayersBusted) {
+      while (calculateHandValue(gameState.dealerHand, true) < 17) {
+        gameState.dealerHand.add(gameState.deck.dealCard());
+      }
+    }
+
+    // Process final outcomes for each player, skipping those who have busted
+    dealerValue = calculateHandValue(gameState.dealerHand, true);
+    boolean dealerBust = dealerValue > 21;
+
+    for (String playerId : gameState.players) {
+      GameStatus currentStatus = gameState.playerStatuses.get(playerId);
+      if (currentStatus == GameStatus.PLAYER_BUST ||
+              currentStatus == GameStatus.PLAYER_BLACKJACK) {
+        continue;
+      }
+
+      int playerValue = calculateHandValue(gameState.playerHands.get(playerId), false);
+
+      if (dealerBust) {
+        gameState.playerStatuses.put(playerId, GameStatus.DEALER_BUST);
+      } else if (dealerValue > playerValue) {
+        gameState.playerStatuses.put(playerId, GameStatus.DEALER_WIN);
+      } else if (dealerValue < playerValue) {
+        gameState.playerStatuses.put(playerId, GameStatus.PLAYER_WIN);
+      } else {
+        gameState.playerStatuses.put(playerId, GameStatus.PUSH);
+      }
+    }
+  }
+
+
+  // individual player state mapping
+  private Map<String, Object> getGameState(GameState gameState) {
+    Map<String, Object> state = new HashMap<>();
+    List<Map<String, Object>> playerStates = new ArrayList<>();
+
+    for (String playerId : gameState.players) {
+      Map<String, Object> playerState = new HashMap<>();
+      List<Card> hand = gameState.playerHands.get(playerId);
+      playerState.put("hand", hand);
+      playerState.put("value", calculateHandValue(hand, false));
+      playerState.put("hasAce", needsAcePrompt(hand));
+      playerState.put("isActive", !gameState.playerTurnComplete.get(playerId));
+      playerState.put("status", gameState.playerStatuses.get(playerId));
+      playerStates.add(playerState);
+    }
+
+    state.put("players", playerStates);
+    state.put("currentPlayerIndex", gameState.playerIndex);
+    state.put("dealerHand", gameState.dealerHand);
+    state.put("dealerValue", calculateHandValue(gameState.dealerHand, true));
+
+    if (gameState.playerIndex < gameState.players.size()) {
+      String currentPlayer = gameState.players.get(gameState.playerIndex);
+      state.put("hasAce", needsAcePrompt(gameState.playerHands.get(currentPlayer)));
+      state.put("isCurrentPlayerActive", !gameState.playerTurnComplete.get(currentPlayer));
+    } else {
+      state.put("hasAce", false);
+      state.put("isCurrentPlayerActive", false);
+    }
+
+    return state;
   }
 }
