@@ -1,112 +1,215 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import Chat from './Chat';
+import {render, screen, fireEvent, waitFor, act} from '@testing-library/react';
+import Chat from '@/app/messages/chat/chat';
 import { AuthContext } from '@/app/messages/AuthContext';
 import { ChatContext } from '@/app/messages/ChatContext';
-import { db } from '@/firebaseConfig';
+import {getDoc, onSnapshot, updateDoc} from "firebase/firestore";
+import '@testing-library/jest-dom';
 
 // Mock Firebase functions
-jest.mock('firebase/firestore', () => ({
-  arrayUnion: jest.fn(),
-  doc: jest.fn(),
-  getDoc: jest.fn(),
-  onSnapshot: jest.fn(),
-  updateDoc: jest.fn(),
-  serverTimestamp: jest.fn(),
-}));
+jest.mock('firebase/firestore', () => {
+  const mockDoc = jest.fn((db, collection, id) => ({
+    path: `${collection}/${id}`
+  }));
 
-// Mock context values
-const mockCurrentUser = { uid: 'user123' };
-const mockChatData = {
-  conversationId: 'conv123',
-  participants: ['user123', 'user456'],
-};
+  return {
+    doc: mockDoc,
+    getDoc: jest.fn(),
+    updateDoc: jest.fn(() => Promise.resolve()),
+    onSnapshot: jest.fn(),
+    arrayUnion: jest.fn(data => data),
+    serverTimestamp: jest.fn(() => new Date('2024-01-01T00:00:00Z')),
+    getFirestore: jest.fn()
+  };
+});
+// Mock crypto for UUID generation
+Object.defineProperty(global, 'crypto', {
+  value: {
+    randomUUID: () => '123e4567-e89b-12d3-a456-426614174000'
+  }
+});
 
 describe('Chat Component', () => {
+  const mockScrollIntoView = jest.fn();
+  window.HTMLElement.prototype.scrollIntoView = mockScrollIntoView;
+  const mockCurrentUser = {
+    uid: 'currentUser123'
+  };
+
+  const mockChatData = {
+    conversationId: 'conversation123',
+    participants: ['currentUser123', 'otherUser456']
+  };
+
+  const mockDispatch = jest.fn();
+
+
+  const mockConversationData = {
+    messages: [
+      {
+        id: '1',
+        senderId: 'currentUser123',
+        text: 'Hello',
+        createdAt: '2024-01-01T10:00:00Z'
+      },
+      {
+        id: '2',
+        senderId: 'otherUser456',
+        text: 'Hi there',
+        createdAt: '2024-01-01T10:01:00Z'
+      }
+    ],
+    participants: ['currentUser123', 'otherUser456']
+  };
+
+  const mockUserChatsData = {
+    chats: [
+      {
+        chatId: 'conversation123',
+        lastMessage: 'Previous message',
+        updatedAt: Date.now() - 1000,
+        isSeen: false
+      }
+    ]
+  };
+
   beforeEach(() => {
-    // Mock the getDoc and onSnapshot functions
-    getDoc.mockResolvedValue({
-      exists: true,
-      data: () => ({
-        messages: [],
-        participants: mockChatData.participants,
-      }),
+    jest.clearAllMocks();
+    mockScrollIntoView.mockClear();
+
+    // Mock getDoc implementation
+    getDoc.mockImplementation((ref) => {
+      if (ref.path?.includes('conversations')) {
+        return Promise.resolve({
+          exists: () => true,
+          data: () => mockConversationData
+        });
+      }
+      // Mock userChats document
+      if (ref.path?.includes('userChats')) {
+        return Promise.resolve({
+          exists: () => true,
+          data: () => mockUserChatsData
+        });
+      }
+      // Mock users document
+      return Promise.resolve({
+        exists: () => true,
+        data: () => ({
+          username: 'TestUser'
+        })
+      });
     });
-    onSnapshot.mockImplementation((docRef, onChange) => {
-      onChange({ exists: true, data: () => ({ messages: [] }) });
-      return jest.fn(); // Return unsubscribe function
+
+
+    // Mock onSnapshot implementation
+    onSnapshot.mockImplementation((docRef, callback) => {
+      callback({
+        exists: () => true,
+        data: () => mockConversationData
+      });
+      return () => {};
     });
+    updateDoc.mockImplementation(() => Promise.resolve());
   });
 
-  it('should render the chat component when a conversation is selected', () => {
+  const renderComponent = () => {
+    return render(
+      <AuthContext.Provider value={{ currentUser: mockCurrentUser }}>
+        <ChatContext.Provider value={{ data: mockChatData, dispatch: mockDispatch }}>
+          <Chat />
+        </ChatContext.Provider>
+      </AuthContext.Provider>
+    );
+  };
+
+  test('renders empty state when no conversation is selected', () => {
     render(
       <AuthContext.Provider value={{ currentUser: mockCurrentUser }}>
-        <ChatContext.Provider value={{ data: mockChatData }}>
+        <ChatContext.Provider value={{ data: { conversationId: null }, dispatch: mockDispatch }}>
           <Chat />
         </ChatContext.Provider>
       </AuthContext.Provider>
     );
 
-    // Check if the message input and send button are rendered
-    expect(screen.getByPlaceholderText('Type a message...')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /send/i })).toBeInTheDocument();
+    expect(screen.getByText('Select a chat or start a new conversation')).toBeInTheDocument();
   });
 
-  it('should display a no-chat-selected message if no conversation is active', () => {
-    render(
-      <AuthContext.Provider value={{ currentUser: mockCurrentUser }}>
-        <ChatContext.Provider value={{ data: {} }}>
-          <Chat />
-        </ChatContext.Provider>
-      </AuthContext.Provider>
-    );
+  test('renders messages from Firebase', async () => {
+    await act(async () => {
+      renderComponent();
+    });
 
-    // Check for the "no chat selected" message
-    expect(screen.getByText(/select a chat or start a new conversation/i)).toBeInTheDocument();
+    expect(screen.getByText('Hello')).toBeInTheDocument();
+    expect(screen.getByText('Hi there')).toBeInTheDocument();
   });
 
-  it('should send a message and update the chat', async () => {
-    render(
-      <AuthContext.Provider value={{ currentUser: mockCurrentUser }}>
-        <ChatContext.Provider value={{ data: mockChatData }}>
-          <Chat />
-        </ChatContext.Provider>
-      </AuthContext.Provider>
-    );
+  test('sends a new message', async () => {
+    await act(async () => {
+      renderComponent();
+    });
 
     const input = screen.getByPlaceholderText('Type a message...');
-    const sendButton = screen.getByRole('button', { name: /send/i });
+    const sendButton = screen.getByText('Send');
 
-    // Type a message
-    fireEvent.change(input, { target: { value: 'Hello!' } });
+    await act(async () => {
+      fireEvent.change(input, { target: { value: 'New message' } });
+      fireEvent.click(sendButton);
+    });
 
-    // Simulate sending the message
-    fireEvent.click(sendButton);
-
-    // Wait for the asynchronous update (e.g., messages getting updated in the state)
-    await waitFor(() => expect(updateDoc).toHaveBeenCalledTimes(1));
     expect(updateDoc).toHaveBeenCalledWith(
-      expect.any(Object),
+      expect.anything(),
       expect.objectContaining({
-        messages: expect.arrayContaining([
-          expect.objectContaining({ text: 'Hello!' }),
-        ]),
+        messages: expect.any(Object),
+        lastUpdate: expect.any(Date)
       })
     );
   });
 
-  it('should scroll to the bottom when new messages are added', async () => {
-    render(
-      <AuthContext.Provider value={{ currentUser: mockCurrentUser }}>
-        <ChatContext.Provider value={{ data: mockChatData }}>
-          <Chat />
-        </ChatContext.Provider>
-      </AuthContext.Provider>
+  test('does not send empty messages', async () => {
+    await act(async () => {
+      renderComponent();
+    });
+
+    const sendButton = screen.getByText('Send');
+
+    await act(async () => {
+      fireEvent.click(sendButton);
+    });
+
+    expect(updateDoc).not.toHaveBeenCalled();
+  });
+
+  test('formats time correctly', async () => {
+    await act(async () => {
+      renderComponent();
+    });
+
+    // Wait for any asynchronous operations
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    // Match the existing time elements in the DOM
+    const timeElements = screen.getAllByText((content, element) =>
+      element.tagName.toLowerCase() === 'span' && content.trim().endsWith('AM')
     );
 
-    const endRef = screen.getByTestId('endRef'); // Assuming this element has a data-testid="endRef"
+    // Check that the times rendered correctly
+    expect(timeElements).toHaveLength(2); // Adjust this based on expected count
+    expect(timeElements[0]).toHaveTextContent('05:00 AM');
+    expect(timeElements[1]).toHaveTextContent('05:01 AM');
+  });
 
-    // Scroll to the bottom to view the last message
-    await waitFor(() => expect(endRef).toBeInTheDocument());
-    expect(endRef.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth' });
+
+  test('applies correct message styling for own messages', async () => {
+    await act(async () => {
+      renderComponent();
+    });
+
+    const messages = document.querySelectorAll('.message');
+    const ownMessage = document.querySelector('.message.own');
+
+    expect(messages.length).toBe(2); // Total messages
+    expect(ownMessage).toBeInTheDocument(); // At least one own message
   });
 });

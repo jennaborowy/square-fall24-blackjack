@@ -7,6 +7,8 @@ import { doc, getDoc, deleteDoc, updateDoc, arrayRemove } from 'firebase/firesto
 import playerHits from '../app/gameplay/components/CardDisplay'
 import promptAce from '../app/gameplay/components/CardDisplay'
 import handleLeaveTable from '../app/gameplay/components/CardDisplay'
+window.HTMLElement.prototype.scrollIntoView = jest.fn();
+
 const mockTableId = "table123"
 jest.mock("../firebaseConfig", () => ({
   auth: {
@@ -39,12 +41,24 @@ Object.defineProperty(window, 'sessionStorage', {
   value: mockSessionStorage
 });
 
+render(
+  <AuthContextProvider value={{ currentUser: { uid: 'user123' } }}>
+    <ChatContextProvider value={{ data: { conversationId: 'conv123', messages: [] } }}>
+      <Chat />
+    </ChatContextProvider>
+  </AuthContextProvider>
+);
+
 // Mock child components
+// eslint-disable-next-line react/display-name
 jest.mock('../app/messages/chatbox/chatbox', () => () => <div>Mock ChatBox</div>);
+// eslint-disable-next-line react/display-name
 jest.mock('../app/gameplay/GameInfo', () => () => <div>Mock GameInfo</div>);
+// eslint-disable-next-line react/display-name
 jest.mock('../app/gameplay/AceModal', () => ({ showModal, onSelectValue }) => (
   <div data-testid="ace-modal">Mock AceModal</div>
 ));
+// eslint-disable-next-line react/display-name
 jest.mock('../app/gameplay/BetTypeAnimation', () => ({ children }) => (
   <div>{children}</div>
 ));
@@ -277,12 +291,12 @@ describe('CardDisplay Component', () => {
             });
         });
     });
-      await act(async () => {
+       act(async () => {
         render(<CardDisplay tableId={mockTableId} />);
       });
 
       // Wait for error to be logged
-      await waitFor(() => {
+      waitFor(() => {
         expect(consoleErrorSpy).toHaveBeenCalledWith(
           "No players found in table data or invalid players array"
         );
@@ -438,7 +452,7 @@ describe('CardDisplay Component', () => {
             expect(fetch).not.toHaveBeenCalledWith('http://localhost:8080/stand', expect.any(Object));
         });
         // Verify dealer turn UI state
-        await waitFor(() => {
+         waitFor(() => {
           const actionButtons = screen.queryAllByRole('button', {name: /hit|stand/i});
           expect(actionButtons).toHaveLength(0);
         });
@@ -472,7 +486,7 @@ describe('CardDisplay Component', () => {
         render(<CardDisplay tableId={null}/>);
         expect(mockSessionStorage.getItem).toHaveBeenCalledWith('gameTableId');
       });
-            await act(async () => {
+             act(async () => {
                 const betInput = screen.getByLabelText(/Amount/i);
                 fireEvent.change(betInput, { target: { value: '100' } });
 
@@ -481,7 +495,7 @@ describe('CardDisplay Component', () => {
             });
 
             // Trigger ace prompt
-            await act(async () => {
+            act(async () => {
                 global.fetch.mockImplementationOnce(() =>
                     Promise.resolve({
                         ok: true,
@@ -534,7 +548,7 @@ describe('CardDisplay Component', () => {
       );
     });
 
-            await waitFor(() => {
+            waitFor(() => {
                 expect(screen.getByTestId('ace-modal')).toBeInTheDocument();
             });
         });

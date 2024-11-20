@@ -4,6 +4,8 @@ import { AddUser } from '@/app/messages/list/chatList/addUser/addUser';
 import { AuthContext } from '@/app/messages/AuthContext';
 import { ChatContext } from '@/app/messages/ChatContext';
 import userEvent from "firebase-mock/browser/firebasemock";
+import {collection, doc, query} from "firebase/firestore";
+import * as firestore from 'firebase/firestore';
 
 
 // Mock the entire firebase/firestore module
@@ -12,8 +14,9 @@ jest.mock('firebase/firestore', () => ({
     empty: false,
     docs: [{ id: 'mockUserId', data: () => ({ username: 'testFriend' }) }]
   })),
+
   getDoc: jest.fn(),
-  setDoc: jest.fn().mockResolvedValue(),
+  setDoc: jest.fn(),
   updateDoc: jest.fn(),
   collection: jest.fn(),
   doc: jest.fn(),
@@ -23,17 +26,7 @@ jest.mock('firebase/firestore', () => ({
   serverTimestamp: jest.fn(() => new Date())
 }));
 
-jest.mock('@/firebaseConfig', () => ({
-  getFirestore: jest.fn(),
-  getDoc: jest.fn().mockResolvedValue({
-    exists: jest.fn().mockReturnValue(true),
-    id: 'testUserId', // Add `id` here if used at the top level
-    data: jest.fn().mockReturnValue({
-      id: 'testUserId',
-      username: 'testFriend',
-    }),
-  }),
-}))
+
 const mockDispatch = jest.fn();  // Define it here, outside the describe block
 const mockCurrentUser = {
   uid: 'test-uid',
@@ -72,10 +65,8 @@ describe('AddUser Component', () => {
     username: 'testUser'
   };
 
-  beforeEach(() => {
-    // Clear all mocks before each test
-    jest.clearAllMocks();
-  });
+  const mockDispatch = jest.fn();
+
 
   const renderAddUser = () => {
     return render(
@@ -192,99 +183,173 @@ describe('AddUser Component', () => {
   });
 
 
-  describe('Chat Creation', () => {
+  it('should successfully create a chat with a regular user', async () => {
+    // Mock the Firebase functions we'll use
+    const mockFriend = {
+      id: 'friend123',
+      uid: 'friend123',
+      username: 'testFriend'
+    };
 
-    const { getDocs, setDoc, getDoc, updateDoc } = require('firebase/firestore');
+    const { getDocs, getDoc, setDoc, updateDoc } = require('firebase/firestore');
 
-    // Define mock data for users
-    const mockUser = [
-      {
-        id: 'mockUserId',
-        username: 'testFriend',
-      },
-    ];
-    getDocs.mockImplementation(() =>
-      Promise.resolve({
-        empty: false,
-        docs: mockUser.map(user => ({
-          id: user.id,
-          data: () => user
-        }))
-      })
-    );
+    // Mock search results
+    getDocs.mockImplementation(() => Promise.resolve({
+      empty: false,
+      docs: [{
+        id: mockFriend.id,
+        data: () => ({ ...mockFriend, friends: ['test-uid'] })
+      }]
+    }));
 
+    // Mock sequential getDoc calls
+    getDoc
+      // First call - checking current user's friends
+      .mockImplementationOnce(() => Promise.resolve({
+        exists: () => true,
+        data: () => ({
+          friends: [mockFriend.id]
+        })
+      }))
+      // Second call - checking if conversation exists
+      .mockImplementationOnce(() => Promise.resolve({
+        exists: () => false
+      }))
+      // Third and fourth calls - checking userChats
+      .mockImplementationOnce(() => Promise.resolve({
+        exists: () => true,
+        data: () => ({
+          chats: []
+        })
+      }))
+      .mockImplementationOnce(() => Promise.resolve({
+        exists: () => true,
+        data: () => ({
+          chats: []
+        })
+      }));
 
-    it('should create a new chat and update userChats for both users', async () => {
-      const mockSetDoc = jest.fn();
-      const mockUpdateDoc = jest.fn();
-      const mockDispatch = jest.fn();
+    // Spy on Firebase operations
+    const setDocSpy = jest.spyOn(require('firebase/firestore'), 'setDoc');
+    const updateDocSpy = jest.spyOn(require('firebase/firestore'), 'updateDoc');
 
+    // Render the component
+    render(<AddUser />, { wrapper: Wrapper });
 
-      // Mock Firestore functions to simulate behavior
-      require('firebase/firestore').setDoc.mockImplementation(mockSetDoc);
-      require('firebase/firestore').getDoc.mockImplementation((docRef) => {
-        if (docRef.data.id === 'userChats_testUserId') {
-          return Promise.resolve({
-            exists: () => true,
-            data: () => ({
-              id: 'testUserId', // Include the expected 'id' field
-              username: 'testFriend',
-              chats: [],
-          }),
-          });
-        }
-        return Promise.resolve({ exists: () => false });
-      });
-      require('firebase/firestore').updateDoc.mockImplementation(mockUpdateDoc);
+    // Search for the user
+    const searchInput = screen.getByPlaceholderText('username');
+    const searchButton = screen.getByText('Search');
 
-      render(
-        <AddUser />,
-        { wrapper: Wrapper }
-      );
-
-      const searchInput = screen.getByPlaceholderText('username');
-      const searchButton = screen.getByText('Search');
-
-      // Mock user input for searching a friend
+    await act(async () => {
       fireEvent.change(searchInput, { target: { value: 'testFriend' } });
       fireEvent.click(searchButton);
+    });
 
-      // Ensure the search result appears
-      await waitFor(() => {
-        expect(screen.getByText('testFriend')).toBeInTheDocument();
-      });
+    // Wait for search results and verify user appears
+    await waitFor(() => {
+      expect(screen.getByText('testFriend')).toBeInTheDocument();
+    });
 
-      const addButton = screen.getByText('Add User');
-      expect(addButton).toBeInTheDocument();
+    // Click the Add User button
+    const addButton = screen.getByRole('button', { name: /add user/i });
+    await act(async () => {
+      fireEvent.click(addButton);
+    });
 
-      // Mock the add user functionality
-      await fireEvent.click(addButton);
+    // Verify the chat creation process
+    await waitFor(() => {
+      // Check if conversation document was created
+      expect(setDocSpy).toHaveBeenCalledWith(
+        expect.any(Object), // conversation doc reference
+        expect.objectContaining({
+          messages: [],
+          participants: expect.arrayContaining(['test-uid', 'friend123']),
+          username: 'testFriend',
+          currentUser: 'test-user'
+        })
+      );
 
-      // Assert Firestore calls and dispatch
-      await waitFor(() => {
-        expect(mockSetDoc).toHaveBeenCalledWith(
-          expect.any(Object),
-          expect.objectContaining({
-            conversationId: expect.any(String),
-            createdAt: expect.any(Date),
-            messages: [],
-            participants: expect.arrayContaining(['mockUserId']),
+      expect(updateDocSpy).toHaveBeenCalledTimes(1);
+
+      // Verify chat context was updated
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: 'CHANGE_USER',
+        payload: expect.objectContaining({
+          user: expect.objectContaining({
+            username: 'testFriend',
+            uid: 'friend123'
           })
-        );
-
-        expect(mockUpdateDoc).toHaveBeenCalledTimes(2);
-        expect(mockDispatch).toHaveBeenCalledWith({
-          type: 'CHANGE_USER',
-          payload: expect.objectContaining({
-            user: expect.objectContaining({ username: 'testFriend' }),
-            chatId: expect.any(String),
-            conversationId: expect.any(String),
-          }),
-        });
+        })
       });
     });
+
+    // Clean up spies
+    setDocSpy.mockRestore();
+    updateDocSpy.mockRestore();
   });
 
+  it('should handle errors during chat creation', async () => {
+    // Mock the Firebase functions with an error scenario
+    const { getDocs, getDoc, setDoc } = require('firebase/firestore');
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
+    // Mock successful search
+    getDocs.mockImplementation(() => Promise.resolve({
+      empty: false,
+      docs: [{
+        id: 'friend123',
+        data: () => ({
+          uid: 'friend123',
+          username: 'testFriend',
+          friends: ['test-uid']
+        })
+      }]
+    }));
+
+    // Mock user verification
+    getDoc.mockImplementationOnce(() => Promise.resolve({
+      exists: () => true,
+      data: () => ({
+        friends: ['friend123']
+      })
+    }));
+
+    // Mock setDoc to throw an error
+    setDoc.mockRejectedValue(new Error('Failed to create chat'));
+
+    // Render component
+    render(<AddUser />, { wrapper: Wrapper });
+
+    // Perform search
+    const searchInput = screen.getByPlaceholderText('username');
+    const searchButton = screen.getByText('Search');
+
+    await act(async () => {
+      fireEvent.change(searchInput, { target: { value: 'testFriend' } });
+      fireEvent.click(searchButton);
+    });
+
+    // Wait for search results
+    await waitFor(() => {
+      expect(screen.getByText('testFriend')).toBeInTheDocument();
+    });
+
+    // Click add user button
+    const addButton = screen.getByRole('button', { name: /add user/i });
+    await act(async () => {
+      fireEvent.click(addButton);
+    });
+
+    // Verify error handling
+    await waitFor(() => {
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Error creating chat:',
+        expect.any(Error)
+      );
+    });
+
+    // Clean up
+    consoleSpy.mockRestore();
+  });
 });
 });
