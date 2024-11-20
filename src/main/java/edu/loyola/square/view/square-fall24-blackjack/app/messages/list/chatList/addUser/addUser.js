@@ -56,7 +56,7 @@ export const AddUser = () => {
         const adminSnapshot = await getDocs(adminQuery);
 
         if (adminSnapshot.empty) {
-          console.log("No admins found.");
+         // console.log("No admins found.");
           return;
         }
         // Get list of admins
@@ -76,9 +76,9 @@ export const AddUser = () => {
   const handleAddChat = async (user) => {
 
     if (!currentUser?.uid || !user?.uid) {
-      console.log("current user", currentUser.uid)
-      console.log("user", user.uid)
-      console.error("Either currentUser or recipient user ID is undefined.");
+      //console.log("current user", currentUser.uid)
+      //console.log("user", user.uid)
+      //console.error("Either currentUser or recipient user ID is undefined.");
       return;
     }
     try {

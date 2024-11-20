@@ -3,8 +3,6 @@
  */
 package edu.loyola.square.model;
 
-import org.springframework.web.bind.annotation.PathVariable;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
