@@ -8,7 +8,7 @@ import AceModal from '../AceModal'
 import GameInfo from '../GameInfo'
 import InputGroup from "react-bootstrap/InputGroup";
 import Form from "react-bootstrap/Form";
-import {FriendsIcon, MessageIcon} from '../icons';
+import {FriendsIcon, MessageIcon, TableChatIcon} from '../icons';
 import PlaceBetAnimation from '../BetTypeAnimation'
 import { auth, db } from "@/firebaseConfig";
 import {doc, getDoc, deleteDoc, updateDoc, arrayRemove, onSnapshot} from 'firebase/firestore';
@@ -741,13 +741,13 @@ export default function CardDisplay({ tableId }) {
   //ace value between 1 and 11 after being prompted initially, given that they wont bust
   const ChangeAce = () => {
     return (
-        <div>
-          <button
+        <div className="ace-btns-container">
+          <button className="btn btn-primary"
             onClick={() => handleAceValueSelect(1)}
           >
             Set Ace to 1
           </button>
-          <button
+          <button class="btn btn-primary"
             onClick={() => handleAceValueSelect(11)}
           >
             Set Ace to 11
@@ -857,6 +857,9 @@ export default function CardDisplay({ tableId }) {
           )}
 
           {gameStarted && !gameOver && (
+
+            <div className="stack-btn-container">
+                  <ChangeAce/>
             <div className="btn-container">
               <button
                 className="action-btn"
@@ -872,6 +875,7 @@ export default function CardDisplay({ tableId }) {
               >
                 Stand
               </button>
+            </div>
             </div>
           )}
 
@@ -902,14 +906,14 @@ export default function CardDisplay({ tableId }) {
             </div>
           )}
           <div className="message-icon">
-            <div className="icons-btn" onClick={() => setIsChatOpen((prev) => !prev)}>
+            <div className="icons-btn" onClick={() => setIsFriendChatOpen((prev) => !prev)}>
               <MessageIcon/>
               {isFriendChatOpen && <ChatBox onClose={handleCloseFriendChat}/>}
             </div>
           </div>
           <div className="table-chat-icon">
             <div className="icons-btn" onClick={() => setIsTableChatOpen((prev) => !prev)}>
-              <MessagesSquare/>
+              <TableChatIcon/>
               {isTableChatOpen && <TableChat db={db} tableId={tableId} onClose={handleCloseTableChat}/>}
             </div>
           </div>
@@ -923,11 +927,7 @@ export default function CardDisplay({ tableId }) {
             showModal={showAceModal}
             onSelectValue={handleAceValueSelect}
           />
-          {gameStarted && showAceButton && (
-            <div>
-              <ChangeAce/>
-            </div>
-          )}
+
 
         </div>
       </div>
