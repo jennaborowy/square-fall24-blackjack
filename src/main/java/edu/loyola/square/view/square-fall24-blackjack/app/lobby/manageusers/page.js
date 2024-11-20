@@ -43,6 +43,9 @@ function ManageUsers() {
         }
     }, [currentUser]);
 
+    //THIS IS HIP TOO - emma We designated one file to list all the users in the database then another file to
+    //display the selected user from the previous column in more detail when the user clicks a button. Both
+    //are displayed at the same time and the user can then edit profile info
     return (
         <div className="row">
             <div className="col">

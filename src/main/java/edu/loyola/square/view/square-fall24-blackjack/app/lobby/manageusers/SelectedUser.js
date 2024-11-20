@@ -152,7 +152,7 @@ function SelectedUser({ userInfo, setErr, setErrMsg, setSuccess, setSuccessMsg }
         }
 
         else {
-            setErrMsg("Last name field must be populated to update");
+            setErrMsg("Email field must be populated to update");
             setErr(true);
         }
     }
