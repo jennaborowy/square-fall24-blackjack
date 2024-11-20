@@ -63,6 +63,11 @@ public class UserController {
   @PostMapping("/reset-password")
   public ResponseEntity<Object> resetPassword(@Valid @RequestBody AuthDTO authDTO) {
     try {
+      // THIS IS HIP TOO
+      // Jenna - this code required using FirebaseAdmin. Going through FirebaseAdmin required using the Controller,
+      //   which adds a protective layer from someone having easy access to changing a password.
+      //   I find it interesting, because we don't have direct access to the passwords stored by Firebase,
+      //   but as long as the uid is valid, we can change the password.
       UpdateRequest request = new UserRecord.UpdateRequest(authDTO.getUid())
               .setPassword(authDTO.getPassword());
 
