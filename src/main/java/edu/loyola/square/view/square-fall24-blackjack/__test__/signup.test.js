@@ -5,8 +5,6 @@ import Signup from "../app/signup/page"
 import {useRouter} from "next/navigation";
 import '@testing-library/jest-dom';
 import React from 'react';
-import Dialog from '@mui/material/Dialog';
-import ManageUsers from "@/app/lobby/manageusers/page";
 
 jest.mock("next/navigation", () => ({
     useRouter: jest.fn()
