@@ -5,14 +5,12 @@ import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.UserRecord;
 import com.google.firebase.auth.UserRecord.CreateRequest;
 import com.google.firebase.auth.UserRecord.UpdateRequest;
-import com.google.firebase.cloud.FirestoreClient;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.DocumentReference;
 import edu.loyola.square.controller.service.UserService;
 import edu.loyola.square.model.dto.AuthDTO;
 import edu.loyola.square.model.dto.UserDTO;
 import edu.loyola.square.model.entity.User;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -40,14 +38,13 @@ public class UserController {
 
   private final FirebaseAuth firebaseAuth;
   private final Firestore firestore;
+  private final UserService userService;
 
-  public UserController() {
-    this.firebaseAuth = FirebaseAuth.getInstance();
-    this.firestore = FirestoreClient.getFirestore();
+  public UserController(FirebaseAuth firebaseAuth, Firestore firestore, UserService userService) {
+    this.firebaseAuth = firebaseAuth;
+    this.firestore = firestore;
+    this.userService = userService;
   }
-
-  @Autowired
-  private UserService userService;
 
   // Example usage
   @GetMapping("/{uid}")
@@ -66,10 +63,6 @@ public class UserController {
   @PostMapping("/reset-password")
   public ResponseEntity<Object> resetPassword(@Valid @RequestBody AuthDTO authDTO) {
     try {
-      //User user = userService.getUserByUsername(userDTO.getUsername());
-      System.out.println("hellooooo");
-//      System.out.println(userDTO.getPassword());
-//      System.out.println(userDTO.getId());
       UpdateRequest request = new UserRecord.UpdateRequest(authDTO.getUid())
               .setPassword(authDTO.getPassword());
 
@@ -77,9 +70,6 @@ public class UserController {
       return ResponseEntity.ok(userRecord);
 
     } catch (Exception e) {
-      System.out.println(authDTO);
-      System.out.println(authDTO.getPassword());
-      System.out.println(authDTO.getUid());
       return ResponseEntity.internalServerError().build();
     }
   }
@@ -112,7 +102,7 @@ public class UserController {
 
 
   @DeleteMapping("/delete")
-  public ResponseEntity<String> deleteUser(@RequestBody AuthDTO authDTO) throws FirebaseAuthException {
+  public ResponseEntity<String> deleteUser(@RequestBody AuthDTO authDTO) {
     try {
       // deletes auth instance
       firebaseAuth.deleteUser(authDTO.getUid());
@@ -207,8 +197,7 @@ public class UserController {
       else {
         claims.put("accountUser", true);
       }
-      FirebaseAuth.getInstance().setCustomUserClaims(userRecord.getUid(), claims);
-
+      firebaseAuth.setCustomUserClaims(userRecord.getUid(), claims);
 
       System.out.println("Response: " + ResponseEntity.status(HttpStatus.CREATED).body(userData));
       return ResponseEntity.status(HttpStatus.CREATED).body(userData);
@@ -241,9 +230,7 @@ public class UserController {
           return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
           return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
-        } catch (ExecutionException e) {
-          throw new RuntimeException(e);
-        } catch (InterruptedException e) {
+        } catch (ExecutionException | InterruptedException e) {
           throw new RuntimeException(e);
         }
 
@@ -255,21 +242,5 @@ public class UserController {
     errorResponse.put("message", e.getReason());
     return new ResponseEntity<>(errorResponse, e.getStatusCode());
   }
-
-  // Add this middleware to verify Firebase ID tokens in protected routes
-  private String verifyFirebaseToken(String authHeader) {
-    try {
-      if (authHeader != null && authHeader.startsWith("Bearer ")) {
-        String idToken = authHeader.substring(7);
-        return firebaseAuth.verifyIdToken(idToken).getUid();
-      }
-      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No token provided");
-    } catch (FirebaseAuthException e) {
-      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token");
-    }
-  }
-
-
-
 
 }

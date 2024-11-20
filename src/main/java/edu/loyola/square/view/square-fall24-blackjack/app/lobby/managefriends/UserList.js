@@ -18,7 +18,7 @@ function UserList({ userList, updateFriend }) {
                                     </p>
                                 </div>
                                 <div className="col text-end">
-                                    <button className="btn btn-success mt-3" onClick={(e) => {
+                                    <button className="btn btn-success mt-3" name="add" onClick={(e) => {
                                         updateFriend(user)
                                             .then(() => console.log("updated"))
                                             .catch((error) => {
