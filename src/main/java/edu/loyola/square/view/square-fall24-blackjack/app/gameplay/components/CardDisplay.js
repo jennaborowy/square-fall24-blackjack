@@ -737,6 +737,8 @@ export default function CardDisplay({ tableId }) {
     }
   }, [playerHands]);
 
+  //THIS IS HIP TOO - Callie, this code completes the change ace, allowing the user to switch their
+  //ace value between 1 and 11 after being prompted initially, given that they wont bust
   const ChangeAce = () => {
     return (
         <div>
