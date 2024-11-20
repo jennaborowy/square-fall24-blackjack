@@ -25,6 +25,21 @@
     gap: 75px;
 }
 
+.ace-btns-container{
+    height: 100px;
+    margin: 20px auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 75px;
+}
+
+.stack-btn-container{
+    display: flex;
+    flex-direction: column; /* Stack items vertically */
+    align-items: center; /* Optional: Center buttons horizontally */
+}
+
 .left-column, .right-column {
     display: flex;
     flex-direction: column;

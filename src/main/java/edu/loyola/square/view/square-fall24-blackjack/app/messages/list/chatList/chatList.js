@@ -21,7 +21,7 @@ export default function ChatList () {
   useEffect(() => {
     //console.log(auth?.currentUser?.uid)
     if (!currentUser) {
-      console.error("Current user not authenticated");
+     // console.error("Current user not authenticated");
       return;
     }
     //snapshot of all the users current chats

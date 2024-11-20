@@ -1,4 +1,4 @@
-import {fireEvent, render, screen, waitFor} from '@testing-library/react';
+import {act, fireEvent, render, screen, waitFor} from '@testing-library/react';
 import ChatList from '@/app/messages/list/chatList/ChatList';
 import { AuthContext } from "@/app/messages/AuthContext";
 import { ChatContext } from "@/app/messages/ChatContext";
@@ -33,6 +33,9 @@ jest.mock('firebase/firestore', () => ({
     }
   }),
 }));
+
+const mockDispatch = jest.fn();
+
 
 // Mock context values
 const mockAuthContext = {
@@ -78,7 +81,7 @@ describe('ChatList Component', () => {
     });
   });
 
-  it('opens and closes the add user form', () => {
+  it('opens and closes the add user form', async () => {
     render(
       <AuthContext.Provider value={mockAuthContext}>
         <ChatContext.Provider value={mockChatContext}>
@@ -90,21 +93,25 @@ describe('ChatList Component', () => {
     // Check that AddUser is not visible initially
     expect(screen.queryByText('AddUser Component')).toBeNull();
 
-    // Click on the add button
-    fireEvent.click(screen.getByRole('button', { name: /add/i }));
+    // Wrap the click event in act to handle state updates properly
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("AddIcon"));
+    });
 
     // Check that AddUser is visible after clicking
-    expect(screen.getByText('AddUser Component')).toBeInTheDocument();
+    const addUserComponent = screen.getByText(/AddUser Component/i);
 
-    // Click on the remove button to close the AddUser form
-    fireEvent.click(screen.getByRole('button', { name: /remove/i }));
+    // Wrap the second click event in act
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /remove/i }));
+    });
 
     // Check that AddUser is no longer visible
     expect(screen.queryByText('AddUser Component')).toBeNull();
   });
 
 
-  it('selects a chat and dispatches the correct action', () => {
+  it('selects a chat and dispatches the correct action', async () => {
     const mockChat = {
       chatId: '1',
       receiverId: '2',
@@ -120,17 +127,22 @@ describe('ChatList Component', () => {
       </AuthContext.Provider>
     );
 
-    // Click on a chat
-    fireEvent.click(screen.getByText('Friend 1'));
+    // Wait for the chat to appear
+    await waitFor(() => expect(screen.getByText(/Friend 1/i)).toBeInTheDocument());
 
-    // Check if dispatch was called with the correct payload
-    expect(mockDispatch).toHaveBeenCalledWith({
-      type: 'CHANGE_USER',
-      payload: {
-        user: { ...mockChat, uid: mockChat.receiverId },
-        chatId: 'testUserId_2',
-        conversationId: 'testUserId_2',
-      }
+    // Click on the chat
+    fireEvent.click(screen.getByText(/Friend 1/i));
+
+    // Wait for dispatch to be called
+    await waitFor(() => {
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: 'CHANGE_USER',
+        payload: {
+          user: { ...mockChat, uid: mockChat.receiverId },
+          chatId: 'testUserId_2',
+          conversationId: 'testUserId_2',
+        }
+      });
     });
   });
 });
