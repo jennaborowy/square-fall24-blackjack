@@ -141,7 +141,7 @@ export default function Chat() {
         <div className="user">
           <div className="texts">
 
-            <p>{console.log("user is", user.username)}Online</p>
+            <p>Online</p>
           </div>
         </div>
       </div>

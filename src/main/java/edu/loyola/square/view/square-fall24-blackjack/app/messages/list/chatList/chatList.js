@@ -19,7 +19,7 @@ export default function ChatList () {
 
 
   useEffect(() => {
-    console.log(auth?.currentUser?.uid)
+    //console.log(auth?.currentUser?.uid)
     if (!currentUser) {
       console.error("Current user not authenticated");
       return;
@@ -52,7 +52,6 @@ export default function ChatList () {
       unsubscribe();
     };
   }, [currentUser?.uid]);
-  console.log("Chats here", chats)
 
   //opens a specific chat
   const handleSelectChat = (chat) => {

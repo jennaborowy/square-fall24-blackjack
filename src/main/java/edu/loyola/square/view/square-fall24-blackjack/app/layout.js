@@ -1,3 +1,4 @@
+import React from 'react';
 import './globals.css';
 import 'bootstrap/dist/css/bootstrap.css';
 import { AuthProvider } from "@/app/context/auth";

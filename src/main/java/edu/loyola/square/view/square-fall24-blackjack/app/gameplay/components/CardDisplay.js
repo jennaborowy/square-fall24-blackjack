@@ -37,6 +37,7 @@ export default function CardDisplay({ tableId }) {
   const [isFriendChatOpen, setIsFriendChatOpen] = useState(false);
   const [isTableChatOpen, setIsTableChatOpen] = useState(false);
 
+  const [showAceButton, setShowAceButton] = useState(false);
   const [tableMessages, setTableMessages] = useState();
   const isCurrentPlayer = auth?.currentUser?.uid === players[playerIndex];
 
@@ -90,7 +91,7 @@ export default function CardDisplay({ tableId }) {
 
     try {
       const newIndex = playerIndex + 1;
-      console.log('Updating player index:', { current: playerIndex, new: newIndex });
+      console.log('Updating player index:', {current: playerIndex, new: newIndex});
 
       const tableRef = doc(db, 'Table', tableId);
       await updateDoc(tableRef, {
@@ -280,7 +281,7 @@ export default function CardDisplay({ tableId }) {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ tableId }),
+        body: JSON.stringify({tableId}),
       });
 
       // Clean up Firestore
@@ -299,17 +300,17 @@ export default function CardDisplay({ tableId }) {
           await updateDoc(tableRef, {
             players: remainingPlayers,
             playerHands: Object.fromEntries(
-                Object.entries(tableData.playerHands || {})
-                    .filter(([id]) => id !== auth.currentUser.uid)
+              Object.entries(tableData.playerHands || {})
+                .filter(([id]) => id !== auth.currentUser.uid)
             ),
             playerBets: Object.fromEntries(
-                Object.entries(tableData.playerBets || {})
-                    .filter(([id]) => id !== auth.currentUser.uid)
+              Object.entries(tableData.playerBets || {})
+                .filter(([id]) => id !== auth.currentUser.uid)
             ),
             // If the leaving player was the current player, update playerIndex
             playerIndex: tableData.playerIndex > remainingPlayers.length ?
-                remainingPlayers.length :
-                Math.min(tableData.playerIndex, remainingPlayers.length - 1)
+              remainingPlayers.length :
+              Math.min(tableData.playerIndex, remainingPlayers.length - 1)
           });
         }
       }
@@ -490,9 +491,9 @@ export default function CardDisplay({ tableId }) {
       // dealer's turn if that was the last player
       const isLastPlayer = playerIndex === players.length - 1;
       const shouldPlayDealer = isLastPlayer &&
-          result.players.some((player, idx) => {
-            return idx < players.length && player.value <= 21;
-          });
+        result.players.some((player, idx) => {
+          return idx < players.length && player.value <= 21;
+        });
 
       if (shouldPlayDealer) {
         console.log('=== DEALER TURN STARTING ===');
@@ -546,11 +547,12 @@ export default function CardDisplay({ tableId }) {
       setPlayerHands(newPlayerHands);
       setGameState(result);
       setShowAceModal(false);
+      setShowAceButton(true);
 
       if (!result.players[playerIndex].isActive ||
-          result.gameStatus?.endStatus === "PLAYER_WIN" ||
-          result.gameStatus?.endStatus === "PLAYER_BUST" ||
-          result.gameStatus?.endStatus === "NEXT_PLAYER") {
+        result.gameStatus?.endStatus === "PLAYER_WIN" ||
+        result.gameStatus?.endStatus === "PLAYER_BUST" ||
+        result.gameStatus?.endStatus === "NEXT_PLAYER") {
         await updatePlayerIndex();
       }
 
@@ -607,7 +609,7 @@ export default function CardDisplay({ tableId }) {
       const playerState = playerStates[i];
       const playerValue = playerState.value;
       const dealerValue = dealerResult.dealerHand?.reduce((total, card) =>
-          total + card.value, 0) || 0;
+        total + card.value, 0) || 0;
 
       if (playerValue > 21) {
         // Handle busted players
@@ -620,7 +622,7 @@ export default function CardDisplay({ tableId }) {
       } else {
         // Process non-busted players
         await processWinLossPush(playerId, playerValue, dealerValue,
-            playerBet, userData, docRef);
+          playerBet, userData, docRef);
       }
     }
   };
@@ -633,9 +635,9 @@ export default function CardDisplay({ tableId }) {
     const currentPlayerHand = playerHands[currentUserId];
 
     if (gameStarted &&
-        isCurrentPlayer &&
-        hasAce(currentPlayerHand) &&
-        !handledAces[currentUserId]) {
+      isCurrentPlayer &&
+      hasAce(currentPlayerHand) &&
+      !handledAces[currentUserId]) {
       setShowAceModal(true);
       console.log('=== IN PLAYER ', currentUserId, ' HAS ACE AND HAS NOT SET VALUE YET ===');
     } else {
@@ -668,65 +670,89 @@ export default function CardDisplay({ tableId }) {
 
       await promptAce(value);
       console.log(playerHands);
+      console.log("Ace value is now", value)
     } catch (error) {
       console.error("Error updating ace handled state:", error);
     }
   };
 
+    // checks that all bets are placed
+    const handleBetPlaced = async (betValue) => {
+      const bet = betValue.target.value;
+      setBetAmount(bet);
+      const isValid = await validateBet(bet);
 
-  // checks that all bets are placed
-  const handleBetPlaced = async (betValue) => {
-    const bet = betValue.target.value;
-    setBetAmount(bet);
-    const isValid = await validateBet(bet);
+      if (isValid) {
+        // Update Firestore with the new bet
+        const tableRef = doc(db, 'Table', tableId);
+        const currentUserId = auth?.currentUser?.uid;
 
-    if (isValid) {
-      // Update Firestore with the new bet
-      const tableRef = doc(db, 'Table', tableId);
-      const currentUserId = auth?.currentUser?.uid;
+        try {
+          const newPlayerBets = {
+            ...playerBets,
+            [currentUserId]: {
+              amount: parseFloat(bet),
+              isValid: true,
+            }
+          };
 
-      try {
-        const newPlayerBets = {
-          ...playerBets,
-          [currentUserId]: {
-            amount: parseFloat(bet),
-            isValid: true,
-          }
-        };
+          await updateDoc(tableRef, {playerBets: newPlayerBets});
 
-        await updateDoc(tableRef, {playerBets: newPlayerBets});
-
-        setPlayerBets(newPlayerBets);
-      } catch (error) {
-        console.error("Error updating bet in Firestore:", error);
+          setPlayerBets(newPlayerBets);
+        } catch (error) {
+          console.error("Error updating bet in Firestore:", error);
+        }
       }
+    };
+
+    const handleCloseFriendChat = () => {
+      console.log("Closing chat...");
+      setIsFriendChatOpen(false);
+      console.log("Chat is now closed:", isFriendChatOpen);
+    };
+    useEffect(() => {
+      console.log("isChatOpen changed:", isFriendChatOpen);
+    }, [isFriendChatOpen]);
+
+    const handleCloseTableChat = () => {
+
+      console.log("Closing chat...");
+      setIsTableChatOpen(false);
+      console.log("Chat is now closed:", isTableChatOpen);
     }
-  };
 
-  const handleCloseFriendChat = () => {
-    console.log("Closing chat...");
-    setIsFriendChatOpen(false);
-    console.log("Chat is now closed:", isFriendChatOpen);
-  };
+    // T/F if the hand has an ace
+    const hasAce = (hand) => {
+      return hand?.some(card => card.rank === 'A');
+    };
+
   useEffect(() => {
-    console.log("isChatOpen changed:", isFriendChatOpen);
-  }, [isFriendChatOpen]);
+    const currentUserId = auth?.currentUser?.uid;
+    const currentPlayerHand = playerHands[currentUserId];
 
-  const handleCloseTableChat = () => {
+    if (currentPlayerHand) {
+      setShowAceButton(hasAce(currentPlayerHand));
+    } else {
+      setShowAceButton(false); // Reset if no hand exists
+    }
+  }, [playerHands]);
 
-  // T/F if the hand has an ace
-  const hasAce = (hand) => {
-    return hand?.some(card => card.rank === 'A');
+  const ChangeAce = () => {
+    return (
+        <div>
+          <button
+            onClick={() => handleAceValueSelect(1)}
+          >
+            Set Ace to 1
+          </button>
+          <button
+            onClick={() => handleAceValueSelect(11)}
+          >
+            Set Ace to 11
+          </button>
+      </div>
+    );
   };
-
-
-  // handles closing the chat
-  const handleClose = () => {
-    console.log("Closing chat...");
-    setIsTableChatOpen(false);
-    console.log("Chat is now closed:", isTableChatOpen);
-  };
-
 
   // handles opening the chat
   useEffect(() => {
@@ -735,20 +761,20 @@ export default function CardDisplay({ tableId }) {
 
 
   // Display for flipping the dealer's second card
-  const FlippableCard = ({ suit, rank, isFlipped }) => {
+  const FlippableCard = ({suit, rank, isFlipped}) => {
     return (
         <div className={`cardArea card-flip ${isFlipped ? 'has-flipped' : ''}`}>
           <div className="card-front">
-            <Card suit={suit} rank={rank} />
+            <Card suit={suit} rank={rank}/>
           </div>
-          <div className="card-back" />
+          <div className="card-back"/>
         </div>
-    );
-  };
+      );
+    };
 
 
-  // JSX component for rendering in [tableId]/page.js
-  return (
+    // JSX component for rendering in [tableId]/page.js
+    return (
       <div>
         <div className="cardDisplay">
           <div className="friend-icon">
@@ -756,15 +782,15 @@ export default function CardDisplay({ tableId }) {
           </div>
 
           {gameStarted && (
-              <div className="leave-btn">
-                <button
-                    className="mt-3 btn btn-danger"
-                    onClick={handleLeaveTable}
-                    disabled={playerIndex < players.length}
-                >
-                  Leave Game
-                </button>
-              </div>
+            <div className="leave-btn">
+              <button
+                className="mt-3 btn btn-danger"
+                onClick={handleLeaveTable}
+                disabled={playerIndex < players.length}
+              >
+                Leave Game
+              </button>
+            </div>
           )}
 
           {!gameStarted ? (
@@ -806,72 +832,72 @@ export default function CardDisplay({ tableId }) {
           ) : null}
 
           {gameStarted && (
-              <div className="dealerHand-container">
-                {dealerHand.map((card, index) => (
-                    index === 1 ? (
-                        <FlippableCard
-                            key={index}
-                            suit={card.suit}
-                            rank={card.rank}
-                            isFlipped={playerIndex < players.length}
-                        />
-                    ) : (
-                        <Card key={index} suit={card.suit} rank={card.rank}/>
-                    )
-                ))}
-              </div>
+            <div className="dealerHand-container">
+              {dealerHand.map((card, index) => (
+                index === 1 ? (
+                  <FlippableCard
+                    key={index}
+                    suit={card.suit}
+                    rank={card.rank}
+                    isFlipped={playerIndex < players.length}
+                  />
+                ) : (
+                  <Card key={index} suit={card.suit} rank={card.rank}/>
+                )
+              ))}
+            </div>
           )}
 
           {gameOver && (
-              <div className="end-container">
-                {gameStatusMessage}
-              </div>
+            <div className="end-container">
+              {gameStatusMessage}
+            </div>
           )}
 
           {gameStarted && !gameOver && (
-              <div className="btn-container">
-                <button
-                    className="action-btn"
-                    onClick={playerHits}
-                    disabled={!isCurrentPlayer || playerStand}
-                >
-                  Hit
-                </button>
-                <button
-                    className="action-btn"
-                    onClick={playerStands}
-                    disabled={!isCurrentPlayer || playerStand}
-                >
-                  Stand
-                </button>
-              </div>
+            <div className="btn-container">
+              <button
+                className="action-btn"
+                onClick={playerHits}
+                disabled={!isCurrentPlayer || playerStand}
+              >
+                Hit
+              </button>
+              <button
+                className="action-btn"
+                onClick={playerStands}
+                disabled={!isCurrentPlayer || playerStand}
+              >
+                Stand
+              </button>
+            </div>
           )}
 
           {gameStarted && (
-              <div className="all-players-container">
-                {Array.isArray(players) && players.length > 0 ? (
-                    players.map((playerId, index) => (
-                        <div key={playerId}
-                             className={`playerHand-container ${index === playerIndex ? 'active-player' : ''}`}>
-                          {playerHands && playerHands[playerId] && Array.isArray(playerHands[playerId]) ? (
-                              playerHands[playerId].map((card, cardIndex) => (
-                                  <Card key={cardIndex} suit={card.suit} rank={card.rank}/>
-                              ))
-                          ) : (
-                              <div>Waiting for cards...</div>
-                          )}
-                        </div>
-                    ))
-                ) : (
-                    <div>Loading players...</div>
-                )}
-              </div>
+            <div className="all-players-container">
+              {Array.isArray(players) && players.length > 0 ? (
+                players.map((playerId, index) => (
+                  <div key={playerId}
+                       className={`playerHand-container ${index === playerIndex ? 'active-player' : ''}`}>
+                    {playerHands && playerHands[playerId] && Array.isArray(playerHands[playerId]) ? (
+                      playerHands[playerId].map((card, cardIndex) => (
+                        <Card key={cardIndex} suit={card.suit} rank={card.rank}/>
+                      ))
+                    ) : (
+                      <div>Waiting for cards...</div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div>Loading players...</div>
+              )}
+            </div>
           )}
 
           {gameStarted && (
-              <div className="bet-value">
-                {betAmount}
-              </div>
+            <div className="bet-value">
+              {betAmount}
+            </div>
           )}
           <div className="message-icon">
             <div className="icons-btn" onClick={() => setIsChatOpen((prev) => !prev)}>
@@ -886,15 +912,22 @@ export default function CardDisplay({ tableId }) {
             </div>
           </div>
           {gameStarted && (
-              <div className="game-stats-container">
-                <GameInfo/>
-              </div>
+            <div className="game-stats-container">
+              <GameInfo/>
+            </div>
           )}
+
           <AceModal
-              showModal={showAceModal}
-              onSelectValue={handleAceValueSelect}
+            showModal={showAceModal}
+            onSelectValue={handleAceValueSelect}
           />
+          {gameStarted && showAceButton && (
+            <div>
+              <ChangeAce/>
+            </div>
+          )}
+
         </div>
       </div>
-  );
+    );
 }
