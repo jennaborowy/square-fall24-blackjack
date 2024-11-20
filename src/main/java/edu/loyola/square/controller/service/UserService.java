@@ -12,12 +12,12 @@ import org.springframework.stereotype.Service;
 public class UserService {
   private final Firestore firestore;
   private final CollectionReference usersCollection;
-  private final FirebaseAuth firebaseAuth;
+  //private final FirebaseAuth firebaseAuth;
 
   public UserService() {
     this.firestore = FirestoreClient.getFirestore();
     this.usersCollection = firestore.collection("users");
-    this.firebaseAuth = FirebaseAuth.getInstance();
+    //this.firebaseAuth = FirebaseAuth.getInstance();
   }
 
   public User getUser(String uid) throws ExecutionException, InterruptedException {
@@ -50,33 +50,33 @@ public class UserService {
     return User.fromDocument(query.getDocuments().get(0));
   }
 
-  public void saveUser(User user) throws ExecutionException, InterruptedException {
-    usersCollection.document(user.getUid()).set(user.toDocument()).get();
-  }
-
-  public void updateChipBalance(String uid, int newBalance) throws ExecutionException, InterruptedException {
-    usersCollection.document(uid).update("chipBalance", newBalance).get();
-  }
-
-  public void incrementWins(String uid) throws ExecutionException, InterruptedException {
-    DocumentReference docRef = usersCollection.document(uid);
-    firestore.runTransaction(transaction -> {
-      DocumentSnapshot snapshot = transaction.get(docRef).get();
-      long currentWins = snapshot.getLong("totalWins") != null ?
-              snapshot.getLong("totalWins") : 0;
-      transaction.update(docRef, "totalWins", currentWins + 1);
-      return null;
-    }).get();
-  }
-
-  public void incrementLosses(String uid) throws ExecutionException, InterruptedException {
-    DocumentReference docRef = usersCollection.document(uid);
-    firestore.runTransaction(transaction -> {
-      DocumentSnapshot snapshot = transaction.get(docRef).get();
-      long currentLosses = snapshot.getLong("totalLosses") != null ?
-              snapshot.getLong("totalLosses") : 0;
-      transaction.update(docRef, "totalLosses", currentLosses + 1);
-      return null;
-    }).get();
-  }
+//  public void saveUser(User user) throws ExecutionException, InterruptedException {
+//    usersCollection.document(user.getUid()).set(user.toDocument()).get();
+//  }
+//
+//  public void updateChipBalance(String uid, int newBalance) throws ExecutionException, InterruptedException {
+//    usersCollection.document(uid).update("chipBalance", newBalance).get();
+//  }
+//
+//  public void incrementWins(String uid) throws ExecutionException, InterruptedException {
+//    DocumentReference docRef = usersCollection.document(uid);
+//    firestore.runTransaction(transaction -> {
+//      DocumentSnapshot snapshot = transaction.get(docRef).get();
+//      long currentWins = snapshot.getLong("totalWins") != null ?
+//              snapshot.getLong("totalWins") : 0;
+//      transaction.update(docRef, "totalWins", currentWins + 1);
+//      return null;
+//    }).get();
+//  }
+//
+//  public void incrementLosses(String uid) throws ExecutionException, InterruptedException {
+//    DocumentReference docRef = usersCollection.document(uid);
+//    firestore.runTransaction(transaction -> {
+//      DocumentSnapshot snapshot = transaction.get(docRef).get();
+//      long currentLosses = snapshot.getLong("totalLosses") != null ?
+//              snapshot.getLong("totalLosses") : 0;
+//      transaction.update(docRef, "totalLosses", currentLosses + 1);
+//      return null;
+//    }).get();
+//  }
 }

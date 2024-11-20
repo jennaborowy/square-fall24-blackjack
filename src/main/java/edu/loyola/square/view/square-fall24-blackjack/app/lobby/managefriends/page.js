@@ -19,6 +19,7 @@ function ManageFriends() {
     const currentUser = useAuth().currentUser;
 
     const initUserList = async () => {
+
         try {
             fetch('http://localhost:8080/api/user/', {
                 method: 'GET',
@@ -38,6 +39,7 @@ function ManageFriends() {
         } catch (error) {
             console.log(error.message);
         }
+
     }
 
     // dependent on currentUser loading -- initializes the lists after fetching from db
@@ -55,8 +57,8 @@ function ManageFriends() {
                 return {uid, ...friendSnap.data()}
             })
         );
-
         setFriends([...friendsData]);
+
     }
 
     useEffect(() => {
@@ -93,6 +95,7 @@ function ManageFriends() {
             console.log("error adding friend: ", error);
         }
         console.log("friends update: ", friends)
+
     }
 
     // removes friend from currentUser's friend list

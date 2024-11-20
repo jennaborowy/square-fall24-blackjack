@@ -85,6 +85,23 @@ describe('ManageFriends Component', () => {
         updateDoc.mockResolvedValue();
     });
 
+    afterEach(() => {
+        jest.resetAllMocks(); // Resets mocks and ensures a clean state
+    });
+
+    test('handles case when currentUser is null', async () => {
+        // Mock currentUser as null
+        useAuth.mockReturnValue({ currentUser: null });
+
+        render(<ManageFriends />);
+
+        // Verify that initialization functions weren't called
+        await waitFor(() => {
+            expect(fetch).not.toHaveBeenCalled();
+            expect(getDoc).not.toHaveBeenCalled();
+        });
+    });
+
     test('renders user list and friends list', async () => {
         render(<ManageFriends />);
 
@@ -96,13 +113,25 @@ describe('ManageFriends Component', () => {
         });
     });
 
+    test('handles empty user list response gracefully', async () => {
+        global.fetch.mockResolvedValueOnce({
+            json: () => Promise.resolve([]),
+        });
+
+        render(<ManageFriends />);
+        await waitFor(() => {
+            expect(screen.queryByText('@user1')).not.toBeInTheDocument();
+            expect(screen.queryByText('@friend1')).not.toBeInTheDocument();
+        });
+    });
+
     test('adds a friend successfully', async () => {
         render(<ManageFriends />);
 
         // Wait for the component to load
         await waitFor(() => {
             // Find all add friend buttons
-            const addButtons = screen.getAllByRole('button', { name: /add/i });
+            const addButtons = screen.getAllByRole('button', {name: /Add Friend/i});
             // Click the first add button
             fireEvent.click(addButtons[0]);
         });
@@ -154,6 +183,26 @@ describe('ManageFriends Component', () => {
         });
     });
 
+    test('handles errors in initFriends gracefully', async () => {
+        // Mock getDoc to throw an error
+        getDoc.mockRejectedValueOnce(new Error('Firestore error'));
+
+        // Mock console.log
+        const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+
+        // Render the component
+        render(<ManageFriends />);
+
+        // Wait for the error handling logic to execute
+        await waitFor(() => {
+            expect(consoleLogSpy).toHaveBeenCalledWith(expect.any(Error));
+            expect(consoleLogSpy).toHaveBeenCalledWith(expect.objectContaining({ message: 'Firestore error' }));
+        });
+
+        // Restore the original console.log after the test
+        consoleLogSpy.mockRestore();
+    });
+
     test('handles API error gracefully', async () => {
         // Mock console.log
         const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
@@ -202,6 +251,63 @@ describe('ManageFriends Component', () => {
         await waitFor(() => {
             expect(consoleSpy).toHaveBeenCalledWith('error adding friend: ', new Error('Firebase Error'));
         });
+    });
+
+    test('handles error in updateFriendToAdd', async () => {
+        // Mock getDoc to throw error for specific case
+        getDoc.mockImplementationOnce(() => Promise.reject(new Error('Failed to fetch friend data')));
+
+        const consoleSpy = jest.spyOn(console, 'log');
+
+        render(<ManageFriends />);
+
+        // Trigger updateFriendToAdd
+        await waitFor(() => {
+            const addButtons = screen.getAllByRole('button', {name: /add/i});
+            fireEvent.click(addButtons[0]);
+        });
+
+        // Verify error was logged
+        expect(consoleSpy).toHaveBeenCalledWith(expect.any(Error));
+
+        consoleSpy.mockRestore();
+    });
+
+    test('handles error in updateFriendToRemove', async () => {
+        // First mock getDoc to return friends list successfully
+        getDoc.mockImplementationOnce(() => Promise.resolve({
+            data: () => ({ friends: mockFriends.map(f => f.uid) })
+        }));
+
+        // Then mock getDoc for each friend in the list
+        mockFriends.forEach(friend => {
+            getDoc.mockImplementationOnce(() => Promise.resolve({
+                data: () => friend
+            }));
+        });
+
+        // Finally mock getDoc to throw error when trying to remove
+        getDoc.mockImplementationOnce(() => Promise.reject(new Error('Failed to fetch friend data')));
+
+        const consoleSpy = jest.spyOn(console, 'log');
+
+        render(<ManageFriends />);
+
+        // Wait for friends to be loaded and visible
+        await waitFor(() => {
+            expect(screen.getByText('@friend1')).toBeInTheDocument();
+        });
+
+        // Now we can find and click the remove button
+        const removeButtons = screen.getAllByRole('button', {name: /remove/i});
+        fireEvent.click(removeButtons[0]);
+
+        // Verify error was logged
+        await waitFor(() => {
+            expect(consoleSpy).toHaveBeenCalledWith(expect.any(Error));
+        });
+
+        consoleSpy.mockRestore();
     });
 
     test('modal can be cancelled', async () => {
