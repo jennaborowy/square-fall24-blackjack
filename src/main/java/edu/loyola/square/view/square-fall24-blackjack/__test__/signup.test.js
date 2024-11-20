@@ -2,51 +2,77 @@ import {fireEvent, getByText, render, screen, waitFor} from '@testing-library/re
 import '@testing-library/jest-dom/jest-globals'
 import {describe, expect, test, jest, beforeEach, it} from '@jest/globals'
 import Signup from "../app/signup/page"
-import handleSubmit from "../app/signup/page"
-import userEvent from "firebase-mock/browser/firebasemock";
 import {useRouter} from "next/navigation";
+import '@testing-library/jest-dom';
+import React from 'react';
+import Dialog from '@mui/material/Dialog';
+import ManageUsers from "@/app/lobby/manageusers/page";
 
 jest.mock("next/navigation", () => ({
     useRouter: jest.fn()
 }));
 
-global.fetch = jest.fn();
+jest.mock('@mui/material/Dialog', () => {
+    return function Dialog({ children, open }) {
+        return open ? <div data-testid="modal-content">{children}</div> : null;
+    };
+});
 
+jest.mock('@mui/material/DialogTitle', () => {
+    return function DialogTitle({ children }) {
+        return <div data-testid="dialog-title">{children}</div>;
+    };
+});
+
+jest.mock('@mui/material/DialogContent', () => {
+    return function DialogContent({ children }) {
+        return <div data-testid="dialog-content">{children}</div>;
+    };
+});
+
+jest.mock('@mui/material/DialogContentText', () => {
+    return function DialogContentText({ children }) {
+        return <div data-testid="dialog-text">{children}</div>;
+    };
+});
+
+jest.mock('@mui/material/DialogActions', () => {
+    return function DialogActions({ children }) {
+        return <div data-testid="dialog-actions">{children}</div>;
+    };
+});
 
 describe('Signup', () => {
-    const mockSetErrMsg = jest.fn();
-    const mockSetErr = jest.fn();
-    const mockSetSuccess = jest.fn();
-    const fillForm = async (user = {}) => {
-        const defaultUser = {
-            username: 'testuser',
-            password: 'Password123!',
-            confirm: 'Password123!',
-            email: 'test@example.com',
-            first: 'John',
-            last: 'Doe',
-            ...user
-        };
-
-        await userEvent.type(screen.getByPlaceholderText(/Username/i), defaultUser.username);
-        await userEvent.type(screen.getByPlaceholderText(/Password/i), defaultUser.password);
-        await userEvent.type(screen.getByPlaceholderText(/Confirm Password/i), defaultUser.confirm);
-        await userEvent.type(screen.getByPlaceholderText(/Email/i), defaultUser.email);
-        await userEvent.type(screen.getByPlaceholderText(/First Name/i), defaultUser.first);
-        await userEvent.type(screen.getByPlaceholderText(/Last Name/i), defaultUser.last);
+    const mockRouter = {
+        push: jest.fn()
     };
 
     beforeEach(() => {
         jest.clearAllMocks();
+        useRouter.mockReturnValue(mockRouter);
+        global.fetch = jest.fn();
     });
 
-    test("opens right signup page", async () => {
+
+    it("opens right signup page", async () => {
         render(<Signup/>);
-        const placeElement = await screen.findByPlaceholderText('First Name');
-        expect(placeElement).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('First Name')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('Last Name')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('Username')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('Email')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('Password')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('Confirm Password')).toBeInTheDocument();
+        expect(screen.getByText('Create Account')).toBeInTheDocument();
     });
 
-    it('handle a submit', async () => {
+
+    it('handle a sucessful submit', async () => {
+        global.fetch.mockImplementationOnce(() =>
+            Promise.resolve({
+                ok: true
+            })
+        );
+
         render(<Signup />);
 
         // Simulate user input for password fields
@@ -68,7 +94,9 @@ describe('Signup', () => {
         // Simulate form submission
         fireEvent.click(createAccountButton)
 
-        expect(mockSetErr()).toBe(true);
+        await waitFor(() => {
+            expect(mockRouter.push).toHaveBeenCalledWith('/login');
+        });
     });
 
     it('passwords do not match', async () => {
@@ -93,7 +121,49 @@ describe('Signup', () => {
         // Simulate form submission
         fireEvent.click(createAccountButton)
 
-        expect(mockSetErr()).toBe(true);
+        await waitFor(() => {
+            expect(screen.getByText('Password fields do not match.')).toBeInTheDocument();
+        });
+    });
+
+
+    it('handles server error response', async () => {
+        const errorMessage = 'Username already exists';
+        global.fetch.mockImplementationOnce(() =>
+            Promise.resolve({
+                ok: false,
+                json: () => Promise.resolve({ message: errorMessage })
+            })
+        );
+
+        render(<Signup />);
+
+        // Fill out form
+        fireEvent.input(screen.getByPlaceholderText('First Name'), {
+            target: { name: 'first', value: 'John' }
+        });
+        fireEvent.input(screen.getByPlaceholderText('Last Name'), {
+            target: { name: 'last', value: 'Doe' }
+        });
+        fireEvent.input(screen.getByPlaceholderText('Username'), {
+            target: { name: 'username', value: 'johndoe' }
+        });
+        fireEvent.input(screen.getByPlaceholderText('Email'), {
+            target: { name: 'email', value: 'john@example.com' }
+        });
+        fireEvent.input(screen.getByPlaceholderText('Password'), {
+            target: { name: 'password', value: 'password123' }
+        });
+        fireEvent.input(screen.getByPlaceholderText('Confirm Password'), {
+            target: { name: 'confirm', value: 'password123' }
+        });
+
+        // Submit form
+        fireEvent.click(screen.getByText('Create Account'));
+
+        await waitFor(() => {
+            expect(screen.getByText(errorMessage)).toBeInTheDocument();
+        });
     });
 
     test('should update state when input changes', async () => {

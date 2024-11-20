@@ -15,18 +15,15 @@ function Stats() {
         const display = auth.onAuthStateChanged(async ()=>
         {
             const curUser = auth.currentUser;
-            if(!curUser)
-                return
+
             if (curUser) {
                 const user = curUser.uid;
                 const docRef = doc(db, 'users', user);
                 const docSnap = await getDoc(docRef);
 
-                if (docSnap.exists()) {
-                    setLosses(docSnap.data()['totalLosses']);
-                    setWins(docSnap.data()['totalWins']);
-                    setChips(docSnap.data()['chipBalance']);
-                }
+                setLosses(docSnap.data()['totalLosses']);
+                setWins(docSnap.data()['totalWins']);
+                setChips(docSnap.data()['chipBalance']);
             }
         });
         return ()=> display;

@@ -72,12 +72,15 @@ export default function Home() {
                                   <a href="https://bicyclecards.com/how-to-play/blackjack">
                                       Click here for more Blackjack info.
                                   </a>
+                                  <a href="https://www.youtube.com/watch?v=xjqTIzYkGdI&ab_channel=TripleSGames">
+                                      Click here for more Blackjack info.
+                                  </a>
                                   </span>
                               </p>
                           </DialogContentText>
                       </DialogContent>
                       <DialogActions>
-                          <button className="mt-3 btn btn-success border" onClick={handleClose}>
+                      <button className="mt-3 btn btn-success border" onClick={handleClose}>
                               Ok
                           </button>
                       </DialogActions>
