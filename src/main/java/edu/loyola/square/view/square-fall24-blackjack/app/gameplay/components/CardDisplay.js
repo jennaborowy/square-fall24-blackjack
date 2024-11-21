@@ -217,6 +217,10 @@ export default function CardDisplay({ tableId }) {
   }, [tableId]);
 
 
+  // THIS IS HIP TOO - chris
+  // this code prevents the host of the game from starting the game until all players have entered a valid bet.
+  // this happens in real time so once you enter a valid bet you cant take it back!
+
   // stores the valid bets in firestore
   const validateBet = async (betAmount) => {
     try {
