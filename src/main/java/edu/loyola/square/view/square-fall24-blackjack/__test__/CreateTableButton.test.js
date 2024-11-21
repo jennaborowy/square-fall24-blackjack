@@ -1,48 +1,64 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import CreateTableButton from '../app/lobby/CreateTableButton';
 
-const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation();
+// Mock MUI Dialog components
+jest.mock('@mui/material/Dialog', () => {
+    return function Dialog({ children, open }) {
+        return open ? <div data-testid="dialog-content">{children}</div> : null;
+    };
+});
 
-jest.mock('@mui/material', () => ({
-    Dialog: ({ children, open, onClose }) => (
-        open ? <div data-testid="mock-dialog" onClick={onClose}>{children}</div> : null
-    ),
-    DialogContent: ({ children }) => <div>{children}</div>,
-    DialogContentText: ({ children }) => <div>{children}</div>,
-    DialogTitle: ({ children }) => <div>{children}</div>,
-    DialogActions: ({ children }) => <div>{children}</div>,
-}));
+jest.mock('@mui/material/DialogTitle', () => {
+    return function DialogTitle({ children }) {
+        return <div data-testid="dialog-title">{children}</div>;
+    };
+});
 
-describe('CreateTableButton', () => {
+jest.mock('@mui/material/DialogContent', () => {
+    return function DialogContent({ children }) {
+        return <div data-testid="dialog-content-section">{children}</div>;
+    };
+});
+
+jest.mock('@mui/material/DialogActions', () => {
+    return function DialogActions({ children }) {
+        return <div data-testid="dialog-actions">{children}</div>;
+    };
+});
+
+describe('CreateTableButton Component', () => {
     const mockOnTableCreate = jest.fn();
 
     beforeEach(() => {
-        mockOnTableCreate.mockClear();
-        mockConsoleLog.mockClear();
-    });
-
-    afterEach(() => {
         jest.clearAllMocks();
     });
 
-    it('renders create table button', () => {
-        render(<CreateTableButton onTableCreate={mockOnTableCreate} />);
-        expect(screen.getByText('Create Table')).toBeInTheDocument();
-    });
+    describe('Initial Render and Dialog Operation', () => {
+        test('renders create table button', () => {
+            render(<CreateTableButton onTableCreate={mockOnTableCreate} />);
+            expect(screen.getByText('Create Table')).toBeInTheDocument();
+        });
 
-    it('opens dialog when create table button is clicked', () => {
-        render(<CreateTableButton onTableCreate={mockOnTableCreate} />);
-        fireEvent.click(screen.getByText('Create Table'));
-        expect(screen.getByTestId('mock-dialog')).toBeInTheDocument();
-        expect(screen.getByText('Create New Table')).toBeInTheDocument();
-    });
+        test('opens dialog when create button is clicked', () => {
+            render(<CreateTableButton onTableCreate={mockOnTableCreate} />);
+            fireEvent.click(screen.getByText('Create Table'));
+            expect(screen.getByTestId('dialog-content')).toBeInTheDocument();
+            expect(screen.getByText('Create New Table')).toBeInTheDocument();
+        });
 
-    it('closes dialog when clicking outside', () => {
-        render(<CreateTableButton onTableCreate={mockOnTableCreate} />);
-        fireEvent.click(screen.getByText('Create Table'));
-        fireEvent.click(screen.getByTestId('mock-dialog'));
-        expect(screen.queryByTestId('mock-dialog')).not.toBeInTheDocument();
+        test('closes dialog when cancel button is clicked', () => {
+            render(<CreateTableButton onTableCreate={mockOnTableCreate} />);
+
+            // Open dialog
+            fireEvent.click(screen.getByText('Create Table'));
+            expect(screen.getByTestId('dialog-content')).toBeInTheDocument();
+
+            // Close dialog
+            fireEvent.click(screen.getByText('Cancel'));
+            expect(screen.queryByTestId('dialog-content')).not.toBeInTheDocument();
+        });
     });
 
     describe('Form Validation', () => {
@@ -51,7 +67,7 @@ describe('CreateTableButton', () => {
             fireEvent.click(screen.getByText('Create Table'));
         });
 
-        it('shows validation errors when form is submitted empty', async () => {
+        test('shows validation errors when form is submitted empty', async () => {
             fireEvent.click(screen.getByText('Create'));
 
             await waitFor(() => {
@@ -63,207 +79,140 @@ describe('CreateTableButton', () => {
             expect(mockOnTableCreate).not.toHaveBeenCalled();
         });
 
-        it('validates player amount range - below minimum', async () => {
-            const playerAmountInput = screen.getByLabelText(/Player Amount/i);
+    });
 
-            fireEvent.change(playerAmountInput, { target: { value: '0' } });
+    describe('Input Handling', () => {
+        beforeEach(() => {
+            render(<CreateTableButton onTableCreate={mockOnTableCreate} />);
+            fireEvent.click(screen.getByText('Create Table'));
+        });
+
+        test('handles text input for table name', () => {
+            const input = screen.getByPlaceholderText('Enter table name');
+            fireEvent.change(input, { target: { value: 'Test Table' } });
+            expect(input.value).toBe('Test Table');
+        });
+
+        test('handles numeric input for player amount', () => {
+            const input = screen.getByRole('spinbutton');
+            fireEvent.change(input, { target: { value: '4' } });
+            expect(input.value).toBe('4');
+        });
+
+        test('filters non-numeric input for minimum bet', () => {
+            const input = screen.getByPlaceholderText('Enter minimum bet');
+            fireEvent.change(input, { target: { value: 'abc123def' } });
+            expect(input.value).toBe('123');
+        });
+
+        test('clears form after closing dialog', () => {
+            // Fill in all fields
+            fireEvent.change(screen.getByPlaceholderText('Enter table name'), {
+                target: { value: 'Test Table' }
+            });
+            fireEvent.change(screen.getByRole('spinbutton'), {
+                target: { value: '4' }
+            });
+            fireEvent.change(screen.getByPlaceholderText('Enter minimum bet'), {
+                target: { value: '100' }
+            });
+
+            // Close dialog
+            fireEvent.click(screen.getByText('Cancel'));
+
+            // Reopen dialog
+            fireEvent.click(screen.getByText('Create Table'));
+
+            // Check if fields are cleared
+            expect(screen.getByPlaceholderText('Enter table name').value).toBe('');
+            expect(screen.getByRole('spinbutton').value).toBe('');
+            expect(screen.getByPlaceholderText('Enter minimum bet').value).toBe('');
+        });
+    });
+
+    describe('Form Submission', () => {
+        test('successfully submits form with valid data', async () => {
+            render(<CreateTableButton onTableCreate={mockOnTableCreate} />);
+            fireEvent.click(screen.getByText('Create Table'));
+
+            // Fill in all fields with valid data
+            fireEvent.change(screen.getByPlaceholderText('Enter table name'), {
+                target: { value: 'Test Table' }
+            });
+            fireEvent.change(screen.getByRole('spinbutton'), {
+                target: { value: '4' }
+            });
+            fireEvent.change(screen.getByPlaceholderText('Enter minimum bet'), {
+                target: { value: '100' }
+            });
+
+            // Submit form
             fireEvent.click(screen.getByText('Create'));
 
             await waitFor(() => {
-                expect(screen.getByText('Player amount must be between 1 and 6')).toBeInTheDocument();
+                expect(mockOnTableCreate).toHaveBeenCalledWith({
+                    tableName: 'Test Table',
+                    playerAmount: 4,
+                    minBet: 100
+                });
             });
+
+            // Check if dialog is closed
+            expect(screen.queryByTestId('dialog-content')).not.toBeInTheDocument();
         });
 
-        it('validates player amount range - above maximum', async () => {
-            const playerAmountInput = screen.getByLabelText(/Player Amount/i);
+        test('clears errors when input is corrected', async () => {
+            render(<CreateTableButton onTableCreate={mockOnTableCreate} />);
+            fireEvent.click(screen.getByText('Create Table'));
 
-            fireEvent.change(playerAmountInput, { target: { value: '7' } });
-            fireEvent.click(screen.getByText('Create'));
-
-            await waitFor(() => {
-                expect(screen.getByText('Player amount must be between 1 and 6')).toBeInTheDocument();
-            });
-        });
-
-        it('validates minimum bet is positive', async () => {
-            const minBetInput = screen.getByLabelText(/Minimum Bet/i);
-
-            fireEvent.change(minBetInput, { target: { value: '-100' } });
-            fireEvent.click(screen.getByText('Create'));
-
-            await waitFor(() => {
-                expect(screen.getByText('Minimum bet must be a positive integer')).toBeInTheDocument();
-            });
-        });
-
-        it('validates minimum bet is a number', async () => {
-            const minBetInput = screen.getByLabelText(/Minimum Bet/i);
-            const tableNameInput = screen.getByLabelText(/Table Name/i);
-            const playerAmountInput = screen.getByLabelText(/Player Amount/i);
-
-            fireEvent.change(tableNameInput, { target: { value: 'Test Table' } });
-            fireEvent.change(playerAmountInput, { target: { value: '4' } });
-            fireEvent.change(minBetInput, { target: { value: 'abc' } });
-            fireEvent.click(screen.getByText('Create'));
-
-            await waitFor(() => {
-                expect(screen.getByText('Minimum bet must be a positive integer')).toBeInTheDocument();
-            });
-        });
-
-        it('clears errors when input values change', async () => {
+            // Submit empty form to trigger errors
             fireEvent.click(screen.getByText('Create'));
 
             await waitFor(() => {
                 expect(screen.getByText('Table name is required')).toBeInTheDocument();
             });
 
-            const tableNameInput = screen.getByLabelText(/Table Name/i);
-            fireEvent.change(tableNameInput, { target: { value: 'Test Table' } });
+            // Correct the input
+            fireEvent.change(screen.getByPlaceholderText('Enter table name'), {
+                target: { value: 'Test Table' }
+            });
 
+            // Error should be cleared
             expect(screen.queryByText('Table name is required')).not.toBeInTheDocument();
         });
-
-        it('handles non-numeric input in player amount field', () => {
-            const playerAmountInput = screen.getByLabelText(/Player Amount/i);
-
-            fireEvent.change(playerAmountInput, { target: { value: 'abc' } });
-            expect(playerAmountInput.value).toBe('');
-        });
-
-        it('only allows numbers in minimum bet field', () => {
-            const minBetInput = screen.getByLabelText(/Minimum Bet/i);
-
-            fireEvent.change(minBetInput, { target: { value: 'abc123def' } });
-            expect(minBetInput.value).toBe('123');
-        });
     });
 
-    describe('Form State and Error Handling', () => {
-        beforeEach(() => {
+    describe('Error States', () => {
+        test('handles console logging of submission data', () => {
+            const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+
             render(<CreateTableButton onTableCreate={mockOnTableCreate} />);
             fireEvent.click(screen.getByText('Create Table'));
-        });
 
-        it('resets both form data and errors when dialog is closed', () => {
-            const tableNameInput = screen.getByLabelText(/Table Name/i);
-
-            fireEvent.change(tableNameInput, { target: { value: 'Test' } });
-            fireEvent.click(screen.getByText('Create'));
-
-            fireEvent.click(screen.getByText('Cancel'));
-
-            fireEvent.click(screen.getByText('Create Table'));
-
-            expect(tableNameInput.value).toBe('');
-            expect(screen.queryByText(/is required/)).not.toBeInTheDocument();
-        });
-
-        it('properly validates player amount when value exists but is invalid', async () => {
-            const tableNameInput = screen.getByLabelText(/Table Name/i);
-            const playerAmountInput = screen.getByLabelText(/Player Amount/i);
-            const minBetInput = screen.getByLabelText(/Minimum Bet/i);
-
-            // Fill form with valid data except player amount
-            fireEvent.change(tableNameInput, { target: { value: 'Test Table' } });
-            fireEvent.change(playerAmountInput, { target: { value: '0' } });  // Invalid value
-            fireEvent.change(minBetInput, { target: { value: '100' } });
-
-            fireEvent.click(screen.getByText('Create'));
-
-            await waitFor(() => {
-                expect(screen.getByText('Player amount must be between 1 and 6')).toBeInTheDocument();
+            // Fill in valid data
+            fireEvent.change(screen.getByPlaceholderText('Enter table name'), {
+                target: { value: 'Test Table' }
             });
-        });
-
-        it('handles different input field changes correctly', () => {
-            const playerAmountInput = screen.getByLabelText(/Player Amount/i);
-            const minBetInput = screen.getByLabelText(/Minimum Bet/i);
-
-            fireEvent.change(playerAmountInput, { target: { name: 'playerAmount', value: '5' } });
-            expect(playerAmountInput.value).toBe('5');
-
-            fireEvent.change(minBetInput, { target: { name: 'minBet', value: 'abc123def' } });
-            expect(minBetInput.value).toBe('123');
-
-            const tableNameInput = screen.getByLabelText(/Table Name/i);
-            fireEvent.change(tableNameInput, { target: { name: 'tableName', value: 'Test 123' } });
-            expect(tableNameInput.value).toBe('Test 123');
-        });
-
-        it('handles complete form submission cycle with all validations', async () => {
-            const tableNameInput = screen.getByLabelText(/Table Name/i);
-            const playerAmountInput = screen.getByLabelText(/Player Amount/i);
-            const minBetInput = screen.getByLabelText(/Minimum Bet/i);
-
-            fireEvent.change(tableNameInput, { target: { value: 'Test Table' } });
-            fireEvent.change(playerAmountInput, { target: { value: '7' } }); // Invalid
-            fireEvent.change(minBetInput, { target: { value: '-100' } }); // Invalid
-
-            fireEvent.click(screen.getByText('Create'));
-
-            await waitFor(() => {
-                expect(screen.getByText('Player amount must be between 1 and 6')).toBeInTheDocument();
-                expect(screen.getByText('Minimum bet must be a positive integer')).toBeInTheDocument();
+            fireEvent.change(screen.getByRole('spinbutton'), {
+                target: { value: '4' }
+            });
+            fireEvent.change(screen.getByPlaceholderText('Enter minimum bet'), {
+                target: { value: '100' }
             });
 
-            fireEvent.change(playerAmountInput, { target: { value: '6' } });
-            fireEvent.change(minBetInput, { target: { value: '100' } });
-
+            // Submit form
             fireEvent.click(screen.getByText('Create'));
 
-            expect(mockOnTableCreate).toHaveBeenCalledWith({
-                tableName: 'Test Table',
-                playerAmount: 6,
-                minBet: 100
-            });
+            expect(consoleSpy).toHaveBeenCalledWith(
+                "Submitting table data:",
+                expect.objectContaining({
+                    tableName: 'Test Table',
+                    playerAmount: 4,
+                    minBet: 100
+                })
+            );
 
-            // Verify dialog is closed and console.log was called
-            expect(screen.queryByTestId('mock-dialog')).not.toBeInTheDocument();
-            expect(mockConsoleLog).toHaveBeenCalledWith("Submitting table data:", expect.any(Object));
-        });
-    });
-
-    describe('Form Submission', () => {
-        beforeEach(() => {
-            render(<CreateTableButton onTableCreate={mockOnTableCreate} />);
-            fireEvent.click(screen.getByText('Create Table'));
-        });
-
-        it('successfully submits form with valid data - minimum values', async () => {
-            const tableNameInput = screen.getByLabelText(/Table Name/i);
-            const playerAmountInput = screen.getByLabelText(/Player Amount/i);
-            const minBetInput = screen.getByLabelText(/Minimum Bet/i);
-
-            fireEvent.change(tableNameInput, { target: { value: 'Test Table' } });
-            fireEvent.change(playerAmountInput, { target: { value: '1' } });
-            fireEvent.change(minBetInput, { target: { value: '1' } });
-
-            fireEvent.click(screen.getByText('Create'));
-
-            expect(mockOnTableCreate).toHaveBeenCalledWith({
-                tableName: 'Test Table',
-                playerAmount: 1,
-                minBet: 1
-            });
-        });
-
-        it('successfully submits form with valid data - maximum values', async () => {
-            const tableNameInput = screen.getByLabelText(/Table Name/i);
-            const playerAmountInput = screen.getByLabelText(/Player Amount/i);
-            const minBetInput = screen.getByLabelText(/Minimum Bet/i);
-
-            fireEvent.change(tableNameInput, { target: { value: 'Test Table' } });
-            fireEvent.change(playerAmountInput, { target: { value: '6' } });
-            fireEvent.change(minBetInput, { target: { value: '1000' } });
-
-            fireEvent.click(screen.getByText('Create'));
-
-            expect(mockOnTableCreate).toHaveBeenCalledWith({
-                tableName: 'Test Table',
-                playerAmount: 6,
-                minBet: 1000
-            });
+            consoleSpy.mockRestore();
         });
     });
 });

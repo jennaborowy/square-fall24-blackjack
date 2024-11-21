@@ -215,7 +215,7 @@ function LobbyLayout({children}) {
                         </Box>
                         <Box sx={{flexGrow: 0}}>
                             <Tooltip title="Open settings">
-                                <IconButton onClick={handleOpenUserMenu} sx={{p: 0}}>
+                                <IconButton aria-label="user icon" onClick={handleOpenUserMenu} sx={{p: 0}}>
                                     <Avatar alt="icon" src="/icon.png"/>
                                     <Typography
                                         variant="h6"

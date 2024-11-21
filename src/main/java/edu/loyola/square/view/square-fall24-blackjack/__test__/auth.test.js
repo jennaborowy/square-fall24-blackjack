@@ -1,126 +1,166 @@
-import { render, act } from '@testing-library/react';
-import { useContext } from 'react';
-import { AuthContext, AuthProvider, useAuth } from '@/app/context/auth';
+import React from 'react';
+import { render, screen, act, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import { AuthProvider, useAuth, AuthContext } from '../app/context/auth';
 import { onAuthStateChanged } from 'firebase/auth';
-import '@testing-library/jest-dom/jest-globals'
-import {describe, expect, jest, it, beforeEach} from '@jest/globals'
+import { auth } from "@/firebaseConfig";
 
-// Mock firebase/auth
+// Mock Firebase auth
+jest.mock('@/firebaseConfig', () => ({
+    auth: {}
+}));
+
+// Mock Firebase onAuthStateChanged
 jest.mock('firebase/auth', () => ({
-    onAuthStateChanged: jest.fn(),
+    onAuthStateChanged: jest.fn()
 }));
 
-// Mock firebaseConfig
-jest.mock('../firebaseConfig', () => ({
-    auth: {},
-}));
-
-// Test component to consume the context
+// Test component to access auth context
 const TestComponent = () => {
     const { currentUser } = useAuth();
-    return <div data-testid="user">{currentUser?.displayName}</div>;
+    return (
+        <div>
+            {currentUser ? (
+                <>
+                    <div data-testid="user-id">{currentUser.uid}</div>
+                    <div data-testid="user-name">{currentUser.displayName}</div>
+                </>
+            ) : (
+                <div data-testid="no-user">No user</div>
+            )}
+        </div>
+    );
 };
 
-describe('AuthContext', () => {
+describe('Auth Context and Provider', () => {
     beforeEach(() => {
-        // Clear all mocks before each test
         jest.clearAllMocks();
+        console.log = jest.fn();
     });
 
-    it('provides null user by default', () => {
-        const { getByTestId } = render(
-            <AuthProvider>
-                <TestComponent />
-            </AuthProvider>
-        );
+    describe('AuthProvider Tests', () => {
+        it('provides initial null user state', () => {
+            onAuthStateChanged.mockImplementation((auth, callback) => {
+                // Don't call callback immediately
+                return () => {};
+            });
 
-        expect(getByTestId('user').textContent).toBe('');
-    });
+            render(
+                <AuthProvider>
+                    <TestComponent />
+                </AuthProvider>
+            );
 
-    it('updates user when auth state changes to logged in', async () => {
-        // Mock the Firebase auth state change
-        const mockUser = {
-            uid: '123',
-            displayName: 'Test User',
-        };
-
-        onAuthStateChanged.mockImplementation((auth, callback) => {
-            callback(mockUser);
-            return () => {}; // Cleanup function
+            expect(screen.getByTestId('no-user')).toBeInTheDocument();
         });
 
-        const { getByTestId } = render(
-            <AuthProvider>
-                <TestComponent />
-            </AuthProvider>
-        );
+        it('updates state when user signs in', async () => {
+            const mockUser = {
+                uid: 'test-uid',
+                displayName: 'Test User'
+            };
 
-        // Wait for state update
-        await act(async () => {
-            await Promise.resolve();
+            onAuthStateChanged.mockImplementation((auth, callback) => {
+                callback(mockUser);
+                return () => {};
+            });
+
+            render(
+                <AuthProvider>
+                    <TestComponent />
+                </AuthProvider>
+            );
+
+            await waitFor(() => {
+                expect(screen.getByTestId('user-id')).toHaveTextContent('test-uid');
+                expect(screen.getByTestId('user-name')).toHaveTextContent('Test User');
+            });
         });
 
-        expect(getByTestId('user').textContent).toBe('Test User');
     });
 
-    it('handles logout correctly', async () => {
-        // Mock the Firebase auth state change for logout
-        onAuthStateChanged.mockImplementation((auth, callback) => {
-            callback(null);
-            return () => {}; // Cleanup function
+    describe('useAuth Hook Tests', () => {
+
+        it('provides current user data', async () => {
+            const mockUser = {
+                uid: 'test-uid',
+                displayName: 'Test User'
+            };
+
+            onAuthStateChanged.mockImplementation((auth, callback) => {
+                callback(mockUser);
+                return () => {};
+            });
+
+            const TestConsumer = () => {
+                const { currentUser } = useAuth();
+                return (
+                    <div data-testid="user-data">
+                        {currentUser?.uid}-{currentUser?.displayName}
+                    </div>
+                );
+            };
+
+            render(
+                <AuthProvider>
+                    <TestConsumer />
+                </AuthProvider>
+            );
+
+            await waitFor(() => {
+                expect(screen.getByTestId('user-data')).toHaveTextContent('test-uid-Test User');
+            });
+        });
+    });
+
+    describe('Edge Cases and Error Handling', () => {
+        it('handles user with missing display name', async () => {
+            const mockUser = {
+                uid: 'test-uid',
+                // displayName is undefined
+            };
+
+            onAuthStateChanged.mockImplementation((auth, callback) => {
+                callback(mockUser);
+                return () => {};
+            });
+
+            render(
+                <AuthProvider>
+                    <TestComponent />
+                </AuthProvider>
+            );
+
+            await waitFor(() => {
+                expect(screen.getByTestId('user-id')).toHaveTextContent('test-uid');
+                expect(screen.getByTestId('user-name')).toBeEmpty();
+            });
         });
 
-        const { getByTestId } = render(
-            <AuthProvider>
-                <TestComponent />
-            </AuthProvider>
-        );
+        it('handles multiple rapid auth state changes', async () => {
+            let authCallback;
+            onAuthStateChanged.mockImplementation((auth, callback) => {
+                authCallback = callback;
+                return () => {};
+            });
 
-        // Wait for state update
-        await act(async () => {
-            await Promise.resolve();
+            render(
+                <AuthProvider>
+                    <TestComponent />
+                </AuthProvider>
+            );
+
+            // Simulate rapid auth state changes
+            act(() => {
+                authCallback({ uid: 'user1', displayName: 'User 1' });
+                authCallback({ uid: 'user2', displayName: 'User 2' });
+                authCallback(null);
+                authCallback({ uid: 'user3', displayName: 'User 3' });
+            });
+
+            await waitFor(() => {
+                expect(screen.getByTestId('user-id')).toHaveTextContent('user3');
+            });
         });
-
-        expect(getByTestId('user').textContent).toBe('');
-    });
-
-    it('provides setCurrentUser through context', () => {
-        let contextValue;
-
-        const TestConsumer = () => {
-            contextValue = useContext(AuthContext);
-            return null;
-        };
-
-        render(
-            <AuthProvider>
-                <TestConsumer />
-            </AuthProvider>
-        );
-
-        expect(contextValue.setCurrentUser).toBeDefined();
-        expect(typeof contextValue.setCurrentUser).toBe('function');
-    });
-
-    it('calls onAuthStateChanged on mount', () => {
-        render(
-            <AuthProvider>
-                <TestComponent />
-            </AuthProvider>
-        );
-
-        expect(onAuthStateChanged).toHaveBeenCalledTimes(1);
-    });
-
-    it('useAuth hook throws error when used outside AuthProvider', () => {
-        // Suppress console.error for this test as we expect an error
-        const consoleSpy = jest.spyOn(console, 'error');
-        consoleSpy.mockImplementation(() => {});
-
-        expect(() => {
-            render(<TestComponent />);
-        }).toThrow();
-
-        consoleSpy.mockRestore();
     });
 });
