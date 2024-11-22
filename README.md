@@ -63,6 +63,7 @@ There are many things that we did not have time to get around to, such as:
 - Remove guests from the "Manage Users" page
 - Fix the end game status
 - Include "Play Again" button
+- Fix issues with game already in progress
 
 Having these additions would greatly improve user experience.
   
