@@ -4,17 +4,25 @@ This project is our Blackjack web app for our CS482 class in Fall of 2024. It in
 
 ## Landing Page
 When you first get to our app, you have a few options: signup for an account, login as existing user, play as guest, or view blackjack tutorial.
+![Landing Page for app](/Photos/Landing_Page.png)
 
 ## Signing up
 To sign up for an account, you provide your first and last name, a username that isn't already taken, an email that isn't already associated with and account, and a password of at least 8 characters.
+![Sign up page](Photos/Signup.png)
 
 ## Tables
-Tables can be created by any type of user once in the app. If no tables are present and you would like to play a game, you must create a table first. When creating a table, you can set the amount of players anywhere between 1-6. You must set a minimum bet for players to join, which cannot exceed $10,000. Once all of that is set, you are automatically taken to a game to play against the dealer, which is a bot. 
+Tables can be created by any type of user once in the app. 
+![Creating Table](Photos/Create_Table.png)
+
+If no tables are present and you would like to play a game, you must create a table first. When creating a table, you can set the amount of players anywhere between 1-6. You must set a minimum bet for players to join, which cannot exceed $10,000. Once all of that is set, you are automatically taken to a game to play against the dealer, which is a bot. 
 
 When any player joins the table and is placing their bet, they can access the table chat at the bottom left corner of the screen, particularly the rightmost icon there. It is essentially a "group chat" for the table.
 
 ## Play as Guest
-To play as a guest, you just need to provide a username. If that username is already taken, you will be prompted to choose another one. Once you are in, by default, you will be given $2500 worth of chips. If that ever reaches 0, you will be notified and your account will be replenished (as per client request). Guests have no resrictions when it comes to what tables to play at, unless the max player amount at the table has been reached.
+To play as a guest, you just need to provide a username. If that username is already taken, you will be prompted to choose another one. 
+![Registering as Guest](Photos/Guest.png)
+
+Once you are in, by default, you will be given $2500 worth of chips. If that ever reaches 0, you will be notified and your account will be replenished (as per client request). Guests have no resrictions when it comes to what tables to play at, unless the max player amount at the table has been reached.
 
 Once a guest is done playing, they can click the "Exit Game" button, which is found when you click your username in the right side of the navigation bar. This effectively deletes the guest user.
 
@@ -22,7 +30,10 @@ Once a guest is done playing, they can click the "Exit Game" button, which is fo
 Guests have the ability to message admin. You can access the messaging at the bottom left corner when placing your bet or in a game. It is the leftmost icon.
 
 ## Login as Account User
-To login, you must provide your username and password. As a basic account user, you have everything a guest has access to, in addition to more.
+To login, you must provide your username and password. 
+![Login](Photos/Login.png)
+
+As a basic account user, you have everything a guest has access to, in addition to more.
 
 _Note: Anytime you need to get back to the home page, you can click on our logo at the top left corner._
 
