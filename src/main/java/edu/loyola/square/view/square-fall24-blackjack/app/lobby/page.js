@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import TableList from "@/app/lobby/TableList";
 import CreateTableButton from "@/app/lobby/CreateTableButton";
 import {Dialog, DialogActions, DialogContent, DialogContentText} from "@mui/material";
+import "./lobby.css";
 
 function Lobby() {
     const [tables, setTables] = useState([]);
@@ -159,7 +160,7 @@ function Lobby() {
 
     return (
         <div className="m-3" title="lobby">
-            <h1 className="text-2xl font-bold mb-4">Welcome to the Lobby!</h1>
+            <h1 className="welcome">Welcome to the Lobby!</h1>
 
             {/*This is the popup to notify user of chipBalance change*/}
             <Dialog
@@ -182,15 +183,18 @@ function Lobby() {
                 </DialogActions>
             </Dialog>
 
+            <div className="tables">
             <TableList
                 tables={tables}
                 onJoinTable={handleJoinTable}
                 users={users}
             />
-            <div className="mb-4">
+            </div>
+            <div className="button-ctr">
                 <CreateTableButton onTableCreate={handleTableCreate}/>
             </div>
-            <h1> ${userBalance} </h1>
+
+            <h1 style={{color:'white'}}> ${userBalance} </h1>
         </div>
     );
 }

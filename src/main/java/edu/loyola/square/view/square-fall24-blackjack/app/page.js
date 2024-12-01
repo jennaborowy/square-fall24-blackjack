@@ -72,8 +72,9 @@ export default function Home() {
                                   <a href="https://bicyclecards.com/how-to-play/blackjack">
                                       Click here for more Blackjack info.
                                   </a>
+                                  <br/>
                                   <a href="https://www.youtube.com/watch?v=xjqTIzYkGdI&ab_channel=TripleSGames">
-                                      Click here for more Blackjack info.
+                                      Or watch a video on how to play.
                                   </a>
                                   </span>
                               </p>

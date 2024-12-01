@@ -1,6 +1,8 @@
 /* Style for TableList container */
 .TableList-container {
-    width: 500px;
+    display: flex;
+    flex-direction: column;
+    width: 50vw;
     height: 600px;
     background-color: rgba(0, 0, 0, 0.7);
     margin-bottom: 20px;
