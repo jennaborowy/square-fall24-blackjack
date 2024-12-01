@@ -1,0 +1,18 @@
+.tables {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-left: 24vw;
+}
+
+.button-ctr {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-left: 45vw;
+}
+
+.welcome {
+    text-align: center;
+    color: white;
+}
