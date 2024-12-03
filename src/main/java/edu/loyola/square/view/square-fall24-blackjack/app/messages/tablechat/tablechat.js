@@ -9,12 +9,8 @@ import './tablechat.css';
 
 import {auth, db} from "@/firebaseConfig";
 import {arrayUnion, doc, getDoc, onSnapshot, updateDoc, serverTimestamp, setDoc, collection, query} from "firebase/firestore";
-import {AuthContext} from "@/app/messages/AuthContext";
-import {ChatContext} from "@/app/messages/ChatContext";
-import List from "@/app/messages/list/list";
-import Chat from "@/app/messages/chat/chat";
-import {orderBy} from "firebase-mock/src/lodash";
 import {onAuthStateChanged} from "firebase/auth";
+import {ChatContext} from "@/app/messages/ChatContext";
 
 export default function TableChat({db, tableId, onClose}) {
   const [text, setText] = useState("");
@@ -22,7 +18,7 @@ export default function TableChat({db, tableId, onClose}) {
   const [user, setUser] = useState("");
   const endRef = useRef(null);
   const [tableName, setTableName] = useState("Table");
-
+  const [sender, setSender] = useState("");
 
   //const { currentUser } = useContext(AuthContext);
   //const { data, dispatch } = useContext(ChatContext);
@@ -50,7 +46,6 @@ export default function TableChat({db, tableId, onClose}) {
         const tableData = doc.data();
         setMessages(tableData.messages || []);
         setTableName(tableData.table_Name || "Table");
-
       }
     });
 
@@ -97,31 +92,28 @@ export default function TableChat({db, tableId, onClose}) {
     <div className="table-chat">
     <div className="chat-box" onClick={(e) => e.stopPropagation()}>
       <div className="chat-header">
-        {tableName}'s Chat Room
+        <p>{tableName}'s Chat Room</p>
         <button className="close-btn" onClick={onClose}>
           &times;
         </button>
       </div>
       <div className="chat">
-        <div className="center">
+        <div className="messages-container">
           {messages.map((message) => (
             //set the message class to 'message own' if sender is current user id, or just 'message' class if the recipient
             <div key={message.id} className={`message ${message.senderId === currentUser.uid ? 'own' : ''}`}>
               <div className="texts">
                 <p>{message.text}</p>
-                <span>{message.username}
-                  {formatTime(message.createdAt)}</span>
+                <span>{currentUser.username}</span>
+                 <span> {formatTime(message.createdAt)}</span>
               </div>
             </div>
           ))}
           <div ref={endRef}/>
         </div>
 
-        <div className="tablechat">
 
-          <div className="bottom">
-            <div className="icons">
-              <div className="input-message">
+              <div className="input-container">
                 <input type="text" placeholder="Type a message..." value={text}
                        onChange={e => setText(e.target.value)}/>
                 <button type="submit" className="sendButton" onClick={handleSendMessage} disabled={!text.trim()}>
@@ -129,9 +121,6 @@ export default function TableChat({db, tableId, onClose}) {
                 </button>
               </div>
             </div>
-          </div>
-          </div>
-        </div>
       </div>
   </div>
       );

@@ -8,13 +8,13 @@
 .message-icon {
     position: fixed;
     bottom: 15px;
-    left: 20px;
+    right: 20px;
     z-index: 100;
 }
 .table-chat-icon {
     position: fixed;
     bottom: 15px;
-    left: 75px;
+    right: 75px;
     z-index: 100;
 }
 .icons-btn{

@@ -917,11 +917,12 @@ export default function CardDisplay({ tableId }) {
               {isTableChatOpen && <TableChat db={db} tableId={tableId} onClose={handleCloseTableChat}/>}
             </div>
           </div>
-          {gameStarted && (
+
+          {/*{gameStarted && (
             <div className="game-stats-container">
               <GameInfo/>
             </div>
-          )}
+          )} */}
 
           <AceModal
             showModal={showAceModal}

@@ -7,6 +7,10 @@ import { useRouter } from 'next/navigation';
 import TableList from "@/app/lobby/TableList";
 import CreateTableButton from "@/app/lobby/CreateTableButton";
 import {Dialog, DialogActions, DialogContent, DialogContentText} from "@mui/material";
+import {MessageIcon} from "@/app/gameplay/icons";
+import ChatBox from "@/app/messages/chatbox/chatbox";
+import "../gameplay/icons.css"
+import "../gameplay/card.css"
 
 function Lobby() {
     const [tables, setTables] = useState([]);
@@ -14,6 +18,7 @@ function Lobby() {
     const [showPopup, setShowPopup] = useState(false);
     const[userBalance, setChipBalance] = useState();
     const router = useRouter();
+    const [isFriendChatOpen, setIsFriendChatOpen] = useState(false);
 
     //Upon entering lobby, check user's chipBalance. Reset to 2500 if 0 and show popup to notify user of change
     //CHECK THIS OUT -emma, here's why: The gameplay can recognize whether the user wins or loses and the appropriate payout
@@ -157,41 +162,57 @@ function Lobby() {
         }
     };
 
+    const handleCloseFriendChat = () => {
+        console.log("Closing chat...");
+        setIsFriendChatOpen(false);
+        console.log("Chat is now closed:", isFriendChatOpen);
+    };
+    useEffect(() => {
+        console.log("isChatOpen changed:", isFriendChatOpen);
+    }, [isFriendChatOpen]);
+
     return (
-        <div className="m-3" title="lobby">
-            <h1 className="text-2xl font-bold mb-4">Welcome to the Lobby!</h1>
+      <div className="m-3" title="lobby">
+          <h1 className="text-2xl font-bold mb-4">Welcome to the Lobby!</h1>
 
-            {/*This is the popup to notify user of chipBalance change*/}
-            <Dialog
-                open={showPopup}
-                onClose={handleClosePopup}>
-                <DialogContent>
-                    <DialogContentText>
-                        <p>
-                            It seems that youve ran out of chips... Have some more
-                        </p>
-                        <p>
-                            New chip balance: 2500
-                        </p>
-                    </DialogContentText>
-                </DialogContent>
-                <DialogActions>
-                    <button className="mt-3 btn btn-success border" onClick={handleClosePopup}>
-                        Ok
-                    </button>
-                </DialogActions>
-            </Dialog>
+          {/*This is the popup to notify user of chipBalance change*/}
+          <Dialog
+            open={showPopup}
+            onClose={handleClosePopup}>
+              <DialogContent>
+                  <DialogContentText>
+                      <p>
+                          It seems that youve ran out of chips... Have some more
+                      </p>
+                      <p>
+                          New chip balance: 2500
+                      </p>
+                  </DialogContentText>
+              </DialogContent>
+              <DialogActions>
+                  <button className="mt-3 btn btn-success border" onClick={handleClosePopup}>
+                      Ok
+                  </button>
+              </DialogActions>
+          </Dialog>
 
-            <TableList
-                tables={tables}
-                onJoinTable={handleJoinTable}
-                users={users}
-            />
-            <div className="mb-4">
-                <CreateTableButton onTableCreate={handleTableCreate}/>
-            </div>
-            <h1> ${userBalance} </h1>
-        </div>
+          <TableList
+            tables={tables}
+            onJoinTable={handleJoinTable}
+            users={users}
+          />
+          <div className="mb-4">
+              <CreateTableButton onTableCreate={handleTableCreate}/>
+          </div>
+          <h1> ${userBalance} </h1>
+
+          <div className="message-icon">
+              <div className="icons-btn" onClick={() => setIsFriendChatOpen((prev) => !prev)}>
+                  <MessageIcon/>
+                  {isFriendChatOpen && <ChatBox onClose={handleCloseFriendChat}/>}
+              </div>
+          </div>
+      </div>
     );
 }
 
