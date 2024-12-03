@@ -49,7 +49,7 @@
         gap: 20px;
 
         .message{
-            max-width: 30%;
+            max-width: 70%;
             display: flex;
             gap: 20px;
 
@@ -57,31 +57,36 @@
                 align-self: flex-end;
 
                 .texts{
+                    display: flex;
+                    flex-direction: column;
+                    gap: 5px;
                     p{
                         background-color: #176BAC;
-                        border-radius: 8px;
+                        color: white;
                     }
                 }
             }
             img{
-                wisth: 30px;
+                width: 30px;
                 height: 30px;
                 border-radius: 50%;
                 object-fit: cover;
             }
             .texts{
-                flex: 1;
-                display:flex;
-                flex-direction: column;
-                gap: 5px;
+                font-size: 12px;
+                color: #468cff;
 
                 p{
-                    padding: 20px;
+                    padding: 10px 15px;
                     background-color: #D5D3D3;
                     border-radius: 10px;
+                    margin: 0;
+
                 }
                 span{
                     color: #468cff;
+                    font-size: 12px;
+
                 }
             }
         }
@@ -97,23 +102,19 @@
 
         input{
             flex: 1;
-            background-color: #E4E6DC;
+            padding: 8px;
+            border-radius: 5px;
             border: none;
-            outline: none;
+            background-color: #E4E6DC;
             color: black;
-            gap: 10px;
-            border-radius: 10px;
-            padding-left:10px;
-            font-size: 16px;
         }
         .sendButton{
             background-color: #0060ff;
             color: white;
-            padding: 5px 10px;
-            margin-left: 25px;
+            padding: 8px 15px;
             border: none;
             border-radius: 5px;
-            cursor:pointer;
+            cursor: pointer;
 
         }
 

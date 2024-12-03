@@ -21,7 +21,9 @@
     align-items: center;
     padding: 10px 15px;
     background: floralwhite;
-    border-bottom: 1px solid #eee;
+    font-weight: bold;
+    border-bottom: 1px solid #5B5F62;
+
 }
 
 .chat-sections{
