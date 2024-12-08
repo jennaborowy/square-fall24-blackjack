@@ -25,29 +25,26 @@ Following the same standard across all of our code, all variables were camel cas
 
 \subsubsection{Database}
 \label{sec:database}
-Our initial plan was to use the relational SQL database management system, MySQL. However, during Sprint 1, we ran into issues with sharing a local instance of the database, so we decided to migrate to using a cloud-based No-SQL database called Firestore from Google Firebase. This was relatively easily implemented into our project.
+\noindent Our initial plan was to use the relational SQL database management system, MySQL. However, during Sprint 1, we ran into issues with sharing a local instance of the database, so we decided to migrate to using a cloud-based No-SQL database called Firestore from Google Firebase. This was relatively easily implemented into our project.\\
 
-With the original MySQL database, we planned for our table names to be Pascal case and singular. The primary keys were camel case followed by 'ID'. The foreign keys were also camel case with a descriptor followed by 'FK'.
+\noindent With the original MySQL database, we planned for our table names to be Pascal case and singular. The primary keys were camel case followed by 'ID'. The foreign keys were also camel case with a descriptor followed by 'FK'.\\
 
-In our ERD, the different tables were represented as rectangles and the fields were represented as ovals. In addition, primary keys were bolded and underlined, along with having an @ symbol in the front. Foreign keys were marked by a \# in front. Lastly, composite keys were marked like primary keys, but with an additional \# after the @ symbol. This is the ER diagram of our original database: 
+\noindent In our ERD, the different tables were represented as rectangles and the fields were represented as ovals. In addition, primary keys were bolded and underlined, along with having an @ symbol in the front. Foreign keys were marked by a \# in front. Lastly, composite keys were marked like primary keys, but with an additional \# after the @ symbol. This is the ER diagram of our original database: 
+
+\pagebreak
 
 \begin{figure}[hbt!]
     \centering
     \includegraphics[width=1.0\linewidth]{figures/SE Database ERD.pdf}
     \caption{ERD for our original database plan.}
-    \label{fig:ERD}
+    \label{fig: original ERD}
 \end{figure} 
 
-Since we switched from SQL to NoSQL, we also changed the naming conventions. We went from having tables to collections, and our collections were generally camelcase and plural. The documents within a collection had auto-generated identifiers, and the fields within documents were camelcase.
+\noindent Since we switched from SQL to NoSQL, we also changed the naming conventions. We went from having tables to collections, and our collections were generally camelcase and plural. The documents within a collection had auto-generated identifiers, and the fields within documents were camelcase.\\
 
-The model for our NoSQL database appeared similar to our original, but there were noticable changes. Collections were made as rectangles and fields as ovals. Even though there are not technically ''relationships`` in NoSQL databases, we included lines between collections to show when the equivalent to a foreign key was propagated from one collection to another. Subcollections were marked in purple. To prevent clutter and confusion, we left out the individual fields of these subcollections, as their names provided a satisfactory description of what they contained. Here is the updated diagram of our database:
+\noindent The model for our NoSQL database appeared similar to our original, but there were noticeable changes. Collections were made as rectangles and fields as ovals. Even though there are not technically ``relationships" in NoSQL databases, we included lines between collections to show when the equivalent to a foreign key was propagated from one collection to another. Subcollections were marked in purple. To prevent clutter and confusion, we left out the individual fields of these subcollections, as their names provided a satisfactory description of what they contained. Here is the updated diagram of our database:
 
-\begin{figure}[hbt!]
-    \centering
-    \includegraphics[width=1.0\linewidth]{figures/NoSQL_Database_Model.png}
-    \caption{NoSQL database model.}
-    \label{fig:ERD}
-\end{figure}
+% THIS IS WHERE THE MISSING FIGURE WAS THAT WAS TAKEN OUT FOR COMPILATION.
 
 
 \pagebreak

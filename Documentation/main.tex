@@ -1,11 +1,14 @@
 \documentclass[12pt]{article} %set font size and document type
 \usepackage{graphicx} % Required for inserting images
 \usepackage[useregional]{datetime2} %allow use of \today
+\usepackage{multirow}
 \usepackage[margin=1in]{geometry} % set margins
 \usepackage{setspace} % allow setting of double and single spacing
 \usepackage{hyperref} % creates clickable table of contents
 \usepackage{adjustbox} % allows us to rotate images, tables, etc.
 \usepackage[table,xcdraw]{xcolor}
+\usepackage{subcaption} 
+
 
 \usepackage{enumitem}% http://ctan.org/pkg/enumitem
 \setlist[itemize]{nosep, topsep=0pt}
@@ -43,9 +46,8 @@
 
 % set up title information 
 % Students replace project title and their names here
-\title{Black Jack
-\\
-CS482 Software Engineering Team Assignment 2}
+\title{Black Jack\\
+CS482 Software Engineering Project}
 \author{Jenna Borowy, Emma Heiser, Chris Plowman, Callie Walker\\
 Client: Dr. Nguyen Ho}
 \date{\today}
@@ -57,12 +59,11 @@ Client: Dr. Nguyen Ho}
 % creates table of contents
 \pagebreak
 \tableofcontents
-
 \input{abstract}
 
 \pagebreak
 % make body of document double spaced for easier feedback writing
-\doublespacing 
+%\doublespacing 
 
 
 % include the latex files with the content
@@ -73,12 +74,11 @@ Client: Dr. Nguyen Ho}
 \input{architecture}
 \input{AI-Usage}
 \input{testing} 
+\input{persistence}
 \input{reflection}
 
 %\section{References}
 \bibliographystyle{plain}
 %\bibliography{references}
-
-\input{tutorial}
 
 \end{document}

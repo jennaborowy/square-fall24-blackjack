@@ -1,25 +1,59 @@
-\subsection{Non-Functional Requirements \textbf{[TBD]}}
-
-[[ Complete the following template for each non-functional requirement. 
-
-
-\textbf{ID: Title}
-\begin{enumerate}
-    \item Description:
-    \item Affects: 
-\end{enumerate}
-
-Categorize the non-functional requirements using subsections using as many
-categories as your need.
-Please put a blank line between requirements.]]
-
+\subsection{Non-Functional Requirements}
 
 \subsubsection{Category: User Interface}
 
+\textbf{ID: Red theme}
+\begin{enumerate}
+    \item Description: The web app should be colorful, aesthetically pleasing, and have a consistent red theme throughout its GUI.
+    \item Affects: S1 (Login), S3 (Create Account), S4 (View Friends List), S9 (View Table Info), S19 (View Game History), S21 (View Tutorial)
+\end{enumerate}
+
+\smallskip
+
+\textbf{ID: Logo displayed throughout app}
+\begin{enumerate}
+    \item Description: The company's logo should be visible throughout the app across its multiple pages.
+    \item Affects: S1 (Login), S3 (Create Account), S4 (View Friends List), S9 (View Table Info), S19 (View Game History), S21 (View Tutorial)
+\end{enumerate}
+
+\smallskip
+
+\textbf{ID: Include animations}
+\begin{enumerate}
+    \item Description: Include moving parts and animations for visual engagement.
+    \item Affects: S26 (Play Blackjack)
+\end{enumerate}
+
 \subsubsection{Category: Security}
+
+\textbf{ID: Enforce password policies upon creation}
+\begin{enumerate}
+    \item Description: Only allow the creation of an account if the user's proposed password is at least 8 characters long.
+    \item Affects: S3 (Create Account)
+\end{enumerate}
+
+\smallskip
+
+\textbf{ID: Encrypt passwords}
+\begin{enumerate}
+    \item Description: Encrypt the passwords of all users' accounts.
+    \item Affects: S1 (Login), S3 (Create Account)
+\end{enumerate}
 
 \subsubsection{Category: Performance}
 
-\pagebreak
+\textbf{ID: 1 minute maximum loading time}
+\begin{enumerate}
+    \item Description: The app's loading time should not affect the user's experience. Keep loading time under a minute.
+    \item Affects: All user stories
+\end{enumerate}
+
+\smallskip
+
+\textbf{ID: Optimize Ace Value}
+\begin{enumerate}
+    \item Description: The game auto-optimizes an ace value to prevent busts.
+    \item Affects: S15 (Change Ace Value)
+\end{enumerate}
 
 %\subsubsection{add other subsections as needed, or delete irrelevant subsections}
