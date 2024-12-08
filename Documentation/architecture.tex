@@ -25,9 +25,9 @@ Following the same standard across all of our code, all variables were camel cas
 
 \subsubsection{Database}
 \label{sec:database}
-\noindent Our initial plan was to use the relational SQL database management system, MySQL. However, during Sprint 1, we ran into issues with sharing a local instance of the database, so we decided to migrate to using a cloud-based No-SQL database called Firestore from Google Firebase. This was relatively easily implemented into our project.\\
+\noindent Our initial plan was to use the relational SQL database management system, MySQL. However, during Sprint 1, we ran into issues with sharing a local instance of the database, so we decided to migrate to using a cloud-based NoSQL database called Firestore from Google Firebase. This was relatively easily implemented into our project.\\
 
-\noindent With the original MySQL database, we planned for our table names to be Pascal case and singular. The primary keys were camel case followed by 'ID'. The foreign keys were also camel case with a descriptor followed by 'FK'.\\
+\noindent With the original MySQL database, we planned for our table names to be Pascal case and singular. The primary keys were camel case followed by `ID'. The foreign keys were also camel case with a descriptor followed by `FK'.\\
 
 \noindent In our ERD, the different tables were represented as rectangles and the fields were represented as ovals. In addition, primary keys were bolded and underlined, along with having an @ symbol in the front. Foreign keys were marked by a \# in front. Lastly, composite keys were marked like primary keys, but with an additional \# after the @ symbol. This is the ER diagram of our original database: 
 
@@ -46,17 +46,25 @@ Following the same standard across all of our code, all variables were camel cas
 
 % THIS IS WHERE THE MISSING FIGURE WAS THAT WAS TAKEN OUT FOR COMPILATION.
 
+\begin{figure}[hbt!]
+    \centering
+    \includegraphics[width=0.8\linewidth]{figures/NoSQL_Database_Model.png}
+    \caption{Updated NoSQL database model.}
+    \label{fig:NoSQL_Model}
+\end{figure}
+
 
 \pagebreak
 
 \subsection{Technologies Used}
 
 \subsubsection{Languages}
-As stated earlier, we initially used SQL for our database, but because of the issues mentioned in the \hyperref[sec:database]{Database} section, we ended up using NoSQL. 
+\noindent As stated earlier, we initially used SQL for our database, but because of the issues mentioned in the \hyperref[sec:database]{Database} section, we ended up using NoSQL. \\
 
-For the language to run our game logic, we chose Java as we were familiar with it, and it seemed a logical choice as an object-oriented programming language. For our web UI we used Javascript and HTML, which was supplemented by ReactJS as mentioned \hyperref[sec:libs/mods/packs]{here}.
 
-Here is our initial UML class diagram that outlined our plan of the major classes in our game logic:  
+\noindent For the language to run our game logic, we chose Java as we were familiar with it, and it seemed a logical choice as an object-oriented programming language. For our web UI we used Javascript and HTML, which was supplemented by ReactJS as mentioned in the \hyperref[sec:libs/mods/packs]{Libraries, Modules, and Packages} section. \\
+
+\noindent Here is our initial UML class diagram that outlined our plan of the major classes in our game logic: \\ 
 
 \begin{figure}[hbt!]
     \centering
@@ -65,7 +73,7 @@ Here is our initial UML class diagram that outlined our plan of the major classe
     \label{fig:UML}
 \end{figure}
 
-Below is our updated UML class diagram:
+\noindent Below is our updated UML class diagram:
 % PLACE UPDATED DIAGRAM
 
 \pagebreak
