@@ -29,9 +29,7 @@ Following the same standard across all of our code, all variables were camel cas
 
 \noindent With the original MySQL database, we planned for our table names to be Pascal case and singular. The primary keys were camel case followed by `ID'. The foreign keys were also camel case with a descriptor followed by `FK'.\\
 
-\noindent In our ERD, the different tables were represented as rectangles and the fields were represented as ovals. In addition, primary keys were bolded and underlined, along with having an @ symbol in the front. Foreign keys were marked by a \# in front. Lastly, composite keys were marked like primary keys, but with an additional \# after the @ symbol. This is the ER diagram of our original database: 
-
-\pagebreak
+\noindent In our ERD, the different tables were represented as rectangles and the fields were represented as ovals. In addition, primary keys were bolded and underlined, along with having an @ symbol in the front. Foreign keys were marked by a \# in front. Lastly, composite keys were marked like primary keys, but with an additional \# after the @ symbol. Our ERD for our original database can be found in figure \ref{fig: original ERD}. \\
 
 \begin{figure}[hbt!]
     \centering
@@ -42,13 +40,11 @@ Following the same standard across all of our code, all variables were camel cas
 
 \noindent Since we switched from SQL to NoSQL, we also changed the naming conventions. We went from having tables to collections, and our collections were generally camelcase and plural. The documents within a collection had auto-generated identifiers, and the fields within documents were camelcase.\\
 
-\noindent The model for our NoSQL database appeared similar to our original, but there were noticeable changes. Collections were made as rectangles and fields as ovals. Even though there are not technically ``relationships" in NoSQL databases, we included lines between collections to show when the equivalent to a foreign key was propagated from one collection to another. Subcollections were marked in purple. To prevent clutter and confusion, we left out the individual fields of these subcollections, as their names provided a satisfactory description of what they contained. Here is the updated diagram of our database:
-
-% THIS IS WHERE THE MISSING FIGURE WAS THAT WAS TAKEN OUT FOR COMPILATION.
+\noindent The model for our NoSQL database appeared similar to our original, but there were noticeable changes. Collections were made as rectangles and fields as ovals. Even though there are not technically ``relationships" in NoSQL databases, we included lines between collections to show when the equivalent to a foreign key was propagated from one collection to another. Subcollections were marked in purple. To prevent clutter and confusion, we left out the individual fields of these subcollections, as their names provided a satisfactory description of what they contained. The updated diagram for our current database can be found in figure \ref{fig:NoSQL_Model}.
 
 \begin{figure}[hbt!]
     \centering
-    \includegraphics[width=0.8\linewidth]{figures/NoSQL_Database_Model.png}
+    \includegraphics[width=1.0\linewidth]{figures/NoSQL_Database_Model.png}
     \caption{Updated NoSQL database model.}
     \label{fig:NoSQL_Model}
 \end{figure}
@@ -64,22 +60,26 @@ Following the same standard across all of our code, all variables were camel cas
 
 \noindent For the language to run our game logic, we chose Java as we were familiar with it, and it seemed a logical choice as an object-oriented programming language. For our web UI we used Javascript and HTML, which was supplemented by ReactJS as mentioned in the \hyperref[sec:libs/mods/packs]{Libraries, Modules, and Packages} section. \\
 
-\noindent Here is our initial UML class diagram that outlined our plan of the major classes in our game logic: \\ 
+\noindent Our initial UML class diagram that outlined our plan of the major classes in our game logic is shown in figure \ref{fig:UML}, and the UML that represented our current code is in figure \ref{fig:UML-updated}. As you can see, we had planned on having more classes than we ended up with. The classes that were dropped between the initial plan and the current code include Message, Chat, and Table. We realized that they would be unnecessary as Java classes because of how chats and table information needed to be stored in the database. All the attributes listed in these classes in the initial diagram needed to be persisted in the database anyway. \\ 
 
 \begin{figure}[hbt!]
     \centering
     \includegraphics[width=0.8\linewidth]{figures/UML Diagram Whiteboard.pdf}
-    \caption{UML diagram of major classes and relations.}
+    \caption{Our first UML diagram.}
     \label{fig:UML}
 \end{figure}
 
-\noindent Below is our updated UML class diagram:
-% PLACE UPDATED DIAGRAM
+\begin{figure}[hbt!]
+    \centering
+    \includegraphics[width=0.8\linewidth]{figures/Sprint_3_UML_Diagram.png}
+    \caption{Our current UML diagram.}
+    \label{fig:UML-updated}
+\end{figure}
 
 \pagebreak
 
 \subsection{UI Mockups}
-Here are some of the initial UI designs for our project:
+Following are some of the initial UI designs for our project.
 
 \begin{figure}[hbt!]
     \centering
