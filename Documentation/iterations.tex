@@ -123,7 +123,7 @@ In sprint 1 we had quite the eye opening experience as to how complicated creati
 \hline
 \textbf{ID} & \textbf{Name}                                                        & \textbf{Points} & \textbf{Contributor} & \textbf{Status}                       \\ \hline
 S2          & Logout                                                               & 1               & Jenna                & {\color[HTML]{32CB00} Accepted}       \\ \hline
-S4          & View Friends List                                                    & 1               & Jenna                & {\color[HTML]{CB0000} Unaccomplished} \\ \hline
+S4          & View Friends List                                                    & 1               & Jenna                & {\color[HTML]{32CB00} Accepted} \\ \hline
 S5          & Add Friend                                                           & 1               & Jenna                & {\color[HTML]{32CB00} Accepted}       \\ \hline
 S6          & Remove Friend                                                        & 1               & Jenna                & {\color[HTML]{CB0000} Unaccomplished} \\ \hline
 S7          & Play as Guest                                                        & 2               & Jenna                & {\color[HTML]{32CB00} Accepted}       \\ \hline
@@ -144,7 +144,7 @@ T4  & \begin{tabular}[c]{@{}c@{}}Refactor Jest Testing \\ for Firebase\end{tabul
 \end{tabular}
 \end{table}
 
-\noindent Table \ref{tab: sprint 2 overview} shows the overview for sprint 2. The big key change to our project at this point was the switch from MySQL to firebase for our data persistence (shown in row 17, T1). This was necessary as MySQL was giving us substantial problems and preventing progress on the project. Other things worth noting in the table are that the stories highlighted in yellow were stories that were not originally planned in the sprint but were accomplished and accepted and the addition of the ``Unaccomplished" status for S15. This status means that the implementation of this story did not fully meet the expectations of the client in the acceptance test. Lastly, the addition of technical tasks were introduced to help track and give credit to those who had put in substantial time and work into something required for the project that was not directly related to any user stories. All technical tasks had to be given a point value of 1.
+\noindent Table \ref{tab: sprint 2 overview} shows the overview for sprint 2. The big key change to our project at this point was the switch from MySQL to firebase for our data persistence (shown in row 17, T1). This was necessary as MySQL was giving us substantial problems and preventing progress on the project. Other things worth noting in the table are that the stories highlighted in yellow were stories that were not originally planned in the sprint but were accomplished and accepted and the addition of the ``Unaccepted" status for S15. This status means that the implementation of this story did not fully meet the expectations of the client in the acceptance test. Lastly, the addition of technical tasks were introduced to help track and give credit to those who had put in substantial time and work into something required for the project that was not directly related to any user stories. All technical tasks had to be given a point value of 1.
 
 \begin{table}[!hbt]
 \centering
@@ -164,7 +164,7 @@ Emma   & 5 & 5 & 15 & 3    \\ \hline
 \end{tabular}
 \end{table}
 
-\noindent Table \ref{tab: sprint 2 individual metrics} shows the metrics for each team member in sprint 2. Something worth noting is the drastic change in speed compared to last sprint. This is mostly due to the fact that we moved away from paired programming and additionally were able to produce code that directly added features to the app since the overhead of setting up the project had already been taken care of. That along with our working firebase database, allowed us to make significant progress much faster than before. These metrics also include the points for technical tasks mentioned in table \ref{tab: sprint 2 overview}
+\noindent Table \ref{tab: sprint 2 individual metrics} shows the metrics for each team member in sprint 2. Something worth noting is the drastic change in speed compared to last sprint. This is mostly due to the fact that we moved away from paired programming and additionally were able to produce code that directly added features to the app since the overhead of setting up the project had already been taken care of. That, along with our working firebase database, allowed us to make significant progress much faster than before. These metrics also include the points for technical tasks mentioned in table \ref{tab: sprint 2 overview}
 
 \subsubsection{Sprint 2 Testing}
 
@@ -217,10 +217,10 @@ Here are the individual testing results for each member:
     \label{fig:sequence}
 \end{figure}
 
-\noindent Figure \ref{fig:sequence} shows a sequence diagram for the user signing in and playing the game. The user starts at the landing page, logs in, directed to the lobby, then either creates or joins a table, and then enters a loop in which the user keeps putting a bet in and playing the game until they are done and want to leave that table. 
+\noindent Figure \ref{fig:sequence} shows a sequence diagram for the user signing in and playing the game. The user starts at the landing page, logs in, is directed to the lobby, then either creates or joins a table, and then enters a loop in which the user keeps putting a bet in and playing the game until they are done and want to leave that table. 
 
 \subsubsection{Sprint 2 Retrospective}
-In this sprint we realized multiple things including the importance of planning stories. We were fortunate that we planned our stories based on core components of the app. Sprint 1 was focused on the model components of the app allowing us to build all the of the social aspects of the app on top of the existing model components. Additionally, we realized the importance of having the ``main" branch be the most current working version of our project. Each member should push to their branch and then move it to main so that everyone else pulls from main rather than pulling from each other. This ensures that main is always up to date and compiles. We also switched our database from MySQL to Firestore/Firebase. This was a good switch as we were having a lot of trouble with MySQL and Firebase was not only easy to use, but thanks to Jenna it was easy to covert to. 
+In this sprint we realized multiple things including the importance of planning stories. We were fortunate that we planned our stories based on core components of the app. Sprint 1 was focused on the model components of the app, allowing us to build all the of the social aspects of the app on top of the existing model components. Additionally, we realized the importance of having the ``main" branch be the most current working version of our project. Each member should push to their branch and then move it to main so that everyone else pulls from main rather than pulling from each other. This ensures that main is always up to date and compiles. We also switched our database from MySQL to Firebase. This was a good switch as we were having a lot of trouble with MySQL and Firebase was not only easy to use, but was also easy to covert to. 
 
 \pagebreak
 
@@ -228,7 +228,7 @@ In this sprint we realized multiple things including the importance of planning 
 
 \subsubsection{Plan}
 
-\noindent After our last sprint we only had a few stories left to do that centered on admin privileges, table messaging and full multiplayer functionality.
+\noindent After our last sprint we only had a few stories left to do that centered on admin privileges, table messaging, and full multiplayer functionality.
 
 \subsubsection{Sprint 3 Stories}
 
@@ -250,7 +250,7 @@ T6          & \begin{tabular}[c]{@{}c@{}}Refactor for \\ Multiplayer\end{tabular
 \end{tabular}
 \end{table}
 
-\noindent Table \ref{tab: overview for sprint 3} shows the stories and technical tasks that were planned for sprint 3. We added more technical tasks to track work done not directly related to user stories. T5 has 2 contributor's because both Jenna, and Emma thought it was best to co-create an admin page so that they each were working on the same page when they got to their respective stories. T6 was to track the work that Chris put in trying to refactor the game to support multiplayer.\\
+\noindent Table \ref{tab: overview for sprint 3} shows the stories and technical tasks that were planned for sprint 3. We added more technical tasks to track work done not directly related to user stories. T5 has 2 contributors because both Jenna and Emma thought it was best to co-create an admin page so that they each were working on the same page when they got to their respective stories. T6 was to track the work that Chris put in while trying to refactor the game to support multiplayer.\\
 
 \noindent \textbf{Individual Speeds and Cycle times}
 
@@ -325,10 +325,10 @@ Here are the individual testing results for each member:
     \label{fig:sprint 3 UML}
 \end{figure}
 
-\noindent \ref{fig:sprint 3 UML} This is our updated UML diagram for our model classes and their interactions.
+\noindent Figure \ref{fig:sprint 3 UML} is our updated UML diagram for our model classes and their interactions.
 
 
 \subsubsection{Sprint 3 Retrospective}
-In this sprint we didn't have a lot of things left over from sprint 2. The big ticket item was getting multiplayer functionality done. That task was more challenging and time consuming than anticipated which is why Chris had so many hours for such few points this sprint, seen in table \ref{tab: sprint 3 individual metrics}. The multiplayer aspect was under a 2 point story which in hindsight should've been something along the lines of 5-8 points. Other than that we had a good pace and team dynamic which had been developing over the 3 sprints.
+In this sprint we didn't have a lot of things left over from sprint 2. The big ticket item was getting multiplayer functionality done. That task was more challenging and time consuming than anticipated which is why Chris had so many hours for such few points this sprint, seen in Table \ref{tab: sprint 3 individual metrics}. The multiplayer aspect was under a 2 point story, which in hindsight should've been around 5-8 points. Other than that, we had a good pace and team dynamic which had been developing over the 3 sprints.
 
 
