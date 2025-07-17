@@ -7,7 +7,7 @@ When you first get to our app, you have a few options: signup for an account, lo
 ![Landing Page for app](/Photos/Landing_Page.png)
 
 ## Signing up
-To sign up for an account, you provide your first and last name, a username that isn't already taken, an email that isn't already associated with and account, and a password of at least 8 characters.
+To sign up for an account, you provide your first and last name, a username that isn't already taken, an email that isn't already associated with an account, and a password of at least 8 characters.
 ![Sign up page](Photos/Signup.png)
 
 ## Tables
